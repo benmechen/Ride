@@ -13,6 +13,7 @@ import FacebookLogin
 import FacebookCore
 import Kingfisher
 import Alamofire
+import MapKit
 import os.log
 
 protocol GroupViewControllerDelegate: class {
@@ -29,6 +30,7 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
     var imagePicker = UIImagePickerController()
     var group: Group = Group()!
     var payoutsEnabled: Bool = false
+    var locationManager = CLLocationManager()
     weak var groupViewControllerDelegate: GroupViewControllerDelegate?
     
     override func viewDidLoad() {
@@ -112,6 +114,7 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
         case 3:
             if indexPath.row == 0 {
                 group.removeUser(id: currentUser!.uid)
+                locationManager.stopUpdatingLocation()
                 moveToWelcomeController()
             }
         default:
