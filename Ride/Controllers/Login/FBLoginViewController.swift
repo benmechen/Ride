@@ -64,6 +64,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                         })
                     } else {
                         //TODO: Sort out whole file
+                        moveToLoginController()
                         return
                     }
                     

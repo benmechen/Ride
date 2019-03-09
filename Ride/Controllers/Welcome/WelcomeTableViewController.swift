@@ -31,7 +31,6 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
         super.viewDidLoad()
         
         loadUserGroups()
-        
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -102,6 +101,7 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
                     available = UITableViewRowAction(style: .normal, title: "Set Ride status to unavailable") { action, index in
                         RideDB?.child("Users").child(currentUser!.uid).child("available").child(self.groups[editActionsForRowAt.row]._groupID).setValue(false)
                         RideDB?.child("Groups").child("GroupMeta").child(self.groups[editActionsForRowAt.row]._groupID).child("available").child(currentUser!.uid).setValue(false)
+                        
                     }
                     available.backgroundColor = .lightGray
                 }
@@ -241,9 +241,6 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
                     
                         if groupIDs != nil {
                             for groupID: String in groupIDs! {
-                                if groupID == "-L_J8P1AMbRDa_k7Y1ri" {
-                                    continue
-                                }
                                 RideDB?.child("Groups").child("GroupMeta").child(groupID).observe(.value, with: { (snapshot) in
                                     let value = snapshot.value as? NSDictionary
                                     let groupName = value?["name"] as? String ?? ""

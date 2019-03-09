@@ -14,6 +14,7 @@ import FacebookLogin
 import FacebookCore
 import Kingfisher
 import MessageUI
+import MapKit
 import os.log
 
 protocol WelcomeViewControllerDelegate: class {
@@ -41,6 +42,7 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     var selectedType: String?
     var carTypes = ["Hatchback", "Estate", "SUV", "Saloon", "Coupe", "MPV", "Convertible", "Pick Up", "Other"]
     var handle: UInt? = nil
+    let locationManager = CLLocationManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -458,6 +460,8 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
             AccessToken.current = nil
             fbAccessToken = nil
         }
+        
+        locationManager.stopUpdatingLocation()
         
         let firebaseAuth = Auth.auth()
         

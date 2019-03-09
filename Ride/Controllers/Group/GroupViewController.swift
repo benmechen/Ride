@@ -63,6 +63,25 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
         locationManager.startUpdatingLocation()
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        RideDB?.child("Groups").child("UserGroups").child(mainUser!._userID).child("groupIDs").observeSingleEvent(of: .value, with: { snapshot in
+            var count = 0
+            if let value = snapshot.value as? [String: Bool] {
+                for key in value.keys {
+                    if value[key]!{
+                        count += 1
+                    }
+                }
+            }
+            
+            if count == 0 {
+                self.locationManager.stopUpdatingLocation()
+            }
+        })
+    }
+    
     // MARK: - Map view
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if annotation is MKUserLocation { return nil }

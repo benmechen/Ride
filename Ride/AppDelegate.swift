@@ -92,14 +92,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         
         application.registerForRemoteNotifications()
         
-        // Check if launched from notification
         let notificationOption = launchOptions?[.remoteNotification]
         
-        // 1
         if (notificationOption as? [String: AnyObject]) != nil {
             self.selectedIndex = 1
         }
-
         
         return true
     }
@@ -257,8 +254,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                     
                     self.locationManager.startUpdatingLocation()
                 } else {
-                        self.locationManager.stopUpdatingLocation()
-                    }
+                    self.locationManager.stopUpdatingLocation()
+                }
             } else {
                 self.locationManager.stopUpdatingLocation()
             }
@@ -304,7 +301,19 @@ func getMainUser(welcome: Bool) {
                     if currentUser?.uid != nil {
                         mainUser = User(id: (currentUser?.uid)!, name: user["name"] as! String, photo: user["photo"] as! String, car: user["car"] as! [String: String], available: user["available"] as! [String : Bool], location: user["location"] as! [String : CLLocationDegrees], timestamp: user["timestamp"] as! TimeInterval)
                         let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                        appDelegate.updateUserLocation()
+                        
+                        var available = false
+                        for key in (user["available"] as! [String: Bool]).keys {
+                            if (user["available"] as! [String: Bool])[key]! {
+                                available = true
+                            }
+                        }
+                        
+                        if available {
+                            appDelegate.updateUserLocation()
+                        } else {
+                            appDelegate.locationManager.stopUpdatingLocation()
+                        }
                     }
                 } else {
                     moveToLoginController()
