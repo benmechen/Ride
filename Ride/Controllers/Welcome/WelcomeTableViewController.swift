@@ -110,6 +110,11 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
         
         if self.payoutsEnabled {
             return [available]
+        } else {
+            for group in self.groups {
+                RideDB?.child("Users").child(currentUser!.uid).child("available").child(group._groupID).setValue(false)
+                RideDB?.child("Groups").child("GroupMeta").child(group._groupID).child("available").child(currentUser!.uid).setValue(false)
+            }
         }
 
         return []
