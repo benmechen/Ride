@@ -76,7 +76,9 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                             
                             self.populateFriends(userId: (fbAccessToken?.userId)!, completion: { success, data in
                                 if success {
-                                    RideDB?.child("Connections").child((currentUser?.uid)!).child(data[0]).setValue(true)
+                                    for id in data {
+                                        RideDB?.child("Connections").child((currentUser?.uid)!).child(id).setValue(true)
+                                    }
                                 } else {
                                     os_log("Error populating friends", log: .default, type: .error)
                                 }
