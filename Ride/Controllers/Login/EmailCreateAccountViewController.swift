@@ -82,6 +82,8 @@ class EmailCreateAccountViewController: UIViewController {
                                         RideDB?.child("Users").child((currentUser?.uid)!).setValue(["name": currentUser?.displayName as Any, "photo": currentUser?.photoURL?.absoluteString as Any, "car": ["type": "", "mpg": "", "seats": "", "registration": ""]])
                                         
                                         mainUser = User(id: (currentUser?.uid)!, name: (currentUser?.displayName)!, photo: (currentUser?.photoURL?.absoluteString)!, car: ["type": "", "mpg": "", "seats": "", "registration": ""], available: [:], location: [:], timestamp: 0.0)
+                                        
+                                        RideDB?.child("Connections").child((currentUser?.uid)!).setValue([])
                                     } else {
                                         getMainUser(welcome: true)
                                     }
