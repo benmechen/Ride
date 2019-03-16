@@ -21,6 +21,7 @@ class GroupSettingsMembersTableViewController: UITableViewController {
     @IBOutlet weak var membersCloseButton: UIBarButtonItem!
     var selectedIndex: NSInteger = 0
     var connections = [String: Array<Connection>]()
+    var userCount = 0
     var group: Group = Group()!
     var unconnectedUsers = [Connection]()
     var filteredUsers = [Connection]()
@@ -105,7 +106,7 @@ class GroupSettingsMembersTableViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if membersCloseButton != nil {
-            return group._groupMembers!.count - 1
+            return self.userCount
         } else {
             if isFiltering() {
                 return filteredUsers.count
@@ -164,11 +165,13 @@ class GroupSettingsMembersTableViewController: UITableViewController {
                 }
             }
         } else if membersCloseButton != nil && indexPath.row < members.count {
-            print("Members:", members)
             cell.memberConnectionName.text = members[indexPath.row]._userName
-            cell.memberConnectionPhoto.image(fromUrl: members[indexPath.row]._userPhoto!)
-            let car = members[indexPath.row]._userCar as! [String: String]
-            cell.memberConnectionCar.text = car["type"]
+            if members[indexPath.row]._userPhoto != nil {
+                cell.memberConnectionPhoto.image(fromUrl: members[indexPath.row]._userPhoto!)
+            }
+            if let car = members[indexPath.row]._userCar as? [String: String] {
+                cell.memberConnectionCar.text = car["type"]
+            }
         }
     
         
@@ -363,22 +366,23 @@ class GroupSettingsMembersTableViewController: UITableViewController {
     
     private func loadGroupMembers() {
         var i = 0
+        self.userCount = 0
         RideDB?.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
-            let value = snapshot.value as! [String: [String: Any]]
-            
-            for user in self.group._groupMembers! {
-                if user != currentUser!.uid {
-                    let userDetails = value[user]
-                    
-                    let car = userDetails!["car"] as! [String: Any]
-                    let connection = Connection(hostId: (currentUser?.uid)!, userId: user, name: userDetails!["name"] as! String, photo: userDetails!["photo"] as! String, car: car, index: i)
-                
-                    self.members.append(connection!)
-                
-                
-                    self.tableView.reloadData()
+            if let value = snapshot.value as? [String: [String: Any]] {
+                for user in self.group._groupMembers! {
+                    if user != currentUser!.uid {
+                        let userDetails = value[user]
+                        
+                        if userDetails != nil, let car = userDetails?["car"] as? [String: Any], userDetails?["name"] != nil, userDetails?["photo"] != nil {
+                            if let connection = Connection(hostId: (currentUser?.uid)!, userId: user, name: userDetails!["name"] as! String, photo: userDetails!["photo"] as! String, car: car, index: i) {
+                                self.members.append(connection)
+                                self.userCount += 1
+                            }
+                        }
+                        self.tableView.reloadData()
+                    }
+                    i = i + 1
                 }
-                i = i + 1
             }
         })
     }
@@ -421,7 +425,9 @@ extension GroupSettingsMembersTableViewController: UISearchResultsUpdating {
     
     //MARK: UISearchResultsUpdating Updating
     func updateSearchResults(for searchController: UISearchController) {
+        guard searchController.searchBar.text != nil else {
+            return
+        }
         filterContentForSearchText(searchController.searchBar.text!)
-        
     }
 }
