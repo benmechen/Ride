@@ -302,6 +302,17 @@ func getMainUser(welcome: Bool) {
                         mainUser = User(id: (currentUser?.uid)!, name: user["name"] as! String, photo: user["photo"] as! String, car: user["car"] as! [String: String], available: user["available"] as! [String : Bool], location: user["location"] as! [String : CLLocationDegrees], timestamp: user["timestamp"] as! TimeInterval)
                         let appDelegate = UIApplication.shared.delegate as! AppDelegate
                         
+                        InstanceID.instanceID().instanceID { (result, error) in
+                            if let error = error {
+                                print("Error fetching remote instance ID: \(error)")
+                            } else if let result = result {
+                                if currentUser?.uid != nil {
+                                    RideDB?.child("Users").child(currentUser!.uid).child("token").setValue(result.token)
+                                }
+                            }
+                        }
+
+                        
                         var available = false
                         for key in (user["available"] as! [String: Bool]).keys {
                             if (user["available"] as! [String: Bool])[key]! {

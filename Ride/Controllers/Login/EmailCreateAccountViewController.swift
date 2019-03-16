@@ -64,8 +64,7 @@ class EmailCreateAccountViewController: UIViewController {
                         currentUser = Auth.auth().currentUser
                         let changeRequest = currentUser?.createProfileChangeRequest()
                         
-                        changeRequest?.photoURL =
-                            URL(string: "https://firebasestorage.googleapis.com/v0/b/fuse-ride.appspot.com/o/UserProfiles%2Fplaceholder.jpg?alt=media&token=abfeb0ec-6d83-4d8f-b9fe-aa3316aef96b")!
+                        changeRequest?.photoURL = URL(string: "https://firebasestorage.googleapis.com/v0/b/fuse-ride.appspot.com/o/UserProfiles%2Fplaceholder.jpg?alt=media&token=abfeb0ec-6d83-4d8f-b9fe-aa3316aef96b")!
                         changeRequest?.displayName = self.nameTextField.text
                         changeRequest?.commitChanges { error in
                             if let error = error {
