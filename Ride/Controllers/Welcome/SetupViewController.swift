@@ -485,6 +485,10 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     }
     
     @IBAction func page8Done(_ sender: Any) {
+        guard self.imageView.image != nil else {
+            return
+        }
+        
         self.showSpinner(onView: self.view)
         
         RideDB?.child("stripe_customers").child(mainUser!._userID).child("account").setValue(["id": currentUser?.uid, "email": currentUser?.email])
