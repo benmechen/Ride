@@ -17,6 +17,8 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     var userName: String? = nil
     var distance: CLLocationDistance? = nil
     var fees: Double? = nil
+    var min: Double? = nil
+    var message: String = ""
     var fuel: Double = 0.0
     lazy var geocoder = CLGeocoder()
     var price: [String: Double] = [:]
@@ -228,6 +230,18 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
                 self.fees = value
             }
         })
+        
+        RideDB?.child("min").observeSingleEvent(of: .value, with: { (snapshot) in
+            if let value = snapshot.value as? Double {
+                self.min = value
+            }
+        })
+        
+        RideDB?.child("message").observeSingleEvent(of: .value, with: { (snapshot) in
+            if let value = snapshot.value as? String {
+                self.message = value
+            }
+        })
     }
     
 
@@ -282,13 +296,13 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     @IBAction func updateFees(_ sender: Any) {
         var currentPrice = Double(removeSpecialCharsFromString(text: page3Price.text!))
         
-        if (currentPrice ?? 0.0) < 1.0 {
-            page3Price.text = "£1.00"
-            currentPrice = 1.0
+        if (currentPrice ?? 0.0) < (self.min ?? 1.0) {
+            page3Price.text = "£" + String(self.min ?? 1.0)
+            currentPrice = self.min
         }
         
         if currentPrice != nil {
-            page3Fees.attributedText = attributedText(withString: String(format: "Ride Fees: £%.2f", self.calculateFee(cost: currentPrice!)), boldString: "Ride Fees", font: UIFont(name: "HelveticaNeue-Thin", size: 17)!)
+            page3Fees.attributedText = attributedText(withString: String(format: "Ride Fees: £%.2f %@", self.calculateFee(cost: currentPrice!), self.message), boldString: "Ride Fees", font: UIFont(name: "HelveticaNeue-Thin", size: 17)!)
             
             var profit = (currentPrice ?? 1 ) - self.calculateFee(cost: currentPrice!) - self.fuel
             if profit < 0 {
@@ -355,8 +369,8 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     func calculateFee(cost: Double) -> Double {
         let fee = cost * (fees ?? 0.1)
         
-        if fee < 1.0 {
-            return 1.0
+        if fee < self.min ?? 1.0 {
+            return self.min ?? 1.0
         }
         
         return fee

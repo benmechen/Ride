@@ -137,7 +137,7 @@ class RequestSendViewController: UIViewController {
             
             request.send { (success, key) in
                 if success {
-                    let alert = UIAlertController(title: "Request sent", message: "Once the other user has accepted the request and send a price back, you will be notified", preferredStyle: .alert)
+                    let alert = UIAlertController(title: "Request sent", message: "Once the other user has accepted the request and sent a price back, you will be notified", preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
                         self.dismiss(animated: true, completion: nil)
                     }))
