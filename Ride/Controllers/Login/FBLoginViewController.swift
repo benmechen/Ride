@@ -80,6 +80,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                             if success {
                                 for id in data {
                                     RideDB?.child("Connections").child((currentUser?.uid)!).child(id).setValue(true)
+                                    RideDB?.child("Connections").child(id).child((currentUser?.uid)!).setValue(true)
                                 }
                             } else {
                                 os_log("Error populating friends", log: .default, type: .error)
