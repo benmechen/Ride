@@ -353,6 +353,37 @@ exports.deleteBankAccount = functions.database
 // NOTIFICATIONS
 
 // Send notification on request creation
+// exports.sendUserCreateOfferNotification = functions.auth.user().onCreate((user) => {
+//     return admin.database().ref(`Users/${user.uid}/token`)
+//           .once('value').then((snapshot) => {
+//             return snapshot.val();
+//           }).then((tokenID) => {
+//             console.log(tokenID);
+//             var message = {
+//               notification: {
+//                 title: `15% off all Rides`,
+//                 body: `As a thank you for downloading Ride, there will be no fees until 01/04!`
+//               },
+//               token: tokenID
+//             };
+
+//             // Send a message to the device corresponding to the provided
+//             // registration token.
+//             if ((new Date()).getTime() < new Date("2018-04-01")) {
+//               return admin.messaging().send(message);
+//             }
+//           }).then((response) => {
+//               // Response is a message ID string.
+//               console.log('Successfully sent message:', response);
+//               return response
+//             }).catch((error) => {
+//               console.log('Error sending message:', error);
+//               return error
+//             });
+// });
+
+
+// Send notification on request creation
 exports.sendRideCreationNotification = functions.database.ref('/Requests/{pushId}').onCreate((snap, context) => {
   const destination_user_id = snap.val().driver;
   const destination_user_name = snap.val().sender_name;

@@ -73,20 +73,19 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                             RideDB?.child("Users").child((currentUser?.uid)!).setValue(["name": currentUser?.displayName as Any, "photo": currentUser?.photoURL?.absoluteString as Any, "car": ["type": "", "mpg": "", "seats": "", "registration": ""]])
                             
                             mainUser = User(id: (currentUser?.uid)!, name: (currentUser?.displayName)!, photo: (currentUser?.photoURL?.absoluteString)!, car: ["type": "", "mpg": "", "seats": "", "registration": ""], available: [:], location: [:], timestamp: 0.0)
-                            
-                            self.populateFriends(userId: (fbAccessToken?.userId)!, completion: { success, data in
-                                if success {
-                                    for id in data {
-                                        RideDB?.child("Connections").child((currentUser?.uid)!).child(id).setValue(true)
-                                    }
-                                } else {
-                                    os_log("Error populating friends", log: .default, type: .error)
-                                }
-                                moveToWelcomeController()
-                            })
                         } else {
                             getMainUser(welcome: true)
                         }
+                        self.populateFriends(userId: (fbAccessToken?.userId)!, completion: { success, data in
+                            if success {
+                                for id in data {
+                                    RideDB?.child("Connections").child((currentUser?.uid)!).child(id).setValue(true)
+                                }
+                            } else {
+                                os_log("Error populating friends", log: .default, type: .error)
+                            }
+                            moveToWelcomeController()
+                        })
                     })
                     
                     print("\(String(describing: currentUser)) logged in")

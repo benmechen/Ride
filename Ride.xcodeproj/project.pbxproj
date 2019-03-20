@@ -416,6 +416,7 @@
 				B5CBD03020F29A2D00FD86D8 /* Resources */,
 				B532624321DD2CDD00ED789B /* ShellScript */,
 				4D85605BD130B22355A77216 /* [CP] Embed Pods Frameworks */,
+				B544985F223E807500B32786 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -665,6 +666,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\"${PODS_ROOT}/Fabric/run\"\n";
+		};
+		B544985F223E807500B32786 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nfind \"/Users⁩/Ben⁩/Library⁩/Developer⁩/Xcode⁩/DerivedData⁩/Ride-endtiyhpljqwofbubjeoncotsmrb⁩/Build⁩/Products⁩/Debug-iphoneos⁩\" -name \"*.dSYM\" | xargs -I \\{\\} $PODS_ROOT/Fabric/upload-symbols -gsp /Users/Ben/Documents/Programming/Swift/Ride/Ride/GoogleService-Info.plist -p platform \\{\\}\n";
 		};
 		CFA425C305B203265E3ED3A7 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;

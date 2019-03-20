@@ -193,10 +193,15 @@ class Group {
     }
     
     public func updateGroupConnections() {
+        guard (self._groupMembers != nil) else {
+            return
+        }
+        
         for user in self._groupMembers! {
             RideDB?.child("Connections").child(user).observeSingleEvent(of: .value, with: { (snapshot) in
                 if let value = snapshot.value as? NSDictionary {
                     let userIDs = value.allKeys as! Array<String>
+                    RideDB?.child("Connections").child(mainUser!._userID).child(user).setValue(true)
                     for member in self._groupMembers! {
                         if !userIDs.contains(member) {
                             RideDB?.child("Connections").child(user).child(member).setValue(true)

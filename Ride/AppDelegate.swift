@@ -201,7 +201,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
     
     func messaging(_ messaging: Messaging, didReceive remoteMessage: MessagingRemoteMessage) {
-        print(remoteMessage.appData)
+        if let aps = remoteMessage.appData["aps"] as? [String: AnyObject], let alert = aps["alert"] as? [String: Any] {
+            guard let title = alert["title"] as? String, let body = alert["body"] as? String else {
+                return
+            }
+            let alert = UIAlertController(title: title, message: body, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: nil))
+            self.window?.rootViewController?.present(alert, animated: true, completion: nil)
+        }
     }
     
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String) {
@@ -221,11 +228,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
             return
         }
         
-        print(userInfo)
+        if let alert = aps["alert"] as? [String: Any] {
+            guard let title = alert["title"] as? String, let body = alert["body"] as? String else {
+                return
+            }
+            let alert = UIAlertController(title: title, message: body, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: nil))
+            self.window?.rootViewController?.present(alert, animated: true, completion: nil)
+        }
         
         if let tabViewController = window?.rootViewController?.children.first as? TabViewController {
             if Int(tabViewController.tabBar.items?[1].badgeValue ?? "0") == 0 {
-                tabViewController.tabBar.items?[1].badgeValue = "1"
+                if aps["badge"] != nil && aps["badge"] as! Int != 0 {
+                    tabViewController.tabBar.items?[1].badgeValue = "1"
+                }
             } else {
                 tabViewController.tabBar.items?[1].badgeValue = String((Int(tabViewController.tabBar.items?[1].badgeValue ?? "0") ?? 0) + 1)
             }
@@ -236,7 +252,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         
         self.selectedIndex = 1
         
-        application.applicationIconBadgeNumber += aps["badge"] as! Int
+        if aps["badge"] != nil {
+            application.applicationIconBadgeNumber += aps["badge"] as! Int
+        }
     }
     
     public func updateUserLocation() {
