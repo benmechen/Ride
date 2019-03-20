@@ -24,13 +24,16 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     var searchController: UISearchController!
     var profileButton: UIImageView!
     var groups = [Group]()
-    var refreshController = UIRefreshControl()
     var payoutsEnabled: Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         loadUserGroups()
+        
+        var refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(handleRefresh(_:)), for: UIControl.Event.valueChanged)
+        self.tableView.refreshControl = refreshControl
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -169,6 +172,13 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
         return cell
     }
     
+    @objc func handleRefresh(_ refreshControl: UIRefreshControl) {
+        groups.removeAll()
+        loadUserGroups(refreshControl)
+        
+        self.tableView.reloadData()
+    }
+    
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         super.prepare(for: segue, sender: sender)
@@ -215,10 +225,6 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     }
     
     //MARK: Custom Methods
-    @objc public func refresh(_ sender: UIRefreshControl) {
-        groups.removeAll()
-        loadUserGroups(sender)
-    }
     
     @objc private func showSettings() {
         performSegue(withIdentifier: "showSettings", sender: self)
