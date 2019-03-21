@@ -35,7 +35,8 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     @IBOutlet weak var carSeatsTextField: UITextField!
     @IBOutlet weak var carRegistrationTextField: UITextField!
     @IBOutlet weak var contactCell: UITableViewCell!
-
+    @IBOutlet weak var versionNumber: UILabel!
+    
     
     weak var welcomeViewControllerDelegate: WelcomeViewControllerDelegate?
     var imagePicker = UIImagePickerController()
@@ -78,6 +79,9 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                 ])
             
             nameTextField.text = currentUser?.displayName
+            
+            versionNumber.text = Bundle.main.infoDictionary!["CFBundleShortVersionString"] as? String
+
         }
         
         if self.carTypeDetail != nil {

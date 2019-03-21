@@ -729,6 +729,7 @@
                         <outlet property="contactCell" destination="njp-oT-Cje" id="OsP-kH-glh"/>
                         <outlet property="nameTextField" destination="qpL-1N-I2p" id="avF-Mh-Jcc"/>
                         <outlet property="profilePhoto" destination="QmU-OO-6IA" id="Wrm-OC-wie"/>
+                        <outlet property="versionNumber" destination="9L5-iT-er8" id="XJi-eO-ber"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dq9-pe-nbA" userLabel="First Responder" sceneMemberID="firstResponder"/>
