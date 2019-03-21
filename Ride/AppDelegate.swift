@@ -285,10 +285,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
     
     public func stopUpdatingLocation() {
-        
         self.locationManager.stopUpdatingLocation()
         
-        let keys = (mainUser?._userAvailable as! NSDictionary).allKeys(for: true)
+        guard let keys = (mainUser?._userAvailable as NSDictionary?)?.allKeys(for: true) else {
+            return
+        }
         
         for key in keys {
             RideDB?.child("Users").child((currentUser?.uid)!).child("available").child(key as! String).setValue(false)

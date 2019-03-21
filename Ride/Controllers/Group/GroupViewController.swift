@@ -23,7 +23,6 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
         
     }
     
-    
     @IBOutlet weak var groupMapView: MKMapView!
     @IBOutlet weak var groupMembersTable: UITableView!
     let locationManager = CLLocationManager()
@@ -65,6 +64,8 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        
+        locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
         
         RideDB?.child("Groups").child("UserGroups").child(mainUser!._userID).child("groupIDs").observeSingleEvent(of: .value, with: { snapshot in
             var count = 0

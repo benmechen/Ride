@@ -26,7 +26,7 @@ target 'Ride' do
   pod 'Alamofire'
   pod 'Kingfisher', :git => 'https://github.com/onevcat/Kingfisher.git', :branch => 'swift5.0'
   pod 'mailcore2-ios'
-
+  
   target 'RideTests' do
     inherit! :search_paths
     # Pods for testing

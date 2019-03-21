@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14490.55" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.43"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <viewController id="qdx-5W-wau" customClass="AlertChildPageViewController" customModule="Ride">
+            <layoutGuides>
+                <viewControllerLayoutGuide type="top" id="cJc-gi-p9V"/>
+                <viewControllerLayoutGuide type="bottom" id="Dut-fh-6Zk"/>
+            </layoutGuides>
+            <view key="view" contentMode="scaleToFill" id="xgP-oi-YXV">
+                <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="idc-BF-yRA" userLabel="View 1:2">
+                        <rect key="frame" x="0.0" y="-48" width="592" height="434"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="BOp-iF-ff6">
+                                <rect key="frame" x="8" y="52" width="287" height="406"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="287" id="9Cm-jl-6A7"/>
+                                </constraints>
+                            </imageView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ozM-3f-JWg" userLabel="View 2:2">
+                                <rect key="frame" x="0.0" y="441" width="600" height="114"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="CHOOSE THE PLANET" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="64e-Bi-ts0">
+                                        <rect key="frame" x="8" y="8" width="399" height="57"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="57" id="9vj-ko-Mz0"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" name="Avenir-Heavy" family="Avenir" pointSize="17"/>
+                                        <color key="textColor" red="0.6705882353" green="0.69411764710000001" blue="0.76862745099999996" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="5" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eh1-05-M15">
+                                        <rect key="frame" x="8" y="73" width="584" height="21"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="21" id="Mao-Ge-eZ5"/>
+                                        </constraints>
+                                        <string key="text">Lorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsum</string>
+                                        <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="13"/>
+                                        <color key="textColor" red="0.6705882353" green="0.69411764710000001" blue="0.76862745099999996" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="64e-Bi-ts0" firstAttribute="trailing" secondItem="ozM-3f-JWg" secondAttribute="trailingMargin" constant="-185" id="HqA-CP-Vye"/>
+                                    <constraint firstItem="64e-Bi-ts0" firstAttribute="trailing" secondItem="eh1-05-M15" secondAttribute="trailing" constant="-185" id="LDO-vm-R4a"/>
+                                    <constraint firstItem="64e-Bi-ts0" firstAttribute="leading" secondItem="ozM-3f-JWg" secondAttribute="leadingMargin" id="NZ5-e1-hhm"/>
+                                    <constraint firstItem="64e-Bi-ts0" firstAttribute="leading" secondItem="eh1-05-M15" secondAttribute="leading" id="WiQ-my-ljn"/>
+                                    <constraint firstItem="eh1-05-M15" firstAttribute="top" secondItem="64e-Bi-ts0" secondAttribute="bottom" constant="8" symbolic="YES" id="fuX-hW-xpf"/>
+                                    <constraint firstItem="64e-Bi-ts0" firstAttribute="top" secondItem="ozM-3f-JWg" secondAttribute="topMargin" id="meb-Hy-2v4"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="ozM-3f-JWg" firstAttribute="top" secondItem="idc-BF-yRA" secondAttribute="top" constant="441" id="1YI-WC-9If"/>
+                            <constraint firstAttribute="leading" secondItem="ozM-3f-JWg" secondAttribute="leading" id="2Z2-Ap-0oq"/>
+                            <constraint firstItem="BOp-iF-ff6" firstAttribute="top" secondItem="idc-BF-yRA" secondAttribute="top" constant="52" id="7Ws-o7-1lh"/>
+                            <constraint firstItem="BOp-iF-ff6" firstAttribute="leading" secondItem="idc-BF-yRA" secondAttribute="leading" constant="8" id="D7Y-bV-mcm"/>
+                            <constraint firstAttribute="bottom" secondItem="BOp-iF-ff6" secondAttribute="bottom" constant="-24" id="Exu-bR-iKl"/>
+                            <constraint firstAttribute="bottom" secondItem="ozM-3f-JWg" secondAttribute="bottom" constant="-121" id="a2R-9e-NaH"/>
+                            <constraint firstAttribute="trailing" secondItem="ozM-3f-JWg" secondAttribute="trailing" constant="-8" id="eqC-Ll-1gH"/>
+                            <constraint firstItem="ozM-3f-JWg" firstAttribute="top" secondItem="idc-BF-yRA" secondAttribute="bottom" constant="7" id="xqU-YF-uDf"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <constraints>
+                    <constraint firstAttribute="trailing" secondItem="idc-BF-yRA" secondAttribute="trailing" constant="-178" id="Bff-hI-6MZ"/>
+                    <constraint firstItem="idc-BF-yRA" firstAttribute="leading" secondItem="xgP-oi-YXV" secondAttribute="leading" id="S4A-d0-gHt"/>
+                    <constraint firstItem="idc-BF-yRA" firstAttribute="top" secondItem="xgP-oi-YXV" secondAttribute="top" constant="-48" id="oRc-ao-tpT"/>
+                </constraints>
+            </view>
+            <connections>
+                <outlet property="image" destination="BOp-iF-ff6" id="Zgt-es-sBg"/>
+                <outlet property="labelDescription" destination="eh1-05-M15" id="je8-Yh-7zf"/>
+                <outlet property="labelMainTitle" destination="64e-Bi-ts0" id="Fun-m5-Hgp"/>
+            </connections>
+            <point key="canvasLocation" x="524.63768115942037" y="334.82142857142856"/>
+        </viewController>
+    </objects>
+</document>
