@@ -37,6 +37,8 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var cameraShutter: UIButton!
     
+    var welcomeTableViewController: WelcomeTableViewController? = nil
+    
     var skip: Bool = false
     var selectedType: String?
     var carTypes = ["Hatchback", "Estate", "SUV", "Saloon", "Coupe", "MPV", "Convertible", "Pick Up", "Other"]
@@ -279,7 +281,9 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
         RideDB?.child("Users").child((currentUser?.uid)!).child("car").child("mpg").setValue("nil")
         RideDB?.child("Users").child((currentUser?.uid)!).child("car").child("seats").setValue("nil")
         RideDB?.child("Users").child((currentUser?.uid)!).child("car").child("registration").setValue("nil")
-        self.dismiss(animated: true, completion: nil)
+        self.dismiss(animated: true) {
+            self.welcomeTableViewController?.walkthrough()
+        }
     }
     
     @IBAction func page2Next(_ sender: Any) {

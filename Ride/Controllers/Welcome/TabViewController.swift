@@ -24,6 +24,10 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
         
         if ((mainUser!._userCar._carType == "undefined" || mainUser!._userCar._carType == "") && mainUser?._userCar._carMPG != "nil") {
             self.performSegue(withIdentifier: "showSetup", sender: nil)
+        } else {
+            if let welcomeVC = self.viewControllers?[0] as? WelcomeTableViewController {
+                welcomeVC.walkthrough()
+            }
         }
     
         super.viewDidLoad()
@@ -109,12 +113,17 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
         switch(segue.identifier ?? "") {
         case "showSettings":
             let navVC = segue.destination as? UINavigationController
-            let settingsViewController = navVC?.viewControllers.first as! SettingsTableViewController
-            settingsViewController.welcomeViewControllerDelegate = self
+            if let settingsViewController = navVC?.viewControllers.first as? SettingsTableViewController {
+                settingsViewController.welcomeViewControllerDelegate = self
+            }
             os_log("Showing settings", log: OSLog.default, type: .debug)
         case "showCreateGroup":
             os_log("Showing create new group", log: OSLog.default, type: .debug)
         case "showSetup":
+            let navVC = segue.destination as? UINavigationController
+            if let setupViewController = navVC?.viewControllers.first as? SetupViewController, let welcomeTableViewController = self.viewControllers?[0] as? WelcomeTableViewController {
+                setupViewController.welcomeTableViewController = welcomeTableViewController
+            }
             os_log("Showing car setup", log: OSLog.default, type: .debug)
         default:
             fatalError("Unexpected Segue Identifier; \(String(describing: segue.identifier))")

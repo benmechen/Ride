@@ -17,8 +17,7 @@ import Kingfisher
 import Alamofire
 
 
-class WelcomeTableViewController: UITableViewController, CLLocationManagerDelegate, WelcomeViewControllerDelegate {
-    
+class WelcomeTableViewController: UITableViewController, CLLocationManagerDelegate, AlertOnboardingDelegate, WelcomeViewControllerDelegate {
     
     //MARK: Properties
     @IBOutlet weak var navigationBar: UINavigationItem!
@@ -36,37 +35,6 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh(_:)), for: UIControl.Event.valueChanged)
         self.tableView.refreshControl = refreshControl
-        
-        // Walkthrough
-        RideDB?.child("Users").child(mainUser!._userID).child("walkthrough").observeSingleEvent(of: .value, with: { snapshot in
-            var completed = false
-            
-            if let value = snapshot.value as? Bool {
-                if value {
-                    completed = true
-                }
-            }
-            
-            if !completed {
-                let arrayOfImage = ["page1", "page2", "page3"]
-                let arrayOfTitle = ["CREATE GROUPS", "REQUEST RIDES", "VIEW RIDES"]
-                
-                self.alertView = AlertOnboarding(arrayOfImage: arrayOfImage, arrayOfTitle: arrayOfTitle, arrayOfDescription: ["", "", ""])
-                
-                self.alertView.percentageRatioHeight = 0.7
-                self.alertView.percentageRatioWidth = 0.8
-                
-                self.alertView.titleSkipButton = "SKIP"
-                self.alertView.titleGotItButton = "GOT IT!"
-                
-                self.alertView.colorButtonText = rideClickableRed
-                self.alertView.colorButtonBottomBackground = .white
-                
-                self.alertView.show()
-                
-                RideDB?.child("Users").child(mainUser!._userID).child("walkthrough").setValue(true)
-            }
-        })
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -97,10 +65,22 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
             }
         })
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+    
+    func alertOnboardingCompleted() {
+        RideDB?.child("Users").child(mainUser!._userID).child("walkthrough").setValue(true)
+    }
+    
+    func alertOnboardingSkipped(_ currentStep: Int, maxStep: Int) {
+        RideDB?.child("Users").child(mainUser!._userID).child("walkthrough").setValue(true)
+    }
+    
+    func alertOnboardingNext(_ nextStep: Int) {
+        // Do nothing
     }
     
     
@@ -261,6 +241,37 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     
     @objc private func showSettings() {
         performSegue(withIdentifier: "showSettings", sender: self)
+    }
+    
+    public func walkthrough() {
+        RideDB?.child("Users").child(mainUser!._userID).child("walkthrough").observeSingleEvent(of: .value, with: { snapshot in
+            var completed = false
+            
+            if let value = snapshot.value as? Bool {
+                if value {
+                    completed = true
+                }
+            }
+            
+            if !completed {
+                let arrayOfImage = ["page1", "page2", "page3"]
+                let arrayOfTitle = ["CREATE GROUPS", "REQUEST RIDES", "VIEW RIDES"]
+                
+                self.alertView = AlertOnboarding(arrayOfImage: arrayOfImage, arrayOfTitle: arrayOfTitle, arrayOfDescription: ["", "", ""])
+                self.alertView.delegate = self
+                
+                self.alertView.percentageRatioHeight = 0.7
+                self.alertView.percentageRatioWidth = 0.8
+                
+                self.alertView.titleSkipButton = "SKIP"
+                self.alertView.titleGotItButton = "GOT IT!"
+                
+                self.alertView.colorButtonText = rideClickableRed
+                self.alertView.colorButtonBottomBackground = .white
+                
+                self.alertView.show()
+            }
+        })
     }
     
     public func changeProfilePhoto(image: UIImage) {

@@ -36,7 +36,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         self.navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
         
         //Set titles
-        segmentedControl.setTitle("Sent", forSegmentAt: 0)
+        segmentedControl.setTitle("Requests", forSegmentAt: 0)
         segmentedControl.setTitle("Received", forSegmentAt: 1)
         
         //Get NavBar width
@@ -92,6 +92,28 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         receivedRequestIDs["upcoming"]?.removeAll()
         receivedRequestIDs["previous"]?.removeAll()
         getUserRequests()
+        
+        //Set navigation bar title to custom text for logo
+        let rideLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 200, height: 21))
+        rideLabel.text = "Lifts"
+        rideLabel.textColor = UIColor.white
+        rideLabel.textAlignment = .center
+        rideLabel.font = UIFont(name: "HelveticaNeue-Light", size: 30.0)
+        if let tabViewController = self.parent as? TabViewController {
+            tabViewController.navigationBar.titleView = rideLabel
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        //Set navigation bar title to custom text for logo
+        let rideLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 200, height: 21))
+        rideLabel.text = "Ride"
+        rideLabel.textColor = UIColor.white
+        rideLabel.textAlignment = .center
+        rideLabel.font = UIFont(name: "HelveticaNeue-Light", size: 30.0)
+        if let tabViewController = self.parent as? TabViewController {
+            tabViewController.navigationBar.titleView = rideLabel
+        }
     }
     
     // MARK: - Table stuff
@@ -138,6 +160,14 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         let cellIdentifier = "RequestsTableCell"
         
         if tableView == self.sentRequestsTable {
+            if indexPath.section == 0 {
+                if self.sentRequestIDs["upcoming"]?[indexPath.row] == "nil" {
+                    let cell = sentRequestsTable.dequeueReusableCell(withIdentifier: "BlankRequestTableCell", for: indexPath) as! BlankRequestTableViewCell
+                    
+                    return cell
+                }
+            }
+            
             guard var cell = sentRequestsTable.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath) as? RequestsTableViewCell else {
                 fatalError("The dequeued cell is not an instance of RequestsTableViewCell")
             }
@@ -337,6 +367,12 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if indexPath.section == 0 {
+            guard self.sentRequestIDs["upcoming"]?[indexPath.row] != "nil" else {
+                return
+            }
+        }
+        
         self.index = indexPath
         let cell = tableView.cellForRow(at: indexPath) as! RequestsTableViewCell
         
@@ -509,6 +545,14 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                             }
                         }
                     })
+                }
+                
+                if snapshot.childrenCount == 0 {
+                    self.sentRequestIDs["upcoming"]?.append("nil")
+                    
+                    let request = Request(id: "nil", driver: "", sender: "", from: CLLocationCoordinate2D(), fromName: "", to: CLLocationCoordinate2D(), toName: "", time: 0, passengers: 0, status: 0)
+                    self.sentRequests["upcoming"]?["nil"] = request
+                    self.sentRequestsTable.reloadData()
                 }
             })
                 

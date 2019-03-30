@@ -38,7 +38,7 @@
                                 </connections>
                             </button>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="titleIcon" translatesAutoresizingMaskIntoConstraints="NO" id="prO-Wl-42C">
-                                <rect key="frame" x="-68.5" y="118" width="512" height="128"/>
+                                <rect key="frame" x="179.5" y="118" width="16" height="128"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="128" id="66H-JO-u9R"/>
                                 </constraints>
@@ -871,7 +871,7 @@
             </objects>
             <point key="canvasLocation" x="2594" y="2309"/>
         </scene>
-        <!--Requests-->
+        <!--Lifts-->
         <scene sceneID="ya3-zs-NbN">
             <objects>
                 <viewController id="lHT-Mf-ZbL" customClass="RequestsViewController" customModule="Ride" customModuleProvider="target" sceneMemberID="viewController">
@@ -1020,6 +1020,32 @@
                                             <outlet property="to" destination="Jeg-aR-eG5" id="fCU-Kn-ecE"/>
                                         </connections>
                                     </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="BlankRequestTableCell" rowHeight="75" id="dvF-Vh-eGo" customClass="BlankRequestTableViewCell" customModule="Ride" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="108" width="375" height="75"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="dvF-Vh-eGo" id="nHM-hp-se9">
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="74.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="To get a lift, request a Ride from a user on the groups page" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dUv-9G-PB0">
+                                                    <rect key="frame" x="16" y="0.0" width="343" height="74.5"/>
+                                                    <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
+                                                    <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="dUv-9G-PB0" firstAttribute="trailing" secondItem="nHM-hp-se9" secondAttribute="trailingMargin" constant="-1" id="HHk-h0-yZW"/>
+                                                <constraint firstItem="dUv-9G-PB0" firstAttribute="leading" secondItem="nHM-hp-se9" secondAttribute="leadingMargin" constant="1" id="QTe-cZ-6jO"/>
+                                                <constraint firstItem="dUv-9G-PB0" firstAttribute="top" secondItem="nHM-hp-se9" secondAttribute="top" id="mHc-R5-bcM"/>
+                                                <constraint firstItem="dUv-9G-PB0" firstAttribute="centerY" secondItem="nHM-hp-se9" secondAttribute="centerY" id="qT0-hc-pZh"/>
+                                            </constraints>
+                                        </tableViewCellContentView>
+                                        <constraints>
+                                            <constraint firstAttribute="bottom" secondItem="dUv-9G-PB0" secondAttribute="bottom" constant="0.5" id="IdM-lh-O9h"/>
+                                            <constraint firstItem="dUv-9G-PB0" firstAttribute="top" secondItem="dvF-Vh-eGo" secondAttribute="top" id="KlH-0Q-A2A"/>
+                                        </constraints>
+                                    </tableViewCell>
                                 </prototypes>
                             </tableView>
                             <tableView hidden="YES" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="md5-at-Wl6">
@@ -1163,7 +1189,7 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="hri-64-1ng"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Requests" image="plane" id="8Q0-vz-5yi"/>
+                    <tabBarItem key="tabBarItem" title="Lifts" image="plane" id="8Q0-vz-5yi"/>
                     <connections>
                         <outlet property="receivedRequestsTable" destination="md5-at-Wl6" id="a1k-e5-Xxe"/>
                         <outlet property="segmentedControl" destination="LT0-KS-NSC" id="jXS-gG-kAT"/>
@@ -5284,12 +5310,12 @@ Please ensure your photo is taken from directly above, that your license lines u
         <image name="groupPlaceholder" width="300" height="300"/>
         <image name="members" width="128" height="128"/>
         <image name="pin" width="256" height="256"/>
-        <image name="plane" width="25" height="25"/>
+        <image name="plane" width="46.5" height="38"/>
         <image name="timeArrow" width="51" height="16"/>
         <image name="titleIcon" width="512" height="512"/>
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="R1v-pg-QoR"/>
-        <segue reference="cKU-Gw-i0f"/>
+        <segue reference="3oq-4z-fb3"/>
     </inferredMetricsTieBreakers>
 </document>
