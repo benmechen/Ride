@@ -367,9 +367,11 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if indexPath.section == 0 {
-            guard self.sentRequestIDs["upcoming"]?[indexPath.row] != "nil" else {
-                return
+        if tableView == self.sentRequestsTable {
+            if indexPath.section == 0 {
+                guard self.sentRequestIDs["upcoming"]?[indexPath.row] != "nil" else {
+                    return
+                }
             }
         }
         
