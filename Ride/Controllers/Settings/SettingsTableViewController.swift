@@ -15,6 +15,7 @@ import FacebookCore
 import Kingfisher
 import MessageUI
 import MapKit
+import Alamofire
 import os.log
 
 protocol WelcomeViewControllerDelegate: class {
@@ -34,6 +35,10 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     @IBOutlet weak var carMPGTextField: UITextField!
     @IBOutlet weak var carSeatsTextField: UITextField!
     @IBOutlet weak var carRegistrationTextField: UITextField!
+    @IBOutlet weak var driverStatusLabel: UILabel!
+    @IBOutlet weak var driverStatusIcon: UIImageView!
+    @IBOutlet weak var verificationErrorLabel: UILabel!
+    @IBOutlet weak var verificationCell: UITableViewCell!
     @IBOutlet weak var contactCell: UITableViewCell!
     @IBOutlet weak var versionNumber: UILabel!
     
@@ -80,6 +85,41 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
             
             nameTextField.text = currentUser?.displayName
             
+            RideDB?.child("stripe_customers").child(mainUser!._userID).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
+                if let value = snapshot.value as? String {
+                    Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+                        if let error = response.error {
+                            print(error)
+                        } else {
+                            self.driverStatusLabel.text = "Driver status: Verified"
+                            self.driverStatusIcon.image = UIImage(named: "check")
+                            self.verificationCell.isUserInteractionEnabled = false
+                            self.verificationCell.accessoryType = UITableViewCell.AccessoryType.none
+
+                            if let result = response.result.value as? NSDictionary {
+                                RideDB?.child("stripe_customers").child(mainUser!._userID).child("account").setValue(result)
+                                if let verification = result["verification"] as? NSDictionary {
+                                    if let fieldsNeeded = verification["fields_needed"] as? NSArray {
+                                        if fieldsNeeded.count > 0 {
+                                            self.verificationCell.isUserInteractionEnabled = true
+                                            self.verificationCell.accessoryType = UITableViewCell.AccessoryType.disclosureIndicator
+                                            self.driverStatusLabel.text = "Driver status: Unverified"
+                                            if let status = verification["status"] as? String {
+                                                if status == "pending" {
+                                                    self.driverStatusLabel.text = "Driver status: Pending"
+                                                }
+                                            }
+                                            
+                                            self.driverStatusIcon.image = UIImage(named: "alert")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    })
+                }
+            })
+            
             versionNumber.text = Bundle.main.infoDictionary!["CFBundleShortVersionString"] as? String
 
         }
@@ -109,6 +149,25 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
             if mainUser?._userCar._carRegistration != "nil" {
                 self.carRegistrationTextField.text = mainUser?._userCar._carRegistration
             }
+        } else if self.verificationErrorLabel != nil {
+            self.tableView.tableFooterView = UIView()
+            RideDB?.child("stripe_customers").child(mainUser!._userID).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
+                if let value = snapshot.value as? String {
+                    Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+                        if let error = response.error {
+                            print(error)
+                        } else {
+                            if let result = response.result.value as? NSDictionary {
+                                if let legalEntity = result["legal_entity"] as? NSDictionary, let verification = legalEntity["verification"] as? NSDictionary {
+                                    if let details = verification["details"] as? String {
+                                        self.verificationErrorLabel.text = details
+                                    }
+                                }
+                            }
+                        }
+                    })
+                }
+            })
         }
         
         if carTypeTextField != nil {
@@ -357,11 +416,11 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
             
             if indexPath.section == 1 {
                 if mainUser?._userCar._carType != "" {
-                    if indexPath.row == 4 {
+                    if indexPath.row == 5 {
                         return 0.0
                     }
                 } else {
-                    if indexPath.row != 4 {
+                    if indexPath.row != 5 {
                         return 0.0
                     }
                 }

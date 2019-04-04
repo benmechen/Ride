@@ -404,7 +404,7 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     @IBAction func page7Next(_ sender: Any) {
         if self.userInfo.count != 0 && sortCodeTextField.text != "" && accountNumberTextField.text != "" {
             if self.sortCodeTextField.text?.count != 8 || self.accountNumberTextField.text?.count != 8 {
-                let alert = UIAlertController(title: "Check your details", message: "Please check your sort code or account number is correct", preferredStyle: .alert)
+                let alert = UIAlertController(title: "Check your details", message: "Please check your sort code and account number are correct", preferredStyle: .alert)
                 
                 self.present(alert, animated: true)
             } else {
@@ -436,6 +436,16 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     
     @IBAction func takePhoto(_ sender: Any) {
         if cameraShutter.currentTitle == "Take Photo" {
+            guard stillImageOutput != nil else {
+                let alert = UIAlertController(title: "Error", message: "Cannot take photo", preferredStyle: .alert)
+                
+                alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction) in
+                    
+                }))
+                
+                self.present(alert, animated: true)
+                return
+            }
             let settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
             stillImageOutput!.capturePhoto(with: settings, delegate: self)
             cameraShutter.setTitle("Take New Photo", for: .normal)
