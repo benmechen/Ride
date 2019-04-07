@@ -457,8 +457,8 @@
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Add a car" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3dV-Ye-XsG">
-                                                    <rect key="frame" x="16" y="10.5" width="73" height="22.5"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Become a driver" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3dV-Ye-XsG">
+                                                    <rect key="frame" x="16" y="10.5" width="125" height="22.5"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <color key="textColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                     <nil key="highlightedColor"/>
@@ -5424,26 +5424,6 @@ Please ensure your photo is taken from directly above, that your license lines u
             </objects>
             <point key="canvasLocation" x="-1948" y="1161"/>
         </scene>
-        <!--Navigation Controller-->
-        <scene sceneID="9MJ-4y-lxB">
-            <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="nUn-Rj-2bO" sceneMemberID="viewController">
-                    <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" translucent="NO" id="fFF-oz-8SA">
-                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <color key="barTintColor" red="0.70066842090000003" green="0.0060536234770000004" blue="0.1048135572" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                        <textAttributes key="titleTextAttributes">
-                            <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        </textAttributes>
-                    </navigationBar>
-                    <nil name="viewControllers"/>
-                </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="WWE-Rk-anK" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1446" y="-2355"/>
-        </scene>
         <!--Setup View Controller-->
         <scene sceneID="UCo-y8-bl7">
             <objects>
@@ -5906,6 +5886,6 @@ Please ensure your photo is taken from directly above, that your license lines u
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="R1v-pg-QoR"/>
-        <segue reference="3oq-4z-fb3"/>
+        <segue reference="cKU-Gw-i0f"/>
     </inferredMetricsTieBreakers>
 </document>

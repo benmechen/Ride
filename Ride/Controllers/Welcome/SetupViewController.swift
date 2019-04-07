@@ -210,14 +210,21 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
                 destinationVC.car = self.car
             }
             
+            if segue.identifier == "show6" {
+                let destinationVC = segue.destination as! SetupViewController
+                destinationVC.car = self.car
+            }
+            
             if segue.identifier == "show7" {
                 let destinationVC = segue.destination as! SetupViewController
                 destinationVC.userInfo = self.userInfo
+                destinationVC.car = self.car
             }
             
             if segue.identifier == "show8" {
                 let destinationVC = segue.destination as! SetupViewController
                 destinationVC.userInfo = self.userInfo
+                destinationVC.car = self.car
             }
         }
     }
@@ -309,12 +316,7 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     @IBAction func page5Next(_ sender: Any) {
         if noOfSeatsTextField.text != "" {
             car["seats"] = noOfSeatsTextField.text
-            
-            if RideDB != nil {
-                RideDB?.child("Users").child((currentUser?.uid)!).child("car").setValue(car)
-                
-                performSegue(withIdentifier: "show6", sender: nil)
-            }
+            performSegue(withIdentifier: "show6", sender: nil)
         }
     }
     
@@ -504,6 +506,8 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
         }
         
         self.showSpinner(onView: self.view)
+        
+        RideDB?.child("Users").child((currentUser?.uid)!).child("car").setValue(car)
         
         RideDB?.child("stripe_customers").child(mainUser!._userID).child("account").setValue(["id": currentUser?.uid, "email": currentUser?.email])
         
