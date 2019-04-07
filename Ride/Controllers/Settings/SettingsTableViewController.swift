@@ -38,6 +38,7 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     @IBOutlet weak var driverStatusLabel: UILabel!
     @IBOutlet weak var driverStatusIcon: UIImageView!
     @IBOutlet weak var verificationErrorLabel: UILabel!
+    @IBOutlet weak var verificationActivityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var verificationCell: UITableViewCell!
     @IBOutlet weak var contactCell: UITableViewCell!
     @IBOutlet weak var versionNumber: UILabel!
@@ -104,9 +105,11 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                                             self.verificationCell.isUserInteractionEnabled = true
                                             self.verificationCell.accessoryType = UITableViewCell.AccessoryType.disclosureIndicator
                                             self.driverStatusLabel.text = "Driver status: Unverified"
-                                            if let status = verification["status"] as? String {
-                                                if status == "pending" {
-                                                    self.driverStatusLabel.text = "Driver status: Pending"
+                                            if let legalEntity = result["legal_entity"] as? NSDictionary, let legalEntityVerification = legalEntity["verification"] as? NSDictionary {
+                                                if let status = legalEntityVerification["status"] as? String {
+                                                    if status == "pending" {
+                                                        self.driverStatusLabel.text = "Driver status: Pending"
+                                                    }
                                                 }
                                             }
                                             
@@ -150,6 +153,7 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                 self.carRegistrationTextField.text = mainUser?._userCar._carRegistration
             }
         } else if self.verificationErrorLabel != nil {
+            
             self.tableView.tableFooterView = UIView()
             RideDB?.child("stripe_customers").child(mainUser!._userID).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
                 if let value = snapshot.value as? String {
@@ -158,8 +162,10 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                             print(error)
                         } else {
                             if let result = response.result.value as? NSDictionary {
+                                print(result)
                                 if let legalEntity = result["legal_entity"] as? NSDictionary, let verification = legalEntity["verification"] as? NSDictionary {
                                     if let details = verification["details"] as? String {
+                                        self.verificationActivityIndicator.stopAnimating()
                                         self.verificationErrorLabel.text = details
                                     }
                                 }

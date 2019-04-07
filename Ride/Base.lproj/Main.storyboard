@@ -800,10 +800,15 @@
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
+                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" animating="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="XV7-fM-jbi">
+                                                    <rect key="frame" x="177.5" y="25" width="20" height="20"/>
+                                                </activityIndicatorView>
                                             </subviews>
                                             <constraints>
+                                                <constraint firstItem="XV7-fM-jbi" firstAttribute="centerY" secondItem="esx-l5-IOD" secondAttribute="centerY" id="79k-Rb-653"/>
                                                 <constraint firstItem="pDE-hN-cqj" firstAttribute="centerY" secondItem="esx-l5-IOD" secondAttribute="centerY" id="A4E-j7-qOZ"/>
                                                 <constraint firstItem="pDE-hN-cqj" firstAttribute="trailing" secondItem="esx-l5-IOD" secondAttribute="trailingMargin" id="Hil-pe-BIU"/>
+                                                <constraint firstItem="XV7-fM-jbi" firstAttribute="centerX" secondItem="esx-l5-IOD" secondAttribute="centerX" id="I9g-zr-PsA"/>
                                                 <constraint firstItem="pDE-hN-cqj" firstAttribute="leading" secondItem="esx-l5-IOD" secondAttribute="leadingMargin" id="Nqg-NY-R1D"/>
                                                 <constraint firstItem="pDE-hN-cqj" firstAttribute="top" secondItem="esx-l5-IOD" secondAttribute="topMargin" constant="-19" id="iUI-WU-IK5"/>
                                             </constraints>
@@ -820,14 +825,17 @@
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Rerun setup" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Awf-wb-Wj6">
-                                                    <rect key="frame" x="135" y="10" width="104" height="23"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Rerun setup" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Awf-wb-Wj6">
+                                                    <rect key="frame" x="141.5" y="11.5" width="92.5" height="20.5"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <color key="textColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                             </subviews>
+                                            <constraints>
+                                                <constraint firstItem="Awf-wb-Wj6" firstAttribute="centerX" secondItem="N1M-LD-Wwk" secondAttribute="centerX" id="Id3-lq-VJZ"/>
+                                                <constraint firstItem="Awf-wb-Wj6" firstAttribute="centerY" secondItem="N1M-LD-Wwk" secondAttribute="centerY" id="oSA-4A-SfO"/>
+                                            </constraints>
                                         </tableViewCellContentView>
                                         <connections>
                                             <segue destination="RCm-4t-f6e" kind="show" identifier="rerunSetup" id="wES-es-7lV"/>
@@ -842,6 +850,7 @@
                         </connections>
                     </tableView>
                     <connections>
+                        <outlet property="verificationActivityIndicator" destination="XV7-fM-jbi" id="sgh-lO-LNi"/>
                         <outlet property="verificationErrorLabel" destination="pDE-hN-cqj" id="92Q-r7-8GA"/>
                     </connections>
                 </tableViewController>
@@ -5897,6 +5906,6 @@ Please ensure your photo is taken from directly above, that your license lines u
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="R1v-pg-QoR"/>
-        <segue reference="cKU-Gw-i0f"/>
+        <segue reference="3oq-4z-fb3"/>
     </inferredMetricsTieBreakers>
 </document>

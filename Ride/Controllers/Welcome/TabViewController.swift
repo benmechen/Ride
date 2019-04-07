@@ -9,6 +9,7 @@
 import UIKit
 import os.log
 import Kingfisher
+import Alamofire
 
 class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
     
@@ -29,6 +30,34 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
                 welcomeVC.walkthrough()
             }
         }
+        
+        RideDB?.child("stripe_customers").child(mainUser!._userID).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
+            if let value = snapshot.value as? String {
+                Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+                    if let error = response.error {
+                        print(error)
+                    } else {
+                        if let result = response.result.value as? NSDictionary {
+                            print(result)
+                            RideDB?.child("stripe_customers").child(mainUser!._userID).child("account").setValue(result)
+                            if let verification = result["verification"] as? NSDictionary {
+                                if let fieldsNeeded = verification["fields_needed"] as? NSArray {
+                                    if fieldsNeeded.count > 0 {
+                                        if let legalEntity = result["legal_entity"] as? NSDictionary, let legalEntityVerification = legalEntity["verification"] as? NSDictionary {
+                                            if let status = legalEntityVerification["status"] as? String {
+                                                if status != "pending" {
+                                                    self.performSegue(withIdentifier: "showSettings", sender: nil)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        })
     
         super.viewDidLoad()
         
@@ -57,7 +86,6 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
         widthConstraint.isActive = true
         profileButton.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(self.showSettings)))
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(customView: profileButton)
-        //        }
         
         //Set navigation bar title to custom text for logo
         let rideLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 200, height: 21))
