@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -297,7 +297,7 @@
 			path = Welcome;
 			sourceTree = "<group>";
 		};
-		B5C31D78216A5F6E003DAFAE /* Group */ = {
+		B5C31D78216A5F6E003DAFAE /* Groups */ = {
 			isa = PBXGroup;
 			children = (
 				B52EE2AA21664D6A00B73D9D /* GroupViewController.swift */,
@@ -310,7 +310,7 @@
 				B561B8812180C755002B92F4 /* MapCallout.xib */,
 				B561B8832180C78B002B92F4 /* MapCallout.swift */,
 			);
-			path = Group;
+			path = Groups;
 			sourceTree = "<group>";
 		};
 		B5C31D79216A5F7F003DAFAE /* Extra */ = {
@@ -394,7 +394,7 @@
 				B5C31D76216A5F52003DAFAE /* Login */,
 				B5FBE77021FB7F1600ECA52B /* Requests */,
 				B5C31D77216A5F5D003DAFAE /* Welcome */,
-				B5C31D78216A5F6E003DAFAE /* Group */,
+				B5C31D78216A5F6E003DAFAE /* Groups */,
 				B5C31D79216A5F7F003DAFAE /* Extra */,
 			);
 			path = Controllers;
@@ -629,48 +629,11 @@
 			files = (
 			);
 			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Ride/Pods-Ride-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework",
-				"${BUILT_PRODUCTS_DIR}/Bolts/Bolts.framework",
-				"${BUILT_PRODUCTS_DIR}/FBSDKCoreKit/FBSDKCoreKit.framework",
-				"${BUILT_PRODUCTS_DIR}/FBSDKLoginKit/FBSDKLoginKit.framework",
-				"${BUILT_PRODUCTS_DIR}/FacebookCore/FacebookCore.framework",
-				"${BUILT_PRODUCTS_DIR}/FacebookLogin/FacebookLogin.framework",
-				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
-				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac/GoogleToolboxForMac.framework",
-				"${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework",
-				"${BUILT_PRODUCTS_DIR}/Kingfisher/Kingfisher.framework",
-				"${BUILT_PRODUCTS_DIR}/MessageInputBar/MessageInputBar.framework",
-				"${BUILT_PRODUCTS_DIR}/MessageKit/MessageKit.framework",
-				"${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework",
-				"${BUILT_PRODUCTS_DIR}/Stripe/Stripe.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftyJSON/SwiftyJSON.framework",
-				"${BUILT_PRODUCTS_DIR}/leveldb-library/leveldb.framework",
-				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
+				"${PODS_ROOT}/Target Support Files/Pods-Ride/Pods-Ride-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-			);
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Alamofire.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Bolts.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKCoreKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKLoginKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FacebookCore.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FacebookLogin.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleToolboxForMac.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Kingfisher.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MessageInputBar.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MessageKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Protobuf.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Stripe.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyJSON.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/leveldb.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework",
+				"${PODS_ROOT}/Target Support Files/Pods-Ride/Pods-Ride-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

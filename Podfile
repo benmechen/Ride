@@ -20,11 +20,11 @@ target 'Ride' do
   pod 'SwiftyJSON'
   pod 'Fabric', '~> 1.9.0'
   pod 'Crashlytics', '~> 3.12.0'
-  pod 'MessageInputBar'
+  #pod 'MessageInputBar'
   pod 'MessageKit'
   pod 'Stripe'
   pod 'Alamofire'
-  pod 'Kingfisher', :git => 'https://github.com/onevcat/Kingfisher.git', :branch => 'swift5.0'
+  pod 'Kingfisher'
   pod 'mailcore2-ios'
   
   target 'RideTests' do
