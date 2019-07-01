@@ -19,10 +19,11 @@ protocol GroupSettingsViewControllerDelegate: class {
 class GroupSettingsMembersTableViewController: UITableViewController {
 
     @IBOutlet weak var membersCloseButton: UIBarButtonItem!
+    lazy var RideDB = Database.database().reference()
     var selectedIndex: NSInteger = 0
     var connections = [String: Array<Connection>]()
     var userCount = 0
-    var group: Group = Group()!
+    var group: Group!
     var unconnectedUsers = [Connection]()
     var filteredUsers = [Connection]()
     var members = [Connection]()
@@ -66,18 +67,18 @@ class GroupSettingsMembersTableViewController: UITableViewController {
     // MARK: - Actions
     @IBAction func addToGroup(_ sender: Any) {
         if (connections["selected"]?.count)! > 0 {
-//            let selfConnection = Connection(hostId: (currentUser?.uid)!, userId: (currentUser?.uid)!, name: (currentUser?.displayName)!, photo: (currentUser?.photoURL?.absoluteString)!, index: -1)!
+//            let selfConnection = Connection(hostId: (Auth.auth().currentUser?.uid)!, userId: (Auth.auth().currentUser?.uid)!, name: (Auth.auth().currentUser?.displayName)!, photo: (Auth.auth().currentUser?.photoURL?.absoluteString)!, index: -1)!
             
             let newUsers = connections["selected"]!.compactMap{$0._connectionUser}
             
             group._groupMembers?.append(contentsOf: newUsers)
             
             for user in newUsers {
-                RideDB?.child("Groups").child("GroupUsers").child(group._groupID).child("userIDs").child(user).setValue(true)
-                RideDB?.child("Groups").child("UserGroups").child(user).child("groupIDs").child(group._groupID).setValue(true)
+                RideDB.child("Groups").child("GroupUsers").child(group._groupID).child("userIDs").child(user).setValue(true)
+                RideDB.child("Groups").child("UserGroups").child(user).child("groupIDs").child(group._groupID).setValue(true)
             }
             
-            RideDB?.child("Groups").child("GroupMeta").child(group._groupID).child("timestamp").setValue(ServerValue.timestamp())
+            RideDB.child("Groups").child("GroupMeta").child(group._groupID).child("timestamp").setValue(ServerValue.timestamp())
             
             group.generateName(completion: { name in
                 if let name = name {
@@ -184,13 +185,14 @@ class GroupSettingsMembersTableViewController: UITableViewController {
         if membersCloseButton != nil {
             let optionMenu = UIAlertController(title: nil, message: members[indexPath.row]._userName, preferredStyle: .actionSheet)
 
-            let removeAction = UIAlertAction(title: "Remove from group", style: .destructive, handler: {(action) -> Void in
+            let removeAction = UIAlertAction(title: "Remove from group", style: .destructive, handler: {(action) -> Void in                
                 self.group.removeUser(id: self.members[indexPath.row]._connectionUser)
-                self.group._groupMembers?.remove(at: indexPath.row)
+//                self.group._groupMembers?.remove(at: indexPath.row)
                 self.groupSettingsViewControllerDelegate?.updateGroup(group: self.group)
 
                 self.members.remove(at: indexPath.row)
                 
+                self.userCount -= 1
                 self.tableView.reloadData()
             })
             
@@ -270,7 +272,7 @@ class GroupSettingsMembersTableViewController: UITableViewController {
             }
         }))!
         
-        var connectionIds: Array<String> = [(currentUser?.uid)!]
+        var connectionIds: Array<String> = [(Auth.auth().currentUser?.uid)!]
         for connection in connections["unselected"]! {
             connectionIds.append(connection._connectionUser)
         }
@@ -304,77 +306,71 @@ class GroupSettingsMembersTableViewController: UITableViewController {
     // MARK: - Custom functions
     
     private func loadUserConnections() {
-        if RideDB != nil {
-            let userId = currentUser?.uid
-            RideDB?.child("Connections").child(userId!).observeSingleEvent(of: .value, with: { (snapshot) in
-                let value = snapshot.value as! NSDictionary
-                let usersIDs = value.allKeys as! Array<String>
-                if usersIDs.count > 1 {
-                    for id in usersIDs {
-                        if !(self.group._groupMembers!.contains(id)) {
-                            RideDB?.child("Users").child(id ).observeSingleEvent(of: .value, with: { (snapshot) in
-                                guard let userValue = snapshot.value as? [String: Any] else {
-                                    return
-                                }
-                                
-                                if userValue["name"] != nil && userValue["car"] != nil && userValue["photo"] != nil {
-                                    self.insertIntoConnections(key: "unselected", index: usersIDs.index(of: id)!, object: Connection(hostId: userId!, userId: id , name: userValue["name"] as! String, photo: userValue["photo"] as! String, car: userValue["car"] as! [String: Any], index: usersIDs.index(of: id)!)!)
-                                    self.tableView?.reloadData()
-                                }
-                            })
-                        }
+        let userId = Auth.auth().currentUser?.uid
+        RideDB.child("Connections").child(userId!).observeSingleEvent(of: .value, with: { (snapshot) in
+            let value = snapshot.value as! NSDictionary
+            let usersIDs = value.allKeys as! Array<String>
+            if usersIDs.count > 1 {
+                for id in usersIDs {
+                    if !(self.group._groupMembers!.contains(id)) {
+                        self.RideDB.child("Users").child(id ).observeSingleEvent(of: .value, with: { (snapshot) in
+                            guard let userValue = snapshot.value as? [String: Any] else {
+                                return
+                            }
+                            
+                            if userValue["name"] != nil && userValue["car"] != nil && userValue["photo"] != nil {
+                                self.insertIntoConnections(key: "unselected", index: usersIDs.index(of: id)!, object: Connection(hostId: userId!, userId: id , name: userValue["name"] as! String, photo: userValue["photo"] as! String, car: userValue["car"] as! [String: Any], index: usersIDs.index(of: id)!)!)
+                                self.tableView?.reloadData()
+                            }
+                        })
                     }
-                } else {
-                    os_log("No user connections", log: OSLog.default, type: .debug)
                 }
-            })
-        } else {
-            os_log("Failed to reach database", log: OSLog.default, type: .error)
-        }
+            } else {
+                os_log("No user connections", log: OSLog.default, type: .debug)
+            }
+        })
     }
     
     private func loadUnconnectedUsers(userIds: Array<String>, completion: @escaping (Array<Connection>)->()) {
-        if RideDB != nil {
-            RideDB?.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
-                let users = snapshot.value as! NSMutableDictionary
-                // Remove users already displayed
-                for id in userIds {
-                    users.removeObject(forKey: id)
-                }
-                
-                // Create a connection for each user
-                var userConnections: Array<Connection> = []
-                var userDetails: [String: Any]
-                for user in users {
-                    if !(self.group._groupMembers!.contains(user.key as! String)) {
-                        print("User:", user)
-                        userDetails = user.value as! [String : Any]
-                        
-                        if userDetails["name"] != nil && userDetails["car"] != nil && userDetails["photo"] != nil {
-                            let connection = Connection(hostId: "none", userId: user.key as! String, name: userDetails["name"]! as! String, photo: userDetails["photo"]! as! String, car: userDetails["car"]! as! [String: Any], index: -1)!
-                            if !userConnections.contains(connection) {
-                                userConnections.append(connection)
-                            }
+        RideDB.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
+            let users = snapshot.value as! NSMutableDictionary
+            // Remove users already displayed
+            for id in userIds {
+                users.removeObject(forKey: id)
+            }
+            
+            // Create a connection for each user
+            var userConnections: Array<Connection> = []
+            var userDetails: [String: Any]
+            for user in users {
+                if !(self.group._groupMembers!.contains(user.key as! String)) {
+                    print("User:", user)
+                    userDetails = user.value as! [String : Any]
+                    
+                    if userDetails["name"] != nil && userDetails["car"] != nil && userDetails["photo"] != nil {
+                        let connection = Connection(hostId: "none", userId: user.key as! String, name: userDetails["name"]! as! String, photo: userDetails["photo"]! as! String, car: userDetails["car"]! as! [String: Any], index: -1)!
+                        if !userConnections.contains(connection) {
+                            userConnections.append(connection)
                         }
                     }
                 }
-                
-                completion(userConnections)
-            })
-        }
+            }
+            
+            completion(userConnections)
+        })
     }
     
     private func loadGroupMembers() {
         var i = 0
         self.userCount = 0
-        RideDB?.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
+        RideDB.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
             if let value = snapshot.value as? [String: [String: Any]] {
                 for user in self.group._groupMembers! {
-                    if user != currentUser!.uid {
+                    if user != Auth.auth().currentUser!.uid {
                         let userDetails = value[user]
                         
                         if userDetails != nil, let car = userDetails?["car"] as? [String: Any], userDetails?["name"] != nil, userDetails?["photo"] != nil {
-                            if let connection = Connection(hostId: (currentUser?.uid)!, userId: user, name: userDetails!["name"] as! String, photo: userDetails!["photo"] as! String, car: car, index: i) {
+                            if let connection = Connection(hostId: (Auth.auth().currentUser?.uid)!, userId: user, name: userDetails!["name"] as! String, photo: userDetails!["photo"] as! String, car: car, index: i) {
                                 self.members.append(connection)
                                 self.userCount += 1
                             }

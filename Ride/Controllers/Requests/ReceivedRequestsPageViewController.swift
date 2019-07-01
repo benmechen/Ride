@@ -79,7 +79,7 @@ class ReceivedRequestsPageViewController: UIPageViewController {
         }
         
         let pageControl: UIPageControl = UIPageControl.appearance()
-        pageControl.currentPageIndicatorTintColor = rideClickableRed
+        pageControl.currentPageIndicatorTintColor = UIColor(named: "Accent")
         pageControl.pageIndicatorTintColor = UIColor.init(red: 0, green: 0, blue: 0, alpha: 0.2)
     }
     
@@ -88,7 +88,7 @@ class ReceivedRequestsPageViewController: UIPageViewController {
         self.navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
         self.navigationController?.navigationBar.shadowImage = nil
         self.navigationController?.navigationBar.isTranslucent = true
-        self.navigationController?.view.backgroundColor = rideRed
+        self.navigationController?.view.backgroundColor = UIColor(named: "Main")
     }
 }
 
@@ -141,7 +141,7 @@ extension ReceivedRequestsPageViewController: UIPageViewControllerDelegate {
                 self.navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
                 self.navigationController?.navigationBar.shadowImage = nil
                 self.navigationController?.navigationBar.isTranslucent = true
-                self.navigationController?.view.backgroundColor = rideRed
+                self.navigationController?.view.backgroundColor = UIColor(named: "Main")
             } else {
                 print("Setting nav to clear")
                 self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
@@ -165,7 +165,7 @@ extension ReceivedRequestsPageViewController: UIPageViewControllerDelegate {
                 self.navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
                 self.navigationController?.navigationBar.shadowImage = nil
                 self.navigationController?.navigationBar.isTranslucent = true
-                self.navigationController?.view.backgroundColor = rideRed
+                self.navigationController?.view.backgroundColor = UIColor(named: "Main")
             }
         }
     }

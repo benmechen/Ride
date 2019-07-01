@@ -8,6 +8,7 @@
 
 import UIKit
 import Stripe
+import Firebase
 import Crashlytics
 
 protocol CardsTableViewControllerDelegate {
@@ -20,22 +21,20 @@ class CardsTableViewController: UIViewController, UITableViewDataSource, UITable
     @IBOutlet var accountsTableView: UITableView!
     @IBOutlet weak var sortCodeTextField: UITextField!
     @IBOutlet weak var accountNoTextField: UITextField!
-    var cardsTableViewControllerDelegate: CardsTableViewControllerDelegate? = nil
     
+    var cardsTableViewControllerDelegate: CardsTableViewControllerDelegate? = nil
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     var currentlyEditing: Bool = false
     var cards: [[String: Any]] = []
     var cardIDs: Array<String> = []
     var accounts: [[String: Any]] = []
     var accountIDs: Array<String> = []
     var handle: UInt? = nil
+    var vSpinner: UIView?
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        guard mainUser != nil else {
-            moveToLoginController()
-            return
-        }
         
         if self.cardsTableView != nil {
             self.cardsTableView.delegate = self
@@ -77,7 +76,7 @@ class CardsTableViewController: UIViewController, UITableViewDataSource, UITable
     
     override func viewWillDisappear(_ animated: Bool) {
         if self.handle != nil {
-            RideDB?.removeObserver(withHandle: self.handle!)
+            RideDB.removeObserver(withHandle: self.handle!)
         }
     }
     
@@ -202,8 +201,8 @@ class CardsTableViewController: UIViewController, UITableViewDataSource, UITable
                 if self.cards.count > 1 {
                     self.currentlyEditing = true
                     // Delete the row from the data source
-                    RideDB?.child("stripe_customers").child(currentUser!.uid).child("sources").child(cardIDs[indexPath.row]).child("deleted").setValue(true)
-                    RideDB?.child("stripe_customers").child(currentUser!.uid).child("sources").child(cardIDs[indexPath.row]).child("error").observe(.value, with: { (snapshot) in
+                    RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").child(cardIDs[indexPath.row]).child("deleted").setValue(true)
+                    RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").child(cardIDs[indexPath.row]).child("error").observe(.value, with: { (snapshot) in
                         if let value = snapshot.value as? String {
                             let alert = UIAlertController(title: "Error deleting card", message: value, preferredStyle: .alert)
                             
@@ -232,8 +231,8 @@ class CardsTableViewController: UIViewController, UITableViewDataSource, UITable
                 if self.accounts.count > 2 {
                     self.currentlyEditing = true
                     // Delete the row from the data source
-                    RideDB?.child("stripe_customers").child(currentUser!.uid).child("account").child(String(indexPath.row)).child("deleted").setValue(true)
-                    RideDB?.child("stripe_customers").child(currentUser!.uid).child("account").child(String(indexPath.row)).child("error").observe(.value, with: { (snapshot) in
+                    RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account").child(String(indexPath.row)).child("deleted").setValue(true)
+                    RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account").child(String(indexPath.row)).child("error").observe(.value, with: { (snapshot) in
                         if let value = snapshot.value as? String {
                             let alert = UIAlertController(title: "Error deleting account", message: value, preferredStyle: .alert)
                             
@@ -292,42 +291,47 @@ class CardsTableViewController: UIViewController, UITableViewDataSource, UITable
 
     // MARK: - Navigation
      @IBAction func addAccount(_ sender: Any) {
-        self.showSpinner(onView: self.view)
+        self.vSpinner = self.showSpinner(onView: self.view)
         if sortCodeTextField.text?.count == 8 && accountNoTextField.text?.count == 8 {
-            RideDB?.child("stripe_customers").child(mainUser!._userID).child("account").child("individual").observeSingleEvent(of: .value, with: { snapshot in
-                if let value = snapshot.value as? [String: Any] {
-                    var name = mainUser?._userName.split(separator: " ")
-                    name?.remove(at: 0)
-                    
-                    var account: [String: Any] = [
-                        "id": mainUser?._userID as Any,
-                        "ip": self.getWiFiAddress() as Any,
-                        "account_number": self.accountNoTextField.text as Any,
-                        "sort_code": self.sortCodeTextField.text?.replacingOccurrences(of: "-", with: "") as Any,
-                        "first_name": mainUser?._userName.split(separator: " ").first as Any,
-                        "last_name": name?.joined() as Any
-                    ]
-                    if let address = value["address"] as? [String: String] {
-                        account["address_country"] = address["country"]
-                        account["address_line1"] = address["line1"]
-                        account["address_line2"] = address["line2"] ?? ""
-                        account["address_city"] = address["city"]
-                        account["address_state"] = address["state"] ?? ""
-                        account["address_postcode"] = address["postal_code"]
-                    }
-                    
-                    if let dob = value["dob"] as? [String: Int] {
-                        account["dob_day"] = dob["day"]
-                        account["dob_month"] = dob["month"]
-                        account["dob_year"] = dob["year"]
-                    }
-                    account["identity_document"] = "n/a"
-                
-                    RideDB?.child("stripe_customers").child(mainUser!._userID).child("account").setValue(account)
+            userManager?.getCurrentUser(completion: { (success, user) in
+                guard success && user != nil else {
+                    return
                 }
+                self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account").child("individual").observeSingleEvent(of: .value, with: { snapshot in
+                    if let value = snapshot.value as? [String: Any] {
+                        var name = user!.name.split(separator: " ")
+                        name.remove(at: 0)
+                        
+                        var account: [String: Any] = [
+                            "id": Auth.auth().currentUser!.uid as Any,
+                            "ip": self.getWiFiAddress() as Any,
+                            "account_number": self.accountNoTextField.text as Any,
+                            "sort_code": self.sortCodeTextField.text?.replacingOccurrences(of: "-", with: "") as Any,
+                            "first_name": user!.name.split(separator: " ").first as Any,
+                            "last_name": name.joined() as Any
+                        ]
+                        if let address = value["address"] as? [String: String] {
+                            account["address_country"] = address["country"]
+                            account["address_line1"] = address["line1"]
+                            account["address_line2"] = address["line2"] ?? ""
+                            account["address_city"] = address["city"]
+                            account["address_state"] = address["state"] ?? ""
+                            account["address_postcode"] = address["postal_code"]
+                        }
+                        
+                        if let dob = value["dob"] as? [String: Int] {
+                            account["dob_day"] = dob["day"]
+                            account["dob_month"] = dob["month"]
+                            account["dob_year"] = dob["year"]
+                        }
+                        account["identity_document"] = "n/a"
+                    
+                        self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account").setValue(account)
+                    }
+                })
             })
             
-            self.handle = RideDB?.child("stripe_customers").child(mainUser!._userID).child("account").observe(.value, with: { snapshot in
+            self.handle = RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account").observe(.value, with: { snapshot in
                 if snapshot.hasChild("error") {
                     if let value = snapshot.value as? [String: String] {
                         let alert = UIAlertController(title: "Error", message: value["error"], preferredStyle: .alert)
@@ -340,9 +344,9 @@ class CardsTableViewController: UIViewController, UITableViewDataSource, UITable
                     }
                 } else if snapshot.hasChild("id") {
                     self.cardsTableViewControllerDelegate?.reloadAccounts()
-                    self.removeSpinner()
+                    self.removeSpinner(spinner: self.vSpinner!)
                     self.dismiss(animated: true, completion: nil)
-                    RideDB?.removeObserver(withHandle: self.handle!)
+                    self.RideDB.removeObserver(withHandle: self.handle!)
                 }
             })
             
@@ -434,7 +438,7 @@ class CardsTableViewController: UIViewController, UITableViewDataSource, UITable
     private func getUserCards() {
         self.cards.append([:])
         self.cardIDs.append("")
-        RideDB?.child("stripe_customers").child(currentUser!.uid).child("sources").observeSingleEvent(of: .value, with: { (snapshot) in
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").observeSingleEvent(of: .value, with: { (snapshot) in
             if let value = snapshot.value as? [String: [String: Any]] {
                 for sourceID in value.keys {
                     if (!(value[sourceID]?.keys.contains("error"))!) {
@@ -460,7 +464,7 @@ class CardsTableViewController: UIViewController, UITableViewDataSource, UITable
     private func getUserAccounts() {
         self.accounts.append([:])
         self.accountIDs.append("")
-        RideDB?.child("stripe_customers").child(currentUser!.uid).child("account").child("external_accounts").child("data").observeSingleEvent(of: .value, with: { (snapshot) in
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account").child("external_accounts").child("data").observeSingleEvent(of: .value, with: { (snapshot) in
             if let value = snapshot.value as? [[String: Any]] {
                 print(value)
                 for account in value {
@@ -487,20 +491,20 @@ extension CardsTableViewController: STPAddCardViewControllerDelegate {
         navigationController?.popViewController(animated: true)
         
         if (self.handle != nil) {
-            RideDB?.removeObserver(withHandle: self.handle!)
+            RideDB.removeObserver(withHandle: self.handle!)
         }
     }
     
     func addCardViewController(_ addCardViewController: STPAddCardViewController, didCreateToken token: STPToken, completion: @escaping STPErrorBlock) {
         
-        let cardRef = RideDB?.child("stripe_customers").child(mainUser!._userID).child("sources").childByAutoId()
+        let cardRef = RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").childByAutoId()
         
-        cardRef?.child("token").setValue(token.tokenId) { (error, ref) -> Void in
+        cardRef.child("token").setValue(token.tokenId) { (error, ref) -> Void in
             if let error = error {
                 completion(error)
             } else {
                 
-                self.handle = RideDB?.child("stripe_customers").child(mainUser!._userID).child("sources").child(cardRef!.key!).observe(.value, with: { (snapshot) in
+                self.handle = self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").child(cardRef.key!).observe(.value, with: { (snapshot) in
                     if snapshot.hasChild("error") {
                         if let value = snapshot.value as? [String: String] {
                             let alert = UIAlertController(title: "Error", message: value["error"], preferredStyle: .alert)
@@ -512,7 +516,7 @@ extension CardsTableViewController: STPAddCardViewControllerDelegate {
                             self.present(alert, animated: true)
                         }
                     } else if snapshot.hasChild("id") {
-                        RideDB?.removeObserver(withHandle: self.handle!)
+                        self.RideDB.removeObserver(withHandle: self.handle!)
                         self.navigationController?.popViewController(animated: true)
                     }
                 })

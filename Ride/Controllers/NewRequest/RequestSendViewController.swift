@@ -8,6 +8,7 @@
 
 import UIKit
 import Crashlytics
+import Firebase
 import MapKit
 
 class RequestSendViewController: UIViewController {
@@ -18,17 +19,19 @@ class RequestSendViewController: UIViewController {
     @IBOutlet weak var seatsWarning: UILabel!
     @IBOutlet weak var sendRequestButton: UIButton!
     
+    var userManager: UserManagerProtocol!
     var user: User? = nil
     var from: MKPlacemark? = nil
     var to: MKPlacemark? = nil
     let datePickerView = UIDatePicker()
     var dateStamp: TimeInterval? = nil
     var eta: Date? = nil
+    var vSpinner: UIView?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        guard user != nil, let latitude = user?._userLocation["latitude"], let longitude = user?._userLocation["longitude"] else {
+        guard user != nil, let latitude = user?.location["latitude"], let longitude = user?.location["longitude"] else {
             self.dismiss(animated: true, completion: nil)
             return
         }
@@ -117,9 +120,9 @@ class RequestSendViewController: UIViewController {
     
     @IBAction func noOfPeopleDidEndEditing(_ sender: Any) {
         if let numberOfPeople = Int(peopleTextField.text!) {
-            if let numberOfSeats =  Int((user?._userCar._carSeats)!) {
+            if let numberOfSeats =  Int((user?.car._carSeats)!) {
                 if numberOfPeople >= numberOfSeats {
-                    seatsWarning.text = (user?._userName)! + "'s car can only take " + String(numberOfSeats - 1) + " passengers. This Ride will require multiple trips."
+                    seatsWarning.text = (user?.name)! + "'s car can only take " + String(numberOfSeats - 1) + " passengers. This Ride will require multiple trips."
                     return
                 }
             }
@@ -130,10 +133,10 @@ class RequestSendViewController: UIViewController {
     }
     
     @IBAction func sendRequest(_ sender: Any) {
-        self.showSpinner(onView: self.view)
+        self.vSpinner = self.showSpinner(onView: self.view)
         let timestampInt = Int(dateStamp!)
         if let noOfPeople = Int(peopleTextField.text!) {
-            let request = Request(driver: (user?._userID)!, sender: (mainUser?._userID)!, from: (from?.coordinate)!, fromName: (from?.title)!, to: (to?.coordinate)!, toName: (to?.title)! , time: timestampInt, passengers: noOfPeople, status: 0)
+            let request = Request(driver: (user?.id)!, sender: Auth.auth().currentUser!.uid, from: (from?.coordinate)!, fromName: (from?.title)!, to: (to?.coordinate)!, toName: (to?.title)! , time: timestampInt, passengers: noOfPeople, status: 0)
             
             request.send { (success, key) in
                 if success {
@@ -144,7 +147,7 @@ class RequestSendViewController: UIViewController {
                     self.present(alert, animated: true, completion: nil)
                 } else {
                 }
-                self.removeSpinner()
+                self.removeSpinner(spinner: self.vSpinner!)
             }
         }
     }

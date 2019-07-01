@@ -20,10 +20,10 @@ class ResetPasswordViewController: UIViewController {
         super.viewDidLoad()
 
         //Set system colours
-        titleText.textColor = rideRed
+        titleText.textColor = UIColor(named: "Main")
         emailTextField.layer.borderWidth = 1
-        emailTextField.layer.borderColor = rideClickableRed.cgColor
-        resetPasswordButton.backgroundColor = rideClickableRed
+        emailTextField.layer.borderColor = UIColor(named: "Accent")?.cgColor
+        resetPasswordButton.backgroundColor = UIColor(named: "Accent")
     }
     
 

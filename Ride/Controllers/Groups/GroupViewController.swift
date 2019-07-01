@@ -15,7 +15,7 @@ import Kingfisher
 import os.log
 
 protocol GroupTableViewCellDelegate {
-    func callSegueFromCell(data dataobject: AnyObject)
+    func callSegueFromCell(data dataobject: Any)
 }
 
 class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, MKMapViewDelegate, CLLocationManagerDelegate, GroupViewControllerDelegate, UserMapCalloutViewDelegate, GroupTableViewCellDelegate {
@@ -25,9 +25,11 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
     
     @IBOutlet weak var groupMapView: MKMapView!
     @IBOutlet weak var groupMembersTable: UITableView!
+    lazy var RideDB = Database.database().reference()
+    var userManager: UserManagerProtocol!
     let locationManager = CLLocationManager()
     var centered = false
-    var group: Group = Group()!
+    var group: Group!
     var availableMembers: Array<User> = []
     var unavailableMembers: Array<User> = []
     var memberAnnotations: Array<MKAnnotation> = []
@@ -67,7 +69,7 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
         
         locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
         
-        RideDB?.child("Groups").child("UserGroups").child(mainUser!._userID).child("groupIDs").observeSingleEvent(of: .value, with: { snapshot in
+        RideDB.child("Groups").child("UserGroups").child(Auth.auth().currentUser!.uid).child("groupIDs").observeSingleEvent(of: .value, with: { snapshot in
             var count = 0
             if let value = snapshot.value as? [String: Bool] {
                 for key in value.keys {
@@ -142,7 +144,7 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
 //            view.backgroundView?.backgroundColor = UIColor.init(red: 0.82, green: 0.33, blue: 0.33, alpha: 1.00)
             view.backgroundView?.backgroundColor = UIColor.white
             view.textLabel!.backgroundColor = UIColor.clear
-            view.textLabel!.textColor = rideRed
+            view.textLabel!.textColor = UIColor(named: "Main")
         }
         
     }
@@ -193,17 +195,17 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
                 
                 cell.user = user
                 
-                cell.userName.text = user._userName
+                cell.userName.text = user.name
                 
-                if user._userLocation["latitude"] != nil && user._userLocation["longitude"] != nil && locationManager.location != nil {
-                    cell.userCar.text = user._userCar._carType + " - " + String(format: "%.1f miles away", (locationManager.location?.distance(from: CLLocation(latitude: user._userLocation["latitude"]!, longitude: user._userLocation["longitude"]!)))! / 1609.344)
+                if user.location["latitude"] != nil && user.location["longitude"] != nil && locationManager.location != nil {
+                    cell.userCar.text = user.car._carType + " - " + String(format: "%.1f miles away", (locationManager.location?.distance(from: CLLocation(latitude: user.location["latitude"]!, longitude: user.location["longitude"]!)))! / 1609.344)
                 } else {
-                    cell.userCar.text = user._userCar._carType
+                    cell.userCar.text = user.car._carType
                 }
                 
                 
                 cell.userImage.kf.setImage(
-                    with: user._userPhotoURL,
+                    with: user.photo,
                     placeholder: UIImage(named: "groupPlaceholder"),
                     options: ([
                         .transition(.fade(1)),
@@ -234,14 +236,14 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
                 
                 cell.userName.frame.size.width = 311
                 
-                cell.userName.text = user._userName
+                cell.userName.text = user.name
                 
-                if user._userCar._carType != "undefined" && user._userCar._carType != "" {
-                    cell.userCar.text = user._userCar._carType
+                if user.car._carType != "undefined" && user.car._carType != "" {
+                    cell.userCar.text = user.car._carType
                 }
                 
                 cell.userImage.kf.setImage(
-                    with: user._userPhotoURL,
+                    with: user.photo,
                     placeholder: UIImage(named: "groupPlaceholder"),
                     options: ([
                         .transition(.fade(1)),
@@ -285,6 +287,7 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
 
             groupSettingsViewController.group = group
             groupSettingsViewController.groupViewControllerDelegate = self
+            groupSettingsViewController.userManager = userManager
         case "requestRide":
             os_log("Showing request ride", log: OSLog.default, type: .debug)
             let navVC = segue.destination as? UINavigationController
@@ -297,7 +300,7 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
         }
     }
     
-    func callSegueFromCell(data dataobject: AnyObject) {
+    func callSegueFromCell(data dataobject: Any) {
         self.performSegue(withIdentifier: "requestRide", sender: dataobject)
     }
     
@@ -339,15 +342,15 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
         self.memberAnnotations = []
         
         for user in group._groupUsers {
-            if user._userID != currentUser?.uid {
-                if user._userAvailable[self.group._groupID] != nil {
-                    if user._userAvailable[self.group._groupID]! as Bool {
+            if user.id != Auth.auth().currentUser?.uid {
+                if user.available[self.group._groupID] != nil {
+                    if user.available[self.group._groupID]! as Bool {
                         self.availableMembers.append(user)
                         guard let userAnnotation = MapAnnotation(user: user) else {
                             continue
                         }
                         
-                        userAnnotation.propertiesToSend["type"] = user._userCar._carType
+                        userAnnotation.propertiesToSend["type"] = user.car._carType
                         self.memberAnnotations.append(userAnnotation)
                     } else {
                         self.unavailableMembers.append(user)

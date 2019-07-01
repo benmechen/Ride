@@ -19,7 +19,7 @@ struct Message {
 
 extension Message: MessageType {
     
-    var sender: Sender {
+    var sender: SenderType {
         return Sender(id: member.id, displayName: member.name)
     }
     

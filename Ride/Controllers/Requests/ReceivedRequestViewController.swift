@@ -7,12 +7,15 @@
 //
 
 import UIKit
+import Firebase
 import Crashlytics
 import MapKit
 import CoreLocation
 
 class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
 
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     var request: Request? = nil
     var userName: String? = nil
     var distance: CLLocationDistance? = nil
@@ -101,34 +104,39 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
                 page2Title.text = page2Title.text! + (userName?.split(separator: " ").first ?? "the other user")
             }
         } else if (page3Title != nil) {
-            RideDB?.child("Requests").child(request!._id!).observeSingleEvent(of: .value, with: { (snapshot) in
+            RideDB.child("Requests").child(request!._id!).observeSingleEvent(of: .value, with: { (snapshot) in
                 if snapshot.hasChild("price")  {
                     self.page3Sent()
                 } else {
-                    RideDB?.child("fuel").observeSingleEvent(of: .value, with: { (snapshot) in
-                        if let value = snapshot.value {
-                            let directionsRequest = MKDirections.Request()
-                            let sourcePlacemark = MKPlacemark(coordinate: self.request!._to)
-                            let destinationPlacemark = MKPlacemark(coordinate: self.request!._from)
-                            let source = MKMapItem(placemark: sourcePlacemark)
-                            let destination = MKMapItem(placemark: destinationPlacemark)
-                            directionsRequest.destination = destination
-                            directionsRequest.source = source
-                            directionsRequest.transportType = .automobile
-                            
-                            let directions = MKDirections(request: directionsRequest)
-                            directions.calculate(completionHandler: { (response, error) in
-                                if let routeResponse = response?.routes {
-                                    let quickestRouteForSegment: MKRoute = routeResponse.sorted(by: {$0.expectedTravelTime < $1.expectedTravelTime})[0]
-                                    self.fuel = self.calculateFuelCost(distance: quickestRouteForSegment.distance, mpg: Int((mainUser?._userCar._carMPG)!)!, fuel: value as! Double)
-                                    self.page3Price.text = String(format: "£%.2f", self.fuel)
-                                    self.page3Fuel.attributedText = self.attributedText(withString: String(format: "Estimated Fuel Cost: £%.2f", self.fuel), boldString: "Estimated Fuel Cost", font: self.page3Fuel.font!)
-                                    self.updateFees(self)
-                                    self.page3Price.text = String(format: "£%.2f", self.fuel + self.calculateFee(cost: self.fuel))
-                                    
-                                }
-                            })
+                    self.userManager?.getCurrentUser(completion: { (success, user) in
+                        guard success && user != nil else {
+                            return
                         }
+                        self.RideDB.child("fuel").observeSingleEvent(of: .value, with: { (snapshot) in
+                            if let value = snapshot.value {
+                                let directionsRequest = MKDirections.Request()
+                                let sourcePlacemark = MKPlacemark(coordinate: self.request!._to)
+                                let destinationPlacemark = MKPlacemark(coordinate: self.request!._from)
+                                let source = MKMapItem(placemark: sourcePlacemark)
+                                let destination = MKMapItem(placemark: destinationPlacemark)
+                                directionsRequest.destination = destination
+                                directionsRequest.source = source
+                                directionsRequest.transportType = .automobile
+                                
+                                let directions = MKDirections(request: directionsRequest)
+                                directions.calculate(completionHandler: { (response, error) in
+                                    if let routeResponse = response?.routes {
+                                        let quickestRouteForSegment: MKRoute = routeResponse.sorted(by: {$0.expectedTravelTime < $1.expectedTravelTime})[0]
+                                        self.fuel = self.calculateFuelCost(distance: quickestRouteForSegment.distance, mpg: Int(user!.car._carMPG)!, fuel: value as! Double)
+                                        self.page3Price.text = String(format: "£%.2f", self.fuel)
+                                        self.page3Fuel.attributedText = self.attributedText(withString: String(format: "Estimated Fuel Cost: £%.2f", self.fuel), boldString: "Estimated Fuel Cost", font: self.page3Fuel.font!)
+                                        self.updateFees(self)
+                                        self.page3Price.text = String(format: "£%.2f", self.fuel + self.calculateFee(cost: self.fuel))
+                                        
+                                    }
+                                })
+                            }
+                        })
                     })
                     
                     self.page3Total.text = self.page3Total.text! + (self.userName?.split(separator: " ").first ?? "user")
@@ -154,7 +162,7 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
             
             page4Time.attributedText = attributedText(withString: String(format: "Pickup Time: %@", dateFormatter.string(from: date)), boldString: "Pickup Time", font: page4Time.font)
             
-            RideDB?.child("Requests").child(request!._id!).child("price").observeSingleEvent(of: .value, with: { (snapshot) in
+            RideDB.child("Requests").child(request!._id!).child("price").observeSingleEvent(of: .value, with: { (snapshot) in
                 if let value = snapshot.value as? [String: Double] {
                     self.page4Price.attributedText = self.attributedText(withString: String(format: "Price: £%.2f", value["total"]!), boldString: "Price", font: self.page4Price.font)
                 }
@@ -170,7 +178,7 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
                 page4Status.attributedText = attributedText(withString: String(format: "Status: %@", status), boldString: "Status", font: page4Status.font)
             } else {
                 var paidCount = 1
-                RideDB?.child("Requests").child(self.request!._id!).child("split").observeSingleEvent(of: .value, with: { snapshot in
+                RideDB.child("Requests").child(self.request!._id!).child("split").observeSingleEvent(of: .value, with: { snapshot in
                     if let users = snapshot.value as? [String: Bool] {
                         for user in users.keys {
                             if users[user]! {
@@ -217,27 +225,27 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
             })
         }
         
-        if request?._driver == mainUser?._userID {
-            RideDB?.child("Users").child((mainUser?._userID)!).child("requests").child("received").child((request?._id)!).child("new").setValue(false)
+        if request?._driver == Auth.auth().currentUser!.uid {
+            RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("received").child((request?._id)!).child("new").setValue(false)
         } else {
-            RideDB?.child("Users").child((mainUser?._userID)!).child("requests").child("sent").child((request?._id)!).child("new").setValue(false)
+            RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("sent").child((request?._id)!).child("new").setValue(false)
         }
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        RideDB?.child("fees").observeSingleEvent(of: .value, with: { (snapshot) in
+        RideDB.child("fees").observeSingleEvent(of: .value, with: { (snapshot) in
             if let value = snapshot.value as? Double {
                 self.fees = value
             }
         })
         
-        RideDB?.child("min").observeSingleEvent(of: .value, with: { (snapshot) in
+        RideDB.child("min").observeSingleEvent(of: .value, with: { (snapshot) in
             if let value = snapshot.value as? Double {
                 self.min = value
             }
         })
         
-        RideDB?.child("message").observeSingleEvent(of: .value, with: { (snapshot) in
+        RideDB.child("message").observeSingleEvent(of: .value, with: { (snapshot) in
             if let value = snapshot.value as? String {
                 self.message = value
             }
@@ -250,7 +258,7 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
         overlay: MKOverlay) -> MKOverlayRenderer {
         
         let renderer = MKPolylineRenderer(overlay: overlay)
-        renderer.strokeColor = rideClickableRed
+        renderer.strokeColor = UIColor(named: "Accent")
         renderer.lineWidth = 5.0
         return renderer
     }
@@ -280,9 +288,9 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     }
     
     @IBAction func decline(_ sender: Any) {
-        RideDB?.child("Requests").child(request!._id!).child("deleted").setValue(true)
-        RideDB?.child("Requests").child(request!._id!).child("status").setValue(-1)
-        RideDB?.child("Users").child(request!._driver!).child("requests").child("received").child(request!._id!).removeValue()
+        RideDB.child("Requests").child(request!._id!).child("deleted").setValue(true)
+        RideDB.child("Requests").child(request!._id!).child("status").setValue(-1)
+        RideDB.child("Users").child(request!._driver!).child("requests").child("received").child(request!._id!).removeValue()
         self.navigationController?.popViewController(animated: true)
     }
     
@@ -317,9 +325,9 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     }
     
     @IBAction func send(_ sender: Any) {
-        RideDB?.child("Requests").child(request!._id!).child("status").setValue(1)
-        RideDB?.child("Users").child((request?._sender)!).child("requests").child("sent").child((request?._id)!).child("new").setValue(true)
-        RideDB?.child("Requests").child(request!._id!).child("price").setValue(self.price)
+        RideDB.child("Requests").child(request!._id!).child("status").setValue(1)
+        RideDB.child("Users").child((request?._sender)!).child("requests").child("sent").child((request?._id)!).child("new").setValue(true)
+        RideDB.child("Requests").child(request!._id!).child("price").setValue(self.price)
         // RideDB?.child("Requests").child(request!._id!).child("price").setValue(Double(removeSpecialCharsFromString(text: page3Price.text!)))
         
         self.page3Sent()

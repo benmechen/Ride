@@ -38,7 +38,8 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     @IBOutlet weak var cameraShutter: UIButton!
     
     var welcomeTableViewController: WelcomeTableViewController? = nil
-    
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     var skip: Bool = false
     var selectedType: String?
     var carTypes = ["Hatchback", "Estate", "SUV", "Saloon", "Coupe", "MPV", "Convertible", "Pick Up", "Other"]
@@ -50,11 +51,13 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     var stillImageOutput: AVCapturePhotoOutput? = nil
     var videoPreviewLayer: AVCaptureVideoPreviewLayer? = nil
     
+    var vSpinner: UIView?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
-        self.view.backgroundColor = rideRed
+        self.view.backgroundColor = UIColor(named: "Main")
         self.navigationController?.navigationBar.tintColor = UIColor.white
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
@@ -194,7 +197,7 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
         self.navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
         self.navigationController?.navigationBar.shadowImage = nil
         self.navigationController?.navigationBar.isTranslucent = true
-        self.navigationController?.view.backgroundColor = rideRed
+        self.navigationController?.view.backgroundColor = UIColor(named: "Main")
 
     }
     
@@ -214,28 +217,33 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
         switch(segue.identifier ?? "") {
         case "showStripeAgreement":
             let navVC = segue.destination as? UINavigationController
-            let legalViewController = navVC?.viewControllers.first as! LegalViewController
+            guard let legalViewController = navVC?.viewControllers.first as? LegalViewController else {
+                return
+            }
+            
             legalViewController.url = URL(string: "https://stripe.com/gb/connect-account/legal")
             os_log("Showing settings", log: OSLog.default, type: .debug)
         default:
+            guard let destinationVC = segue.destination as? SetupViewController else {
+                return
+            }
+            
+            destinationVC.userManager = userManager
+            
             if noOfSeatsTextField == nil && page1No == nil {
-                let destinationVC = segue.destination as! SetupViewController
                 destinationVC.car = self.car
             }
             
             if segue.identifier == "show6" {
-                let destinationVC = segue.destination as! SetupViewController
                 destinationVC.car = self.car
             }
             
             if segue.identifier == "show7" {
-                let destinationVC = segue.destination as! SetupViewController
                 destinationVC.userInfo = self.userInfo
                 destinationVC.car = self.car
             }
             
             if segue.identifier == "show8" {
-                let destinationVC = segue.destination as! SetupViewController
                 destinationVC.userInfo = self.userInfo
                 destinationVC.car = self.car
             }
@@ -298,9 +306,9 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     }
     
     @IBAction func page1NoPressed(_ sender: Any) {
-        RideDB?.child("Users").child((currentUser?.uid)!).child("car").child("mpg").setValue("nil")
-        RideDB?.child("Users").child((currentUser?.uid)!).child("car").child("seats").setValue("nil")
-        RideDB?.child("Users").child((currentUser?.uid)!).child("car").child("registration").setValue("nil")
+        RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("car").child("mpg").setValue("nil")
+        RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("car").child("seats").setValue("nil")
+        RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("car").child("registration").setValue("nil")
         self.dismiss(animated: true) {
             self.welcomeTableViewController?.walkthrough()
         }
@@ -368,38 +376,44 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     }
     
     @IBAction func page6Next(_ sender: Any) {
-        if dobTextField.text != "" && addressL1TextField.text != "" && cityTextField.text != "" && countyTextField.text != "" && postcodeTextField.text != "" {
-            var name = mainUser?._userName.split(separator: " ").map({ (substring) in
-                return String(substring)
-            })
-            let first = name?.first
-            name!.remove(at: 0)
-            let last = name!.joined(separator: " ")
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
             
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "dd"
-            let day = dateFormatter.string(from: self.dob)
-            dateFormatter.dateFormat = "MM"
-            let month = dateFormatter.string(from: self.dob)
-            dateFormatter.dateFormat = "yyyy"
-            let year = dateFormatter.string(from: self.dob)
-            
-            self.userInfo = [
-                "first_name": first! as String,
-                "last_name": last as String,
-                "dob_day": day,
-                "dob_month": month,
-                "dob_year": year,
-                "address_line1": self.addressL1TextField.text! as String,
-                "address_line2": self.addressL2TextField.text! as String,
-                "address_city": self.cityTextField.text! as String,
-                "address_state": self.countyTextField.text! as String,
-                "address_postcode": self.postcodeTextField.text! as String,
-                "ip": getWiFiAddress() ?? "0.0.0.0"
-            ]
-            
-            performSegue(withIdentifier: "show7", sender: nil)
-        }
+            if self.dobTextField.text != "" && self.addressL1TextField.text != "" && self.cityTextField.text != "" && self.countyTextField.text != "" && self.postcodeTextField.text != "" {
+                var name = user!.name.split(separator: " ").map({ (substring) in
+                    return String(substring)
+                })
+                let first = name.first
+                name.remove(at: 0)
+                let last = name.joined(separator: " ")
+                
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "dd"
+                let day = dateFormatter.string(from: self.dob)
+                dateFormatter.dateFormat = "MM"
+                let month = dateFormatter.string(from: self.dob)
+                dateFormatter.dateFormat = "yyyy"
+                let year = dateFormatter.string(from: self.dob)
+                
+                self.userInfo = [
+                    "first_name": first! as String,
+                    "last_name": last as String,
+                    "dob_day": day,
+                    "dob_month": month,
+                    "dob_year": year,
+                    "address_line1": self.addressL1TextField.text! as String,
+                    "address_line2": self.addressL2TextField.text! as String,
+                    "address_city": self.cityTextField.text! as String,
+                    "address_state": self.countyTextField.text! as String,
+                    "address_postcode": self.postcodeTextField.text! as String,
+                    "ip": self.getWiFiAddress() ?? "0.0.0.0"
+                ]
+                
+                self.performSegue(withIdentifier: "show7", sender: nil)
+            }
+        })
     }
     
     @IBAction func insertDashes(_ sender: Any) {
@@ -518,13 +532,13 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
             return
         }
         
-        self.showSpinner(onView: self.view)
+        self.vSpinner = self.showSpinner(onView: self.view)
         
-        RideDB?.child("Users").child((currentUser?.uid)!).child("car").setValue(car)
+        RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("car").setValue(car)
         
-        RideDB?.child("stripe_customers").child(mainUser!._userID).child("account").setValue(["id": currentUser?.uid, "email": currentUser?.email])
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account").setValue(["id": Auth.auth().currentUser?.uid, "email": Auth.auth().currentUser?.email])
         
-        RideDB?.child("stripe_customers").child(mainUser!._userID).child("account_id").observe(.value, with: {snapshot in
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account_id").observe(.value, with: {snapshot in
             if let value = snapshot.value as? String {
                 self.upload(image: self.imageView.image!, customerID: value)
             }
@@ -538,44 +552,46 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
         }
         
         let parameters = ["purpose": "identity_document"]
-        
-        Alamofire.upload(multipartFormData: { multipartFormData in
-            multipartFormData.append(imageData, withName: "file",fileName: "file.jpg", mimeType: "image/jpg")
-            for (key, value) in parameters {
-                multipartFormData.append(value.data(using: String.Encoding.utf8)!, withName: key)
-            }
-        }, to:"https://uploads.stripe.com/v1/files", headers: ["Authorization": "Bearer \(secretKey)", "Stripe-Account": customerID]) { (result) in
-            switch result {
-            case .success(let upload, _, _):
-                upload.responseJSON { response in
-                    if let json = response.result.value as? [String: Any] {
-                        self.userInfo["identity_document"] = (json["id"] as! String)
-                        self.userInfo["id"] = mainUser!._userID
-                        RideDB?.child("stripe_customers").child(mainUser!._userID).child("account").setValue(self.userInfo)
-                        
-                        let alert = UIAlertController(title: "Success", message: "Your license has been uploaded and will be verified. While verification is taking place, you are free to use Ride normally. Enjoy!", preferredStyle: .alert)
-                        
-                        alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction) in
-                            self.dismiss(animated: true, completion: nil)
-                        }))
-                        
-                        self.removeSpinner()
-                        self.present(alert, animated: true)
-                    }
+        let appDelegate = UIApplication.shared.delegate as? AppDelegate
+        appDelegate?.getSecretKey(completion: { (secretKey) in
+            Alamofire.upload(multipartFormData: { multipartFormData in
+                multipartFormData.append(imageData, withName: "file",fileName: "file.jpg", mimeType: "image/jpg")
+                for (key, value) in parameters {
+                    multipartFormData.append(value.data(using: String.Encoding.utf8)!, withName: key)
                 }
-                
-            case .failure(let encodingError):
-                os_log("Error: @", log: OSLog.default, type: .error, encodingError.localizedDescription)
-                
-                let alert = UIAlertController(title: "Error", message: "An error has occured. Please try again.", preferredStyle: .alert)
-                
-                alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction) in
-                    self.removeSpinner()
-                }))
-                
-                self.present(alert, animated: true)
+            }, to:"https://uploads.stripe.com/v1/files", headers: ["Authorization": "Bearer \(secretKey)", "Stripe-Account": customerID]) { (result) in
+                switch result {
+                case .success(let upload, _, _):
+                    upload.responseJSON { response in
+                        if let json = response.result.value as? [String: Any] {
+                            self.userInfo["identity_document"] = (json["id"] as! String)
+                            self.userInfo["id"] = Auth.auth().currentUser!.uid
+                            self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account").setValue(self.userInfo)
+                            
+                            let alert = UIAlertController(title: "Success", message: "Your license has been uploaded and will be verified. While verification is taking place, you are free to use Ride normally. Enjoy!", preferredStyle: .alert)
+                            
+                            alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction) in
+                                self.dismiss(animated: true, completion: nil)
+                            }))
+                            
+                            self.removeSpinner(spinner: self.vSpinner!)
+                            self.present(alert, animated: true)
+                        }
+                    }
+                    
+                case .failure(let encodingError):
+                    os_log("Error: @", log: OSLog.default, type: .error, encodingError.localizedDescription)
+                    
+                    let alert = UIAlertController(title: "Error", message: "An error has occured. Please try again.", preferredStyle: .alert)
+                    
+                    alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction) in
+                        self.removeSpinner(spinner: self.vSpinner!)
+                    }))
+                    
+                    self.present(alert, animated: true)
+                }
             }
-        }
+        })
     }
     
     func generateBoundaryString() -> String {
@@ -611,14 +627,14 @@ extension SetupViewController: STPAddCardViewControllerDelegate {
     
     func addCardViewController(_ addCardViewController: STPAddCardViewController, didCreateToken token: STPToken, completion: @escaping STPErrorBlock) {
        
-        let cardRef = RideDB?.child("stripe_customers").child(mainUser!._userID).child("sources").childByAutoId()
+        let cardRef = RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").childByAutoId()
         
-        cardRef?.child("token").setValue(token.tokenId) { (error, ref) -> Void in
+        cardRef.child("token").setValue(token.tokenId) { (error, ref) -> Void in
             if let error = error {
                 completion(error)
             } else {
                 
-                RideDB?.child("stripe_customers").child(mainUser!._userID).child("sources").child(cardRef!.key!).observe(.value, with: { (snapshot) in
+                self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").child(cardRef.key!).observe(.value, with: { (snapshot) in
                     if snapshot.hasChild("error") {
                         if let value = snapshot.value as? [String: String] {
                             let alert = UIAlertController(title: "Error", message: value["error"], preferredStyle: .alert)

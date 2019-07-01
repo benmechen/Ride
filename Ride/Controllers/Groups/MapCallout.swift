@@ -50,7 +50,7 @@ class MapCallout: UIView {
         self.user = user
         
         profileImage.kf.setImage(
-            with: user._userPhotoURL,
+            with: user.photo,
             placeholder: UIImage(named: "groupPlaceholder"),
             options: ([
                 .transition(.fade(1)),
@@ -64,11 +64,11 @@ class MapCallout: UIView {
                     }
         }
         
-        userName.text = user._userName
-        if user._userCar._carType != "Other" {
-            userCar.text = user._userCar._carSeats + " seat " + user._userCar._carType
+        userName.text = user.name
+        if user.car._carType != "Other" {
+            userCar.text = user.car._carSeats + " seat " + user.car._carType
         } else {
-            userCar.text = user._userCar._carSeats + " seat car"
+            userCar.text = user.car._carSeats + " seat car"
         }
     }
     
@@ -91,24 +91,24 @@ class MapAnnotation: NSObject, MKAnnotation {
     var coordinate: CLLocationCoordinate2D
     
     init? (user: User) {
-        guard user._userLocation["latitude"] != nil && user._userLocation["longitude"] != nil else {
+        guard user.location["latitude"] != nil && user.location["longitude"] != nil else {
             return nil
         }
         
         self.user = user
-        coordinate = CLLocationCoordinate2DMake(self.user._userLocation["latitude"]!, self.user._userLocation["longitude"]!)
+        coordinate = CLLocationCoordinate2DMake(self.user.location["latitude"]!, self.user.location["longitude"]!)
         super.init()
     }
     
     var title: String? {
-        return user._userName
+        return user.name
     }
     
     var subtitle: String? {
-        if user._userCar._carType != "Other" {
-            return user._userCar._carSeats + " seat " + user._userCar._carType
+        if user.car._carType != "Other" {
+            return user.car._carSeats + " seat " + user.car._carType
         }
-        return user._userCar._carSeats + " seat car"
+        return user.car._carSeats + " seat car"
     }
 }
 

@@ -21,11 +21,17 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     
     //MARK: Properties
     @IBOutlet weak var navigationBar: UINavigationItem!
+    
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     var searchController: UISearchController!
     var profileButton: UIImageView!
     var groups = [Group]()
     var payoutsEnabled: Bool = false
     var alertView: AlertOnboarding!
+    var currentUserCarType = ""
+    
+    var vSpinner: UIView?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -38,9 +44,13 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        if mainUser == nil {
-            getMainUser(welcome: false)
-        }
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
+            
+            self.currentUserCarType = user!.car._carType
+        })
         
         self.clearsSelectionOnViewWillAppear = true
         
@@ -48,19 +58,21 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
             tableView.deselectRow(at: indexPath, animated: true)
         }
         
-        RideDB?.child("stripe_customers").child(mainUser!._userID).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
-            if let value = snapshot.value as? String {
-                Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
-                    if let error = response.error {
-                        print(error)
-                    } else {
-                        if let result = response.result.value as? NSDictionary {
-                            if let enabled = result["payouts_enabled"] as? Bool {
-                                self.payoutsEnabled = enabled
-                                self.tableView.reloadData()
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
+            if let value = snapshot.value as? String, let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                appDelegate.getSecretKey(completion: { (secretKey) in
+                    Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+                        if let error = response.error {
+                            print(error)
+                        } else {
+                            if let result = response.result.value as? NSDictionary {
+                                if let enabled = result["payouts_enabled"] as? Bool {
+                                    self.payoutsEnabled = enabled
+                                    self.tableView.reloadData()
+                                }
                             }
                         }
-                    }
+                    })
                 })
             }
         })
@@ -72,11 +84,11 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     }
     
     func alertOnboardingCompleted() {
-        RideDB?.child("Users").child(mainUser!._userID).child("walkthrough").setValue(true)
+        RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("walkthrough").setValue(true)
     }
     
     func alertOnboardingSkipped(_ currentStep: Int, maxStep: Int) {
-        RideDB?.child("Users").child(mainUser!._userID).child("walkthrough").setValue(true)
+        RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("walkthrough").setValue(true)
     }
     
     func alertOnboardingNext(_ nextStep: Int) {
@@ -94,7 +106,7 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     }
     
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        if mainUser!._userCar._carType != "undefined" && mainUser!._userCar._carType != "" {
+        if currentUserCarType != "undefined" && currentUserCarType != "" {
             return true
         }
         
@@ -103,33 +115,37 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     
     override func tableView(_ tableView: UITableView, editActionsForRowAt: IndexPath) -> [UITableViewRowAction]? {
         var available = UITableViewRowAction(style: .normal, title: "Set Ride status to available") { action, index in
-            RideDB?.child("Users").child(currentUser!.uid).child("available").child(self.groups[editActionsForRowAt.row]._groupID).setValue(true)
-            RideDB?.child("Groups").child("GroupMeta").child(self.groups[editActionsForRowAt.row]._groupID).child("timestamp").setValue(ServerValue.timestamp())
-            RideDB?.child("Groups").child("GroupMeta").child(self.groups[editActionsForRowAt.row]._groupID).child("available").child(currentUser!.uid).setValue(true)
+            self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("available").child(self.groups[editActionsForRowAt.row]._groupID).setValue(true)
+            self.RideDB.child("Groups").child("GroupMeta").child(self.groups[editActionsForRowAt.row]._groupID).child("timestamp").setValue(ServerValue.timestamp())
+            self.RideDB.child("Groups").child("GroupMeta").child(self.groups[editActionsForRowAt.row]._groupID).child("available").child(Auth.auth().currentUser!.uid).setValue(true)
         }
-        available.backgroundColor = rideClickableRed
+        available.backgroundColor = UIColor(named: "Accent")
         
-        print("Main user available:", mainUser!._userAvailable)
-        
-        if !(mainUser!._userAvailable.isEmpty) {
-            if mainUser!._userAvailable[groups[editActionsForRowAt.row]._groupID] != nil {
-                if mainUser!._userAvailable[groups[editActionsForRowAt.row]._groupID]! as Bool == true {
-                    available = UITableViewRowAction(style: .normal, title: "Set Ride status to unavailable") { action, index in
-                        RideDB?.child("Users").child(currentUser!.uid).child("available").child(self.groups[editActionsForRowAt.row]._groupID).setValue(false)
-                        RideDB?.child("Groups").child("GroupMeta").child(self.groups[editActionsForRowAt.row]._groupID).child("available").child(currentUser!.uid).setValue(false)
-                        
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
+            
+            if !(user!.available.isEmpty) {
+                if user!.available[self.groups[editActionsForRowAt.row]._groupID] != nil {
+                    if user!.available[self.groups[editActionsForRowAt.row]._groupID]! as Bool == true {
+                        available = UITableViewRowAction(style: .normal, title: "Set Ride status to unavailable") { action, index in
+                            self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("available").child(self.groups[editActionsForRowAt.row]._groupID).setValue(false)
+                            self.RideDB.child("Groups").child("GroupMeta").child(self.groups[editActionsForRowAt.row]._groupID).child("available").child(Auth.auth().currentUser!.uid).setValue(false)
+                            
+                        }
+                        available.backgroundColor = .lightGray
                     }
-                    available.backgroundColor = .lightGray
                 }
             }
-        }
+        })
         
         if self.payoutsEnabled {
             return [available]
         } else {
             for group in self.groups {
-                RideDB?.child("Users").child(currentUser!.uid).child("available").child(group._groupID).setValue(false)
-                RideDB?.child("Groups").child("GroupMeta").child(group._groupID).child("available").child(currentUser!.uid).setValue(false)
+                RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("available").child(group._groupID).setValue(false)
+                RideDB.child("Groups").child("GroupMeta").child(group._groupID).child("available").child(Auth.auth().currentUser!.uid).setValue(false)
             }
         }
 
@@ -143,6 +159,8 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
         }
         
         tableView.deselectRow(at: indexPath, animated: true)
+        
+        cell.userManager = self.userManager
         
         if groups.count > 0 {
             let group = groups[indexPath.row]
@@ -219,6 +237,7 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
                 print(selectedGroup._groupUsers.count)
                 groupViewController.group = selectedGroup
                 groupViewController.welcomeViewControllerDelegate = self
+                groupViewController.userManager = userManager
             } else {
                 os_log("Index %@ out of range %@", log: OSLog.default, type: .error, indexPath.row, groups.count)
                 return
@@ -227,11 +246,23 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
             let navVC = segue.destination as? UINavigationController
             let settingsViewController = navVC?.viewControllers.first as! SettingsTableViewController
             settingsViewController.welcomeViewControllerDelegate = self
+            settingsViewController.userManager = userManager
             os_log("Showing settings", log: OSLog.default, type: .debug)
         case "showCreateGroup":
             os_log("Showing create new group", log: OSLog.default, type: .debug)
+            guard let createGroupTableViewController = segue.destination as? CreateGroupTableViewController else {
+                return
+            }
+            
+            createGroupTableViewController.userManager = userManager
         case "showSetup":
             os_log("Showing car setup", log: OSLog.default, type: .debug)
+            
+            guard let setupViewController = segue.destination as? SetupViewController else {
+                return
+            }
+            
+            setupViewController.userManager = userManager
         default:
             fatalError("Unexpected Segue Identifier; \(String(describing: segue.identifier))")
         }
@@ -244,7 +275,11 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     }
     
     public func walkthrough() {
-        RideDB?.child("Users").child(mainUser!._userID).child("walkthrough").observeSingleEvent(of: .value, with: { snapshot in
+        guard Auth.auth().currentUser != nil else {
+            return
+        }
+        
+        RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("walkthrough").observeSingleEvent(of: .value, with: { snapshot in
             var completed = false
             
             if let value = snapshot.value as? Bool {
@@ -266,7 +301,7 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
                 self.alertView.titleSkipButton = "SKIP"
                 self.alertView.titleGotItButton = "GOT IT!"
                 
-                self.alertView.colorButtonText = rideClickableRed
+                self.alertView.colorButtonText = UIColor(named: "Accent")!
                 self.alertView.colorButtonBottomBackground = .white
                 
                 self.alertView.show()
@@ -287,65 +322,67 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     
     public func loadUserGroups(_ sender: UIRefreshControl = UIRefreshControl()){
         groups = [Group]()
-        let userID = currentUser?.uid
-        if RideDB != nil {
-            RideDB?.child("Groups").child("UserGroups").child(userID!).observe(.value, with: { (snapshot) in
-                if !(snapshot.value is NSNull), let value = snapshot.value as? NSDictionary {
-                        let groupIDParent = value["groupIDs"]! as! NSDictionary
-                        let groupIDs = groupIDParent.allKeys as? Array<String>
-                    
-                        if groupIDs != nil {
-                            for groupID: String in groupIDs! {
-                                RideDB?.child("Groups").child("GroupMeta").child(groupID).observe(.value, with: { (snapshot) in
-                                    let value = snapshot.value as? NSDictionary
-                                    let groupName = value?["name"] as? String ?? ""
-                                    let groupPhotoURL = value?["photo"] as? String ?? ""
-                                    let groupCreator = value?["creator"] as? String ?? ""
-                                    let groupTimestamp = value?["timestamp"] as? TimeInterval
-                                    let groupAvailability = value?["available"] as? [String: Bool] ?? [:]
+        let userID = Auth.auth().currentUser?.uid
+        RideDB.child("Groups").child("UserGroups").child(userID!).observe(.value, with: { (snapshot) in
+            if !(snapshot.value is NSNull), let value = snapshot.value as? NSDictionary {
+                    let groupIDParent = value["groupIDs"]! as! NSDictionary
+                    let groupIDs = groupIDParent.allKeys as? Array<String>
+                
+                    if groupIDs != nil {
+                        for groupID: String in groupIDs! {
+                            self.RideDB.child("Groups").child("GroupMeta").child(groupID).observe(.value, with: { (snapshot) in
+                                let value = snapshot.value as? NSDictionary
+                                let groupName = value?["name"] as? String ?? ""
+                                let groupPhotoURL = value?["photo"] as? String ?? ""
+                                let groupCreator = value?["creator"] as? String ?? ""
+                                let groupTimestamp = value?["timestamp"] as? TimeInterval
+                                let groupAvailability = value?["available"] as? [String: Bool] ?? [:]
+                                
+                                self.RideDB.child("Groups").child("GroupUsers").child(groupID).observeSingleEvent(of: .value, with: { (snapshot) in
+
+                                    let value = snapshot.value as! NSDictionary
+                                    let userIDParent = value["userIDs"]! as! NSDictionary
+                                    let userIDs = userIDParent.allKeys as? Array<String>
                                     
-                                    RideDB?.child("Groups").child("GroupUsers").child(groupID).observeSingleEvent(of: .value, with: { (snapshot) in
+                                    let groupPhotoReference = Storage.storage().reference(forURL: groupPhotoURL)
 
-                                        let value = snapshot.value as! NSDictionary
-                                        let userIDParent = value["userIDs"]! as! NSDictionary
-                                        let userIDs = userIDParent.allKeys as? Array<String>
-                                        
-                                        let groupPhotoReference = RideStorage?.reference(forURL: groupPhotoURL)
-
-                                        // Fetch the download URL
-                                        groupPhotoReference?.downloadURL { url, error in
-                                            if let error = error {
-                                                //TODO: Handle errors
-                                                // Handle any errors
-                                                print("Error: \(error)")
-                                            } else {
-                                                guard let group = Group(id: groupID, name: groupName, photo: (url?.absoluteString)!, members: userIDs!, creator: groupCreator, timestamp: NSDate(timeIntervalSince1970: groupTimestamp!/1000), available: groupAvailability) else {
-                                                    fatalError("Failed to instantiate group \(groupID)")
-                                                }
-                                                
-                                                if let originalGroup = self.groups.index(where: { $0._groupID == group._groupID }) {
-                                                    self.groups.remove(at: originalGroup)
-                                                }
-                                                                                                
-                                                self.groups.append(group)
-                                                self.groups.sort(by: { $0._groupTimestamp.compare($1._groupTimestamp as Date) == ComparisonResult.orderedDescending })
-
-                                                sender.endRefreshing()
-                                                self.tableView?.reloadData()
+                                    // Fetch the download URL
+                                    groupPhotoReference.downloadURL { url, error in
+                                        if let error = error {
+                                            //TODO: Handle errors
+                                            // Handle any errors
+                                            print("Error: \(error)")
+                                        } else {
+                                            guard let group = Group(id: groupID, name: groupName, photo: (url?.absoluteString)!, members: userIDs!, creator: groupCreator, timestamp: NSDate(timeIntervalSince1970: groupTimestamp!/1000), available: groupAvailability, self.userManager!) else {
+                                                fatalError("Failed to instantiate group \(groupID)")
                                             }
+                                            
+                                            if let originalGroup = self.groups.index(where: { $0._groupID == group._groupID }) {
+                                                self.groups.remove(at: originalGroup)
+                                            }
+                                            
+                                            self.groups.append(group)
+                                            self.groups.sort(by: { $0._groupTimestamp.compare($1._groupTimestamp as Date) == ComparisonResult.orderedDescending })
+
+                                            sender.endRefreshing()
+                                            self.tableView?.reloadData()
                                         }
-                                    })
+                                    }
                                 })
-                            }
-                        } else {
-                            sender.endRefreshing()
+                            })
                         }
                     } else {
                         sender.endRefreshing()
                     }
-                })
-        } else {
-            os_log("Failed to reach database", log: OSLog.default, type: .error)
-        }
+                } else {
+                    sender.endRefreshing()
+                }
+            })
+    }
+}
+
+extension WelcomeTableViewController: UserManagerClient {
+    func setUserManager(_ userManager: UserManagerProtocol) {
+        self.userManager = userManager
     }
 }

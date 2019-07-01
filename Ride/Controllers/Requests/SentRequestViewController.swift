@@ -22,6 +22,7 @@ protocol PaymentDelegate {
 
 class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPaymentContextDelegate, PaymentDelegate {
     
+    lazy var RideDB = Database.database().reference()
     var request: Request? = nil
     var userName: String? = nil
     var price: [String: Double] = [:]
@@ -31,6 +32,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     let customerContext = STPCustomerContext(keyProvider: StripeClient.shared)
     var paymentContext = STPPaymentContext(customerContext: STPCustomerContext(keyProvider: StripeClient.shared))
     var completePaymentDelegate: PaymentDelegate? = nil
+    var vSpinner: UIView?
     
     @IBOutlet weak var page1Title: UILabel!
     @IBOutlet weak var page1Time: UILabel!
@@ -114,7 +116,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         } else if (page3Title != nil) {
             page3Title.text = page3Title.text! + String(userName?.split(separator: " ").first ?? "the other user")
             
-            RideDB?.child("Requests").child(request!._id!).child("price").observeSingleEvent(of: .value, with: { (snapshot) in
+            RideDB.child("Requests").child(request!._id!).child("price").observeSingleEvent(of: .value, with: { (snapshot) in
                 if let value = snapshot.value as? [String: Double] {
                     self.page3Price.text = String(format: "£%.2f", value["total"]!)
                 }
@@ -128,7 +130,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                 self.setPaymentButton()
             }
             
-            RideDB?.child("Requests").child(request!._id!).child("price").observeSingleEvent(of: .value, with: { (snapshot) in
+            RideDB.child("Requests").child(request!._id!).child("price").observeSingleEvent(of: .value, with: { (snapshot) in
                 if let value = snapshot.value as? [String: Double] {
                     self.price = value
                     self.page4Price.attributedText = self.attributedText(withString: String(format: "Price: £%.2f", value["total"]!), boldString: "Price", font: self.page4Price.font)
@@ -203,7 +205,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                 let input = UITextField(frame: CGRect(x: 0, y: 0, width: 303, height: 40))
                 input.placeholder = " + Select users to split the payment"
                 input.borderWidth = 1
-                input.borderColor = rideClickableRed
+                input.borderColor = UIColor(named: "Accent")
                 input.leftViewMode = UITextField.ViewMode.always
                 input.leftView = UIView(frame:CGRect(x:0, y:0, width:10, height:10))
                 input.addTarget(self, action: #selector(showAddUsers(textfield:)), for: .editingDidBegin)
@@ -212,16 +214,16 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             }
         }
         
-        if request?._driver == mainUser?._userID {
-            RideDB?.child("Users").child((mainUser?._userID)!).child("requests").child("received").child((request?._id)!).child("new").setValue(false)
+        if request?._driver == Auth.auth().currentUser!.uid {
+            RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("received").child((request?._id)!).child("new").setValue(false)
         } else {
-            RideDB?.child("Users").child((mainUser?._userID)!).child("requests").child("sent").child((request?._id)!).child("new").setValue(false)
+            RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("sent").child((request?._id)!).child("new").setValue(false)
         }
     }
     
     @IBAction func accept(_ sender: Any) {
-        RideDB?.child("Requests").child(request!._id!).child("status").setValue(2)
-        RideDB?.child("Users").child((request?._driver)!).child("requests").child("received").child((request?._id)!).child("new").setValue(true)
+        RideDB.child("Requests").child(request!._id!).child("status").setValue(2)
+        RideDB.child("Users").child((request?._driver)!).child("requests").child("received").child((request?._id)!).child("new").setValue(true)
         
         if let parent = self.parent as? SentRequestsPageViewController {
             let secondViewController = self.storyboard?.instantiateViewController(withIdentifier: "SentRequestController_Page4") as! SentRequestViewController
@@ -260,12 +262,12 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             return
         }
         
-        self.paymentContext.presentPaymentMethodsViewController()
+        self.paymentContext.presentPaymentOptionsViewController()
     }
     
     @IBAction func pay(_ sender: Any) {
-        if self.paymentContext.selectedPaymentMethod != nil {
-            self.showSpinner(onView: self.view)
+        if self.paymentContext.selectedPaymentOption != nil {
+            self.vSpinner = self.showSpinner(onView: self.view)
             if self.price["split_total"] != nil || self.request?.status == 4 {
                 self.paymentContext.paymentAmount = Int(String(format: "%.2f", self.price["split_total"]!).replacingOccurrences(of: ".", with: ""))!
             } else {
@@ -286,7 +288,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         overlay: MKOverlay) -> MKOverlayRenderer {
         
         let renderer = MKPolylineRenderer(overlay: overlay)
-        renderer.strokeColor = rideClickableRed
+        renderer.strokeColor = UIColor(named: "Accent")
         renderer.lineWidth = 5.0
         return renderer
     }
@@ -347,7 +349,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             input.isEnabled = false
             input.text = user._userName
             input.borderWidth = 1
-            input.borderColor = rideClickableRed
+            input.borderColor = UIColor(named: "Accent")
             input.leftViewMode = UITextField.ViewMode.always
             input.leftView = UIView(frame:CGRect(x: 0, y: 0, width: 10, height: 10))
             self.textFields.append(input)
@@ -396,7 +398,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     
     func paymentContext(_ paymentContext: STPPaymentContext, didCreatePaymentResult paymentResult: STPPaymentResult, completion: @escaping STPErrorBlock) {
         self.getStripeAccountID(destination: self.request!._driver) { destination in
-            RideDB?.child("stripe_customers").child(mainUser!._userID).observeSingleEvent(of: .value, with: { snapshot in
+            self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).observeSingleEvent(of: .value, with: { snapshot in
                 if let customerID = (snapshot.value as! [String: Any])["customer_id"] as? String {
                     if self.price["split_total"] != nil && self.price["split_user"] != nil || self.request?.status == 4 {
                         StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: self.price["split_total"]!, user: self.price["split_user"]!, requestID: self.request!._id!, completion: completion)
@@ -414,14 +416,17 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                         }
                         
                         if !found {
-                            Alamofire.request("https://api.stripe.com/v1/customers/\(customerID)/sources/\(paymentResult.source.stripeID)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
-                                if let error = response.error {
-                                    print(error)
-                                } else {
-                                    if let result = response.result.value as? NSDictionary {
-                                        RideDB?.child("stripe_customers").child(mainUser!._userID).child("sources").childByAutoId().setValue(result)
+                            let appDelegate = UIApplication.shared.delegate as? AppDelegate
+                            appDelegate?.getSecretKey(completion: { (secretKey) in
+                                Alamofire.request("https://api.stripe.com/v1/customers/\(customerID)/sources/\(paymentResult.source.stripeID)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+                                    if let error = response.error {
+                                        print(error)
+                                    } else {
+                                        if let result = response.result.value as? NSDictionary {
+                                            self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").childByAutoId().setValue(result)
+                                        }
                                     }
-                                }
+                                })
                             })
                         }
                     }
@@ -431,7 +436,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     }
     
     func paymentContext(_ paymentContext: STPPaymentContext, didFinishWith status: STPPaymentStatus, error: Error?) {
-        self.removeSpinner()
+        self.removeSpinner(spinner: self.vSpinner!)
         switch status {
         case .success:
             if let errorDescription = error?._userInfo?["description"] {
@@ -440,17 +445,17 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                 self.present(alert, animated: true, completion: nil)
             } else {
                 if self.price["split_total"] != nil && self.connections["selected"] != nil {
-                    RideDB?.child("Requests").child(self.request!._id!).child("status").setValue(4)
-                    RideDB?.child("Requests").child(self.request!._id!).child("price").setValue(self.price)
+                    RideDB.child("Requests").child(self.request!._id!).child("status").setValue(4)
+                    RideDB.child("Requests").child(self.request!._id!).child("price").setValue(self.price)
                     var i = 0
                     for user in self.connections["selected"]! {
-                        RideDB?.child("Requests").child(self.request!._id!).child("split").child(String(i)).setValue(user._connectionUser)
-                        RideDB?.child("Users").child(user._connectionUser).child("requests").child("sent").child((request?._id)!).setValue(["new": true, "split": true, "timestamp": ServerValue.timestamp()])
+                        RideDB.child("Requests").child(self.request!._id!).child("split").child(String(i)).setValue(user._connectionUser)
+                        RideDB.child("Users").child(user._connectionUser).child("requests").child("sent").child((request?._id)!).setValue(["new": true, "split": true, "timestamp": ServerValue.timestamp()])
                         i += 1
                     }
                 } else {
-                    RideDB?.child("Requests").child(self.request!._id!).child("status").setValue(3)
-                    RideDB?.child("Users").child((request?._driver)!).child("requests").child("received").child((request?._id)!).child("new").setValue(true)
+                    RideDB.child("Requests").child(self.request!._id!).child("status").setValue(3)
+                    RideDB.child("Users").child((request?._driver)!).child("requests").child("received").child((request?._id)!).child("new").setValue(true)
                 }
                 self.dismissPayController()
             }
@@ -514,16 +519,16 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     }
     
     func paymentContextDidChange(_ paymentContext: STPPaymentContext) {
-        guard paymentContext.selectedPaymentMethod != nil else {
+        guard paymentContext.selectedPaymentOption != nil else {
             self.payMethod.setTitle("Select Payment Method", for: .normal)
             self.payButton.isEnabled = false
-            self.payButton.backgroundColor = rideClickableRed.withAlphaComponent(0.75)
+            self.payButton.backgroundColor = UIColor(named: "Accent")?.withAlphaComponent(0.75)
             return
         }
         
-        self.payMethod.setTitle(paymentContext.selectedPaymentMethod?.label, for: .normal)
+        self.payMethod.setTitle(paymentContext.selectedPaymentOption?.label, for: .normal)
         self.payButton.isEnabled = true
-        self.payButton.backgroundColor = rideClickableRed
+        self.payButton.backgroundColor = UIColor(named: "Accent")
     }
     
     
@@ -531,7 +536,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     
     private func getStripeAccountID(destination: String, completion: @escaping (String)->()) {
         print(destination)
-        RideDB?.child("stripe_customers").child(destination).observeSingleEvent(of: .value, with: { snapshot in
+        RideDB.child("stripe_customers").child(destination).observeSingleEvent(of: .value, with: { snapshot in
             if snapshot.hasChild("account_id") {
                 if let value = snapshot.value as? [String: Any] {
                     completion(value["account_id"] as! String)
@@ -541,13 +546,13 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     }
     
     private func userHasCard(completion: @escaping (Bool)->()) {
-        RideDB?.child("stripe_customers").child(mainUser!._userID).child("sources").observeSingleEvent(of: .value, with: { (snapshot) in
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").observeSingleEvent(of: .value, with: { (snapshot) in
             completion(snapshot.hasChildren())
         })
     }
     
     private func getCar(user: String, completion: @escaping (Car)->()) {
-        RideDB?.child("Users").child(user).child("car").observeSingleEvent(of: .value, with: { (snapshot) in
+        RideDB.child("Users").child(user).child("car").observeSingleEvent(of: .value, with: { (snapshot) in
             if let value = snapshot.value as? [String: String] {
                 completion(Car(type: value["type"]!, mpg: value["mpg"]!, seats: value["seats"]!, registration: value["registration"]!))
             }
@@ -555,9 +560,9 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     }
     
     private func cancelRide() {
-        RideDB?.child("Requests").child(request!._id!).child("deleted").setValue(true)
-        RideDB?.child("Requests").child(request!._id!).child("status").setValue(-1)
-        RideDB?.child("Users").child(request!._sender!).child("requests").child("sent").child(request!._id!).removeValue()
+        RideDB.child("Requests").child(request!._id!).child("deleted").setValue(true)
+        RideDB.child("Requests").child(request!._id!).child("status").setValue(-1)
+        RideDB.child("Users").child(request!._sender!).child("requests").child("sent").child(request!._id!).removeValue()
         self.navigationController?.popViewController(animated: true)
     }
     
@@ -592,7 +597,7 @@ extension SentRequestViewController: STPAddCardViewControllerDelegate {
     }
     
     func addCardViewController(_ addCardViewController: STPAddCardViewController, didCreateToken token: STPToken, completion: @escaping STPErrorBlock) {
-        RideDB?.child("stripe_customers").child(mainUser!._userID).child("sources").childByAutoId().child("token").setValue(token.tokenId) { (error, ref) -> Void in
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").childByAutoId().child("token").setValue(token.tokenId) { (error, ref) -> Void in
             if let error = error {
                 completion(error)
             } else {

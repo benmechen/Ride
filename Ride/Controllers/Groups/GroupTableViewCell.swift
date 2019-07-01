@@ -23,10 +23,10 @@ class GroupTableViewCell: UITableViewCell {
         // Initialization code
         
         requestButton.titleLabel?.textAlignment = NSTextAlignment.center
-        requestButton.titleLabel?.textColor = rideClickableRed
-        requestButton.tintColor = rideClickableRed
+        requestButton.titleLabel?.textColor = UIColor(named: "Accent")
+        requestButton.tintColor = UIColor(named: "Accent")
         requestButton.layer.borderWidth = 2
-        requestButton.layer.borderColor = rideClickableRed.cgColor
+        requestButton.layer.borderColor = UIColor(named: "Accent")?.cgColor
         
 //        userImage.layer.borderWidth = 1
 //        userImage.layer.borderColor = UIColor.red.cgColor

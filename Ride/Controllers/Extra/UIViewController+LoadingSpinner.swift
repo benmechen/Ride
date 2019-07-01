@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 
 extension UIViewController {
-    func showSpinner(onView : UIView) {
+    func showSpinner(onView : UIView) -> UIView {
         let spinnerViewContainter = UIView.init(frame: onView.bounds)
 //        spinnerViewContainter.backgroundColor = UIColor.init(red: 0, green: 0, blue: 0, alpha: 0.5)
         spinnerViewContainter.backgroundColor = UIColor.init(white: 1, alpha: 0.6)
@@ -27,13 +27,12 @@ extension UIViewController {
             onView.addSubview(spinnerViewContainter)
         }
         
-        vSpinner = spinnerViewContainter
+        return spinnerViewContainter
     }
     
-    func removeSpinner() {
+    func removeSpinner(spinner: UIView) {
         DispatchQueue.main.async {
-            vSpinner?.removeFromSuperview()
-            vSpinner = nil
+            spinner.removeFromSuperview()
         }
     }
 }
@@ -134,7 +133,7 @@ class SpinnerView : UIView {
         let count = 36
         let animation = CAKeyframeAnimation(keyPath: "strokeColor")
         animation.keyTimes = (0 ... count).map { NSNumber(value: CFTimeInterval($0) / CFTimeInterval(count)) }
-        animation.values = (0 ... count).map { _ in rideClickableRed.cgColor }
+        animation.values = (0 ... count).map { _ in UIColor(named: "Accent")?.cgColor }
         animation.duration = duration
         animation.calculationMode = .linear
         animation.repeatCount = Float.infinity

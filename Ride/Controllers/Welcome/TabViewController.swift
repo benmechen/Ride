@@ -8,6 +8,7 @@
 
 import UIKit
 import os.log
+import Firebase
 import Kingfisher
 import Alamofire
 
@@ -15,38 +16,31 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
     
     @IBOutlet weak var navigationBar: UINavigationItem!
     
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     var profileButton: UIImageView!
     
     override func viewDidLoad() {
-        guard mainUser != nil else {
-            moveToLoginController()
-            return
-        }
+        super.viewDidLoad()
         
-        if ((mainUser!._userCar._carType == "undefined" || mainUser!._userCar._carType == "") && mainUser?._userCar._carMPG != "nil") {
-            self.performSegue(withIdentifier: "showSetup", sender: nil)
-        } else {
-            if let welcomeVC = self.viewControllers?[0] as? WelcomeTableViewController {
-                welcomeVC.walkthrough()
-            }
-        }
-        
-        RideDB?.child("stripe_customers").child(mainUser!._userID).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
-            if let value = snapshot.value as? String {
-                Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
-                    if let error = response.error {
-                        print(error)
-                    } else {
-                        if let result = response.result.value as? NSDictionary {
-                            print(result)
-                            RideDB?.child("stripe_customers").child(mainUser!._userID).child("account").setValue(result)
-                            if let verification = result["verification"] as? NSDictionary {
-                                if let fieldsNeeded = verification["fields_needed"] as? NSArray {
-                                    if fieldsNeeded.count > 0 {
-                                        if let legalEntity = result["legal_entity"] as? NSDictionary, let legalEntityVerification = legalEntity["verification"] as? NSDictionary {
-                                            if let status = legalEntityVerification["status"] as? String {
-                                                if status != "pending" {
-                                                    self.performSegue(withIdentifier: "showSettings", sender: nil)
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
+            if let value = snapshot.value as? String, let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                appDelegate.getSecretKey(completion: { (secretKey) in
+                    Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+                        if let error = response.error {
+                            print(error)
+                        } else {
+                            if let result = response.result.value as? NSDictionary {
+                                print(result)
+                                self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account").setValue(result)
+                                if let verification = result["verification"] as? NSDictionary {
+                                    if let fieldsNeeded = verification["fields_needed"] as? NSArray {
+                                        if fieldsNeeded.count > 0 {
+                                            if let legalEntity = result["legal_entity"] as? NSDictionary, let legalEntityVerification = legalEntity["verification"] as? NSDictionary {
+                                                if let status = legalEntityVerification["status"] as? String {
+                                                    if status != "pending" {
+                                                        self.performSegue(withIdentifier: "showSettings", sender: nil)
+                                                    }
                                                 }
                                             }
                                         }
@@ -54,31 +48,43 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
                                 }
                             }
                         }
-                    }
+                    })
                 })
             }
         })
-    
-        super.viewDidLoad()
         
-        navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.shadowImage = UIImage()
         
         //Set the right bar button to user's profile picture
-        profileButton = UIImageView(frame: CGRect(x: 0, y: 0, width: 38, height: 38))
+        self.profileButton = UIImageView(frame: CGRect(x: 0, y: 0, width: 38, height: 38))
+                
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
         
-        profileButton.kf.setImage(
-            with: mainUser?._userPhotoURL,
-            placeholder: UIImage(named: "groupPlaceholder"),
-            options: [
-                .transition(.fade(1)),
-                .cacheOriginalImage
-            ])
+            if ((user!.car._carType == "undefined" || user!.car._carType == "") && user!.car._carMPG != "nil") {
+                self.performSegue(withIdentifier: "showSetup", sender: nil)
+            } else {
+                if let welcomeVC = self.viewControllers?[0] as? WelcomeTableViewController {
+                    welcomeVC.walkthrough()
+                }
+            }
+            
+            self.profileButton.kf.setImage(
+                with: user!.photo,
+                placeholder: UIImage(named: "groupPlaceholder"),
+                options: [
+                    .transition(.fade(1)),
+                    .cacheOriginalImage
+                ])
+        })
         
         profileButton.backgroundColor = .white
         profileButton.layer.masksToBounds = true
         profileButton.layer.cornerRadius = profileButton.frame.height/2
         profileButton.layer.borderWidth = 1
-        profileButton.layer.borderColor = rideClickableRed.cgColor
+        profileButton.layer.borderColor = UIColor(named: "Accent")?.cgColor
         profileButton.isUserInteractionEnabled = true
         let widthConstraint = profileButton.widthAnchor.constraint(equalToConstant: 38)
         let heightConstraint = profileButton.heightAnchor.constraint(equalToConstant: 38)
@@ -95,7 +101,7 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
         rideLabel.font = UIFont(name: "HelveticaNeue-Light", size: 30.0)
         navigationBar.titleView = rideLabel
         
-        RideDB?.child("Users").child(mainUser!._userID).child("requests").observeSingleEvent(of: .value, with: { snapshot in
+        RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").observeSingleEvent(of: .value, with: { snapshot in
             var count = 0
             if let value = snapshot.value as? [String: [String: [String: Any]]] {
                 if let sent = value["sent"] {
@@ -118,7 +124,7 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
             } else {
                 self.tabBar.items?[1].badgeValue = nil
             }
-            self.tabBar.items?[1].badgeColor = rideClickableRed
+            self.tabBar.items?[1].badgeColor = UIColor(named: "Accent")
         })
     }
     
@@ -143,14 +149,20 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
             let navVC = segue.destination as? UINavigationController
             if let settingsViewController = navVC?.viewControllers.first as? SettingsTableViewController {
                 settingsViewController.welcomeViewControllerDelegate = self
+                settingsViewController.userManager = userManager
             }
             os_log("Showing settings", log: OSLog.default, type: .debug)
         case "showCreateGroup":
+            let navVC = segue.destination as? UINavigationController
+            if let createGroupTableViewController = navVC?.viewControllers.first as? CreateGroupTableViewController {
+                createGroupTableViewController.userManager = userManager
+            }
             os_log("Showing create new group", log: OSLog.default, type: .debug)
         case "showSetup":
             let navVC = segue.destination as? UINavigationController
             if let setupViewController = navVC?.viewControllers.first as? SetupViewController, let welcomeTableViewController = self.viewControllers?[0] as? WelcomeTableViewController {
                 setupViewController.welcomeTableViewController = welcomeTableViewController
+                setupViewController.userManager = userManager
             }
             os_log("Showing car setup", log: OSLog.default, type: .debug)
         default:

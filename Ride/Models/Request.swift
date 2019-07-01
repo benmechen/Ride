@@ -26,6 +26,8 @@ class Request {
     var new: Bool = false
     var status: Int = 0
     var deleted: Bool = false
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     
     init (id: String? = nil, driver: String, sender: String, from: CLLocationCoordinate2D, fromName: String, to: CLLocationCoordinate2D, toName: String, time: Int, passengers: Int, status: Int) {
         
@@ -42,40 +44,45 @@ class Request {
     }
     
     public func send(completion: @escaping (Bool, String?)->()) {
-        let key = RideDB?.child("Requests").childByAutoId().key
-        
-        let from: [String: Any] = ["latitude": _from.latitude, "longitude": _from.longitude, "name": _fromName]
-        let to: [String: Any] = ["latitude": _to.latitude, "longitude": _to.longitude, "name": _toName]
-        
-        RideDB?.child("Users").child(self._driver).child("name").observeSingleEvent(of: .value, with: { snapshot in
-            let driver_name = snapshot.value as! String
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
+            let key = self.RideDB.child("Requests").childByAutoId().key
             
-            let request: [String : Any] = ["driver": self._driver,
-                                        "driver_name": driver_name,
-                                        "sender": self._sender,
-                                        "sender_name": mainUser?._userName as Any,
-                                        "from": from,
-                                        "to": to,
-                                        "time": self._time,
-                                        "passengers": self._passengers,
-                                        "status": self.status,
-                                        "sent": ServerValue.timestamp(),
-                                        "deleted": false]
+            let from: [String: Any] = ["latitude": self._from.latitude, "longitude": self._from.longitude, "name": self._fromName]
+            let to: [String: Any] = ["latitude": self._to.latitude, "longitude": self._to.longitude, "name": self._toName]
             
-            let childUpdates: [String : Any] = ["/Requests/\(key!)": request]
-            
-            RideDB?.updateChildValues(childUpdates, withCompletionBlock: { error, data in
-                if let error = error {
-                    os_log("Error updating database: %@", log: OSLog.default, type: .error, error.localizedDescription)
-                    print(error.localizedDescription)
-                    completion(false, "")
-                } else {
-                    completion(true, key!)
-                }
+            self.RideDB.child("Users").child(self._driver).child("name").observeSingleEvent(of: .value, with: { snapshot in
+                let driver_name = snapshot.value as! String
+                
+                let request: [String : Any] = ["driver": self._driver,
+                                            "driver_name": driver_name,
+                                            "sender": self._sender,
+                                            "sender_name": user!.name as Any,
+                                            "from": from,
+                                            "to": to,
+                                            "time": self._time,
+                                            "passengers": self._passengers,
+                                            "status": self.status,
+                                            "sent": ServerValue.timestamp(),
+                                            "deleted": false]
+                
+                let childUpdates: [String : Any] = ["/Requests/\(key!)": request]
+                
+                self.RideDB.updateChildValues(childUpdates, withCompletionBlock: { error, data in
+                    if let error = error {
+                        os_log("Error updating database: %@", log: OSLog.default, type: .error, error.localizedDescription)
+                        print(error.localizedDescription)
+                        completion(false, "")
+                    } else {
+                        completion(true, key!)
+                    }
+                })
             })
+            
+            self.RideDB.child("Users").child(self._driver).child("requests").child("received").child(key!).setValue(["timestamp": ServerValue.timestamp(), "new": true])
+            self.RideDB.child("Users").child(self._sender).child("requests").child("sent").child(key!).setValue(["timestamp": ServerValue.timestamp(), "new": true])
         })
-        
-        RideDB?.child("Users").child(self._driver).child("requests").child("received").child(key!).setValue(["timestamp": ServerValue.timestamp(), "new": true])
-        RideDB?.child("Users").child(self._sender).child("requests").child("sent").child(key!).setValue(["timestamp": ServerValue.timestamp(), "new": true])
     }
 }

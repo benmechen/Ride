@@ -8,7 +8,7 @@
 
 import UIKit
 import MessageKit
-import MessageInputBar
+//import MessageInputBar
 import Firebase
 import Crashlytics
 
@@ -21,6 +21,8 @@ class RequestsChatViewController: MessagesViewController {
     @IBOutlet weak var receivedInput: UITextField!
     @IBOutlet weak var sentInput: UITextField!
     
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     var request: Request? = nil
     var messages: [Message] = []
     var member: Member!
@@ -33,13 +35,13 @@ class RequestsChatViewController: MessagesViewController {
 //        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
 //        self.navigationController?.navigationBar.shadowImage = UIImage()
 //        self.navigationController?.navigationBar.isTranslucent = true
-//        self.navigationController?.view.backgroundColor = rideRed
+//        self.navigationController?.view.backgroundColor = UIColor(named: "Main")
         
 //        print("Setting nav to default")
 //        self.navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
 //        self.navigationController?.navigationBar.shadowImage = nil
 //        self.navigationController?.navigationBar.isTranslucent = true
-//        self.navigationController?.view.backgroundColor = rideRed
+//        self.navigationController?.view.backgroundColor = UIColor(named: "Main")
         
         
         while request == nil && userName == nil {
@@ -73,7 +75,13 @@ class RequestsChatViewController: MessagesViewController {
             }
         }
         
-        member = Member(id: (mainUser?._userID)!, name: (mainUser?._userName)!)
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
+            
+            self.member = Member(id: Auth.auth().currentUser!.uid, name: user!.name)
+        })
         messagesCollectionView.messagesDataSource = self
         messagesCollectionView.messagesLayoutDelegate = self
         messageInputBar.delegate = self
@@ -141,43 +149,53 @@ class RequestsChatViewController: MessagesViewController {
     
     // MARK: - Private functions
     private func listenForMessagesForRequest(_ requestID: String) {
-        let query = RideDB?.child("Requests").child(requestID).child("messages").queryOrdered(byChild: "date")
-        
-        query?.observe(.childAdded, with: { (snapshot) in
-            if let value = snapshot.value as? [String: Any] {
-                let interval = TimeInterval(exactly: value["date"] as! Int)
-                let date = Date(timeIntervalSince1970: interval!)
+        let query = RideDB.child("Requests").child(requestID).child("messages").queryOrdered(byChild: "date")
 
-                var name = ""
-
-                if value["sender"] as? String == mainUser?._userID {
-                    name = (mainUser?._userName)!
-                } else {
-                    name = self.userName!
-                }
-
-                let member = Member(id: value["sender"] as! String, name: name)
-                
-                let message = Message(member: member, text: value["message"] as! String, messageId: snapshot.key, date: date)
-
-                self.messages.append(message)
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
             }
             
-            self.messagesCollectionView.reloadData()
-            self.messagesCollectionView.scrollToBottom()
+            query.observe(.childAdded, with: { (snapshot) in
+                if let value = snapshot.value as? [String: Any] {
+                    let interval = TimeInterval(exactly: value["date"] as! Int)
+                    let date = Date(timeIntervalSince1970: interval!)
+
+                    var name = ""
+
+                    if value["sender"] as? String == Auth.auth().currentUser!.uid {
+                        name = user!.name
+                    } else {
+                        name = self.userName!
+                    }
+
+                    let member = Member(id: value["sender"] as! String, name: name)
+                    
+                    let message = Message(member: member, text: value["message"] as! String, messageId: snapshot.key, date: date)
+
+                    self.messages.append(message)
+                }
+                
+                self.messagesCollectionView.reloadData()
+                self.messagesCollectionView.scrollToBottom()
+            })
         })
     }
 }
 
 extension RequestsChatViewController: MessagesDataSource {
+    func currentSender() -> SenderType {
+        return Sender(id: member.id, displayName: member.name)
+    }
+    
     func numberOfSections(
         in messagesCollectionView: MessagesCollectionView) -> Int {
         return messages.count
     }
     
-    func currentSender() -> Sender {
-        return Sender(id: member.id, displayName: member.name)
-    }
+//    func currentSender() -> Sender {
+//        return Sender(id: member.id, displayName: member.name)
+//    }
     
     func messageForItem(
         at indexPath: IndexPath,
@@ -255,13 +273,13 @@ extension RequestsChatViewController: MessageInputBarDelegate {
         let messageJSON = ["sender": message.member.id,
                            "date": intDateStamp,
                            "message": message.text,] as [String : Any]
-        RideDB?.child("Requests").child((request?._id)!).child("messages").child(message.messageId).setValue(messageJSON)
-        RideDB?.child("Requests").child((request?._id)!).child("last_message").setValue(message.messageId)
+        RideDB.child("Requests").child((request?._id)!).child("messages").child(message.messageId).setValue(messageJSON)
+        RideDB.child("Requests").child((request?._id)!).child("last_message").setValue(message.messageId)
         
-        if request?._driver == mainUser?._userID {
-            RideDB?.child("Users").child((request?._sender)!).child("requests").child("sent").child((request?._id)!).child("new").setValue(true)
+        if request?._driver == Auth.auth().currentUser!.uid {
+            RideDB.child("Users").child((request?._sender)!).child("requests").child("sent").child((request?._id)!).child("new").setValue(true)
         } else {
-            RideDB?.child("Users").child((request?._driver)!).child("requests").child("received").child((request?._id)!).child("new").setValue(true)
+            RideDB.child("Users").child((request?._driver)!).child("requests").child("received").child((request?._id)!).child("new").setValue(true)
         }
     }
 }
@@ -270,7 +288,7 @@ extension RequestsChatViewController: MessageInputBarDelegate {
 extension UIColor {
     
     static var primary: UIColor {
-        return rideClickableRed
+        return UIColor(named: "Accent")!
     }
     
     static var incomingMessage: UIColor {

@@ -19,6 +19,8 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     @IBOutlet weak var segmentedView: UIView!
 
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     var sentRequestIDs: [String: Array<String>] = ["upcoming": [], "previous": []]
     var sentRequests: [String: [String: Request]] = ["upcoming":[:], "previous":[:]]
     var receivedRequestIDs: [String: Array<String>] = ["upcoming": [], "previous": []]
@@ -168,7 +170,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                 }
             }
             
-            guard var cell = sentRequestsTable.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath) as? RequestsTableViewCell else {
+            guard let cell = sentRequestsTable.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath) as? RequestsTableViewCell else {
                 fatalError("The dequeued cell is not an instance of RequestsTableViewCell")
             }
             
@@ -194,7 +196,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
             }
             
             // Name & profile image
-            RideDB!.child("Users").child((request._driver)!).observeSingleEvent(of: .value) { (snapshot) in
+            RideDB.child("Users").child((request._driver)!).observeSingleEvent(of: .value) { (snapshot) in
                 if let value = snapshot.value as? [String : Any] {
                     cell.name.text = (value["name"] as! String)
                     cell.profileImage.image(fromUrl: value["photo"] as! String)
@@ -292,7 +294,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
             }
             
             // Name & profile image
-            RideDB!.child("Users").child((request._sender)!).observeSingleEvent(of: .value) { (snapshot) in
+            RideDB.child("Users").child((request._sender)!).observeSingleEvent(of: .value) { (snapshot) in
                 if let value = snapshot.value as? [String : Any] {
                     cell.name.text = (value["name"] as! String)
                     cell.profileImage.image(fromUrl: value["photo"] as! String)
@@ -402,15 +404,15 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                 section = "previous"
             }
             if self.segmentedControl.selectedSegmentIndex == 0 {
-                RideDB?.child("Requests").child((self.sentRequestIDs[section]?[editActionsForRowAt.row])!).child("deleted").setValue(true)
-                RideDB?.child("Users").child((self.sentRequests[section]?[self.sentRequestIDs[section]![editActionsForRowAt.row]]?._sender)!).child("requests").child("sent").child(self.sentRequestIDs[section]![editActionsForRowAt.row]).removeValue()
+                self.RideDB.child("Requests").child((self.sentRequestIDs[section]?[editActionsForRowAt.row])!).child("deleted").setValue(true)
+                self.RideDB.child("Users").child((self.sentRequests[section]?[self.sentRequestIDs[section]![editActionsForRowAt.row]]?._sender)!).child("requests").child("sent").child(self.sentRequestIDs[section]![editActionsForRowAt.row]).removeValue()
                 self.sentRequests[section]?.removeValue(forKey: (self.sentRequestIDs[section]?[editActionsForRowAt.row])!)
 //                self.sentRequests[section].removeValue(forKey: )
                 self.sentRequestIDs[section]?.remove(at: editActionsForRowAt.row)
                 self.sentRequestsTable.reloadData()
             } else if self.segmentedControl.selectedSegmentIndex == 1 {
-                RideDB?.child("Requests").child(self.receivedRequestIDs[section]![editActionsForRowAt.row]).child("deleted").setValue(true)
-                RideDB?.child("Users").child((self.receivedRequests[section]?[self.receivedRequestIDs[section]![editActionsForRowAt.row]]?._driver)!).child("requests").child("received").child(self.receivedRequestIDs[section]![editActionsForRowAt.row]).removeValue()
+                self.RideDB.child("Requests").child(self.receivedRequestIDs[section]![editActionsForRowAt.row]).child("deleted").setValue(true)
+                self.RideDB.child("Users").child((self.receivedRequests[section]?[self.receivedRequestIDs[section]![editActionsForRowAt.row]]?._driver)!).child("requests").child("received").child(self.receivedRequestIDs[section]![editActionsForRowAt.row]).removeValue()
                 self.receivedRequests[section]?.removeValue(forKey: self.receivedRequestIDs[section]![editActionsForRowAt.row])
                 self.receivedRequestIDs[section]?.remove(at: editActionsForRowAt.row)
                 self.receivedRequestsTable.reloadData()
@@ -493,140 +495,144 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
     // MARK: - Private functions
     
     private func getUserRequests() {
-        if RideDB != nil {
-            RideDB?.child("Users").child((mainUser?._userID)!).child("requests").child("sent").queryOrdered(byChild: "timestamp").observe(.value, with: { (snapshot) in
-                for child in snapshot.children {
-                    let snap = child as! DataSnapshot
-                    RideDB?.child("Requests").child(snap.key).observeSingleEvent(of: .value, with: { (snapshot) in
-                        if let sentValue = snapshot.value as? [String: Any] {
-                            let from = sentValue["from"] as! [String: Any]
-                            let fromLat: Double = from["latitude"] as! Double
-                            let fromLong: Double = from["longitude"] as! Double
-                            let fromName: String = from["name"] as! String
-                            
-                            let to = sentValue["to"] as! [String: Any]
-                            let toLat: Double = to["latitude"] as! Double
-                            let toLong: Double = to["longitude"] as! Double
-                            let toName: String = to["name"] as! String
-                            
-                            let request = Request(id: snap.key, driver: sentValue["driver"] as! String, sender: sentValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: sentValue["time"] as! Int, passengers: sentValue["passengers"] as! Int, status: sentValue["status"] as! Int)
-                            
-                            if let value = snap.value as? [String: Any] {
-                                request.new = value["new"] as! Bool
+        self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("sent").queryOrdered(byChild: "timestamp").observe(.value, with: { (snapshot) in
+            for child in snapshot.children {
+                let snap = child as! DataSnapshot
+                self.RideDB.child("Requests").child(snap.key).observeSingleEvent(of: .value, with: { (snapshot) in
+                    if let sentValue = snapshot.value as? [String: Any] {
+                        let from = sentValue["from"] as! [String: Any]
+                        let fromLat: Double = from["latitude"] as! Double
+                        let fromLong: Double = from["longitude"] as! Double
+                        let fromName: String = from["name"] as! String
+                        
+                        let to = sentValue["to"] as! [String: Any]
+                        let toLat: Double = to["latitude"] as! Double
+                        let toLong: Double = to["longitude"] as! Double
+                        let toName: String = to["name"] as! String
+                        
+                        let request = Request(id: snap.key, driver: sentValue["driver"] as! String, sender: sentValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: sentValue["time"] as! Int, passengers: sentValue["passengers"] as! Int, status: sentValue["status"] as! Int)
+                        
+                        if let value = snap.value as? [String: Any] {
+                            request.new = value["new"] as! Bool
+                        }
+                        request.deleted = sentValue["deleted"] as! Bool
+                        
+                        let date = Date(timeIntervalSince1970: Double(request._time))
+                        if date.timeIntervalSinceNow < 0 {
+                            self.sentRequests["previous"]?[snap.key] = request
+                            if !(self.sentRequestIDs["previous"]?.contains(snap.key))! {
+                                self.sentRequestIDs["previous"]?.append(snap.key)
                             }
-                            request.deleted = sentValue["deleted"] as! Bool
-                            
-                            let date = Date(timeIntervalSince1970: Double(request._time))
-                            if date.timeIntervalSinceNow < 0 {
-                                self.sentRequests["previous"]?[snap.key] = request
-                                if !(self.sentRequestIDs["previous"]?.contains(snap.key))! {
-                                    self.sentRequestIDs["previous"]?.append(snap.key)
-                                }
-                            } else {
-                                self.sentRequests["upcoming"]?[snap.key] = request
-                                if !(self.sentRequestIDs["upcoming"]?.contains(snap.key))! {
-                                    self.sentRequestIDs["upcoming"]?.append(snap.key)
-                                }
-                            }
-                            
-                            self.sentRequestsTable.reloadData()
-                            self.sentRequestsTable.numberOfRows(inSection: 0)
-                            
-                            let sentCount = self.sentRequestIDs["upcoming"]!.count + self.sentRequestIDs["previous"]!.count
-                            let receivedCount = self.receivedRequestIDs["upcoming"]!.count + self.receivedRequestIDs["previous"]!.count
-                            
-                            if (sentCount > 0 || receivedCount > 0) && !self.sectionChanged {
-                                if sentCount < receivedCount {
-                                    self.segmentedControl.selectedSegmentIndex = 1
-                                } else {
-                                    self.segmentedControl.selectedSegmentIndex = 0
-                                }
-                                
-                                self.switchSections(self)
-                                self.sectionChanged = true
+                        } else {
+                            self.sentRequests["upcoming"]?[snap.key] = request
+                            if !(self.sentRequestIDs["upcoming"]?.contains(snap.key))! {
+                                self.sentRequestIDs["upcoming"]?.append(snap.key)
                             }
                         }
-                    })
-                }
-                
-                if snapshot.childrenCount == 0 {
-                    self.sentRequestIDs["upcoming"]?.append("nil")
-                    
-                    let request = Request(id: "nil", driver: "", sender: "", from: CLLocationCoordinate2D(), fromName: "", to: CLLocationCoordinate2D(), toName: "", time: 0, passengers: 0, status: 0)
-                    self.sentRequests["upcoming"]?["nil"] = request
-                    self.sentRequestsTable.reloadData()
-                }
-            })
-                
-            RideDB?.child("Users").child((mainUser?._userID)!).child("requests").child("received").queryOrdered(byChild: "timestamp").observe(.value, with: { (snapshot) in
-                for child in snapshot.children {
-                    let snap = child as! DataSnapshot
-                    RideDB?.child("Requests").child(snap.key).observeSingleEvent(of: .value, with: { (snapshot) in
-                        if let receivedValue = snapshot.value as? [String: Any] {
-                            let from = receivedValue["from"] as! [String: Any]
-                            let fromLat: Double = from["latitude"] as! Double
-                            let fromLong: Double = from["longitude"] as! Double
-                            let fromName: String = from["name"] as! String
-                            
-                            let to = receivedValue["to"] as! [String: Any]
-                            let toLat: Double = to["latitude"] as! Double
-                            let toLong: Double = to["longitude"] as! Double
-                            let toName: String = to["name"] as! String
-                            
-                            let request = Request(id: snap.key, driver: receivedValue["driver"] as! String, sender: receivedValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: receivedValue["time"] as! Int, passengers: receivedValue["passengers"] as! Int, status: receivedValue["status"] as! Int)
-                            
-                            if let value = snap.value as? [String: Any] {
-                                request.new = value["new"] as! Bool
-                            }
-                            request.deleted = receivedValue["deleted"] as! Bool
-                            
-                            let date = Date(timeIntervalSince1970: Double(request._time))
-                            if date.timeIntervalSinceNow < 0 {
-                                self.receivedRequests["previous"]?[snap.key] = request
-                                if !(self.receivedRequestIDs["previous"]?.contains(snap.key))! {
-                                    self.receivedRequestIDs["previous"]?.append(snap.key)
-                                }
+                        
+                        self.sentRequestsTable.reloadData()
+                        self.sentRequestsTable.numberOfRows(inSection: 0)
+                        
+                        let sentCount = self.sentRequestIDs["upcoming"]!.count + self.sentRequestIDs["previous"]!.count
+                        let receivedCount = self.receivedRequestIDs["upcoming"]!.count + self.receivedRequestIDs["previous"]!.count
+                        
+                        if (sentCount > 0 || receivedCount > 0) && !self.sectionChanged {
+                            if sentCount < receivedCount {
+                                self.segmentedControl.selectedSegmentIndex = 1
                             } else {
-                                self.receivedRequests["upcoming"]?[snap.key] = request
-                                if !(self.receivedRequestIDs["upcoming"]?.contains(snap.key))! {
-                                    self.receivedRequestIDs["upcoming"]?.append(snap.key)
-                                }
+                                self.segmentedControl.selectedSegmentIndex = 0
                             }
                             
-                            self.receivedRequestsTable.reloadData()
-                            self.receivedRequestsTable.numberOfRows(inSection: 0)
-                            
-                            let sentCount = self.sentRequestIDs["upcoming"]!.count + self.sentRequestIDs["previous"]!.count
-                            let receivedCount = self.receivedRequestIDs["upcoming"]!.count + self.receivedRequestIDs["previous"]!.count
-                            
-                            if (sentCount > 0 || receivedCount > 0) && !self.sectionChanged {
-                                if sentCount < receivedCount {
-                                    self.segmentedControl.selectedSegmentIndex = 1
-                                } else {
-                                    self.segmentedControl.selectedSegmentIndex = 0
-                                }
-                                
-                                self.switchSections(self)
-                                self.sectionChanged = true
-                            }
+                            self.switchSections(self)
+                            self.sectionChanged = true
                         }
-                    })
-                }
-            })
+                    }
+                })
+            }
             
-            RideDB?.child("Users").child((mainUser?._userID)!).child("requests").child("sent").observe(.childRemoved, with: { (snapshot) in
-                let key = snapshot.key
-//                self.sentRequestIDs.remove(at: self.sentRequestIDs.index(of: key)!)
-                self.sentRequests.removeValue(forKey: key)
+            if snapshot.childrenCount == 0 {
+                self.sentRequestIDs["upcoming"]?.append("nil")
+                
+                let request = Request(id: "nil", driver: "", sender: "", from: CLLocationCoordinate2D(), fromName: "", to: CLLocationCoordinate2D(), toName: "", time: 0, passengers: 0, status: 0)
+                self.sentRequests["upcoming"]?["nil"] = request
                 self.sentRequestsTable.reloadData()
-            })
-            
-            RideDB?.child("Users").child((mainUser?._userID)!).child("requests").child("received").observe(.childRemoved, with: { (snapshot) in
-                let key = snapshot.key
+            }
+        })
+        
+        self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("received").queryOrdered(byChild: "timestamp").observe(.value, with: { (snapshot) in
+            for child in snapshot.children {
+                let snap = child as! DataSnapshot
+                self.RideDB.child("Requests").child(snap.key).observeSingleEvent(of: .value, with: { (snapshot) in
+                    if let receivedValue = snapshot.value as? [String: Any] {
+                        let from = receivedValue["from"] as! [String: Any]
+                        let fromLat: Double = from["latitude"] as! Double
+                        let fromLong: Double = from["longitude"] as! Double
+                        let fromName: String = from["name"] as! String
+                        
+                        let to = receivedValue["to"] as! [String: Any]
+                        let toLat: Double = to["latitude"] as! Double
+                        let toLong: Double = to["longitude"] as! Double
+                        let toName: String = to["name"] as! String
+                        
+                        let request = Request(id: snap.key, driver: receivedValue["driver"] as! String, sender: receivedValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: receivedValue["time"] as! Int, passengers: receivedValue["passengers"] as! Int, status: receivedValue["status"] as! Int)
+                        
+                        if let value = snap.value as? [String: Any] {
+                            request.new = value["new"] as! Bool
+                        }
+                        request.deleted = receivedValue["deleted"] as! Bool
+                        
+                        let date = Date(timeIntervalSince1970: Double(request._time))
+                        if date.timeIntervalSinceNow < 0 {
+                            self.receivedRequests["previous"]?[snap.key] = request
+                            if !(self.receivedRequestIDs["previous"]?.contains(snap.key))! {
+                                self.receivedRequestIDs["previous"]?.append(snap.key)
+                            }
+                        } else {
+                            self.receivedRequests["upcoming"]?[snap.key] = request
+                            if !(self.receivedRequestIDs["upcoming"]?.contains(snap.key))! {
+                                self.receivedRequestIDs["upcoming"]?.append(snap.key)
+                            }
+                        }
+                        
+                        self.receivedRequestsTable.reloadData()
+                        self.receivedRequestsTable.numberOfRows(inSection: 0)
+                        
+                        let sentCount = self.sentRequestIDs["upcoming"]!.count + self.sentRequestIDs["previous"]!.count
+                        let receivedCount = self.receivedRequestIDs["upcoming"]!.count + self.receivedRequestIDs["previous"]!.count
+                        
+                        if (sentCount > 0 || receivedCount > 0) && !self.sectionChanged {
+                            if sentCount < receivedCount {
+                                self.segmentedControl.selectedSegmentIndex = 1
+                            } else {
+                                self.segmentedControl.selectedSegmentIndex = 0
+                            }
+                            
+                            self.switchSections(self)
+                            self.sectionChanged = true
+                        }
+                    }
+                })
+            }
+        })
+        
+        self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("sent").observe(.childRemoved, with: { (snapshot) in
+            let key = snapshot.key
+//                self.sentRequestIDs.remove(at: self.sentRequestIDs.index(of: key)!)
+            self.sentRequests.removeValue(forKey: key)
+            self.sentRequestsTable.reloadData()
+        })
+        
+        self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("received").observe(.childRemoved, with: { (snapshot) in
+            let key = snapshot.key
 //                self.receivedRequestIDs.remove(at: self.receivedRequestIDs.index(of: key)!)
-                self.receivedRequests.removeValue(forKey: key)
-                self.receivedRequestsTable.reloadData()
-            })
-        }
+            self.receivedRequests.removeValue(forKey: key)
+            self.receivedRequestsTable.reloadData()
+        })
+    }
+}
+
+extension RequestViewController: UserManagerClient {
+    func setUserManager(_ userManager: UserManagerProtocol) {
+        self.userManager = userManager
     }
 }

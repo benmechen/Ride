@@ -14,6 +14,8 @@ import os.log
 
 class CreateGroupTableViewController: UITableViewController {
     
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     var selectedIndex: NSInteger = 0
     var connections = [String: Array<Connection>]()
     var unconnectedUsers = [Connection]()
@@ -62,19 +64,20 @@ class CreateGroupTableViewController: UITableViewController {
             self.dismiss(animated: true, completion: nil)
         } else {
             if (connections["selected"]?.count)! > 0 {
-                let selfConnection = Connection(hostId: (currentUser?.uid)!, userId: (currentUser?.uid)!, name: (currentUser?.displayName)!, photo: (currentUser?.photoURL?.absoluteString)!, index: -1)!
+                let selfConnection = Connection(hostId: (Auth.auth().currentUser?.uid)!, userId: (Auth.auth().currentUser?.uid)!, name: (Auth.auth().currentUser?.displayName)!, photo: (Auth.auth().currentUser?.photoURL?.absoluteString)!, index: -1)!
                 
                 var selectedConnections: Array<Connection> = []
                 if var arr = connections["selected"] {
                     arr.append(selfConnection)
                     selectedConnections = arr
                 }
-                let newGroup = Group(members: (selectedConnections.compactMap{$0._connectionUser}), creator: (currentUser?.uid)!)
+                let newGroup = Group(members: (selectedConnections.compactMap{$0._connectionUser}), creator: (Auth.auth().currentUser?.uid)!, userManager!)
                 newGroup?.createGroup(memberNames: (selectedConnections.compactMap{$0._userName}), completion: { status, id in
                     if status == true {
                         self.dismiss(animated: true, completion: nil)
                         DataManager.shared.welcomeViewController.loadUserGroups()
                         DataManager.shared.welcomeViewController.tableView.reloadData()
+                        DataManager.shared.welcomeViewController.userManager = self.userManager
                     }
                 })
             } else {
@@ -223,7 +226,7 @@ class CreateGroupTableViewController: UITableViewController {
             }
         }))!
         
-        var connectionIds: Array<String> = [(currentUser?.uid)!]
+        var connectionIds: Array<String> = [(Auth.auth().currentUser?.uid)!]
         for connection in connections["unselected"]! {
             connectionIds.append(connection._connectionUser)
         }
@@ -257,66 +260,72 @@ class CreateGroupTableViewController: UITableViewController {
     // MARK: - Custom functions
     
     private func loadUserConnections() {
-        if RideDB != nil {
-            let userId = currentUser?.uid
-            RideDB?.child("Connections").child(userId!).observeSingleEvent(of: .value, with: { (snapshot) in
-                if let dictionary = snapshot.value as? NSDictionary, let value = dictionary.allKeys as? Array<String> {
-                    if value.count > 1 {
-                        for id in value {
-                            if id != currentUser!.uid && id != self.driver {
-                                RideDB?.child("Users").child(id ).observeSingleEvent(of: .value, with: { (snapshot) in
-                                    guard let userValue = snapshot.value as? [String: Any] else {
-                                        return
-                                    }
-                                    
-                                    if userValue["name"] != nil && userValue["car"] != nil && userValue["photo"] != nil {
-                                        self.insertIntoConnections(key: "unselected", index: value.index(of: id)!, object: Connection(hostId: userId!, userId: id , name: userValue["name"] as! String, photo: userValue["photo"] as! String, car: userValue["car"] as! [String: Any], index: value.index(of: id)!)!)
-        //                                self.connections["unselected"].insert(Connection(hostId: userId!, userId: id as! String, name: userValue["name"]!, photo: userValue["photo"]!, car: userValue["car"]!, index: value.index(of: id))!, at: value.index(of: id))
-                                        self.tableView?.reloadData()
-                                    }
-                                })
-                            }
-                        }
-                    } else {
-                        os_log("No user connections", log: OSLog.default, type: .debug)
-                    }
-                }
-            })
-        } else {
-            os_log("Failed to reach database", log: OSLog.default, type: .error)
+        guard let userId = Auth.auth().currentUser?.uid else {
+            return
         }
+        
+        RideDB.child("Connections").child(userId).observeSingleEvent(of: .value, with: { (snapshot) in
+            if let dictionary = snapshot.value as? NSDictionary, let value = dictionary.allKeys as? Array<String> {
+                if value.count > 1 {
+                    for id in value {
+                        if id != Auth.auth().currentUser!.uid && id != self.driver {
+                            self.userManager.fetch(byID: id, completion: { (success, user) in
+                                guard success else {
+                                    return
+                                }
+                                
+                                self.insertIntoConnections(key: "unselected", index: value.index(of: id)!, object: Connection(hostId: userId, userId: id , name: user!.name, photo: user!.photo.absoluteString, car: ["type": user!.car._carType, "mpg": user!.car._carMPG, "seats": user!.car._carSeats, "registration": user?.car._carRegistration], index: value.index(of: id)!)!)
+                                self.tableView?.reloadData()
+                            })
+                            
+//                            self.RideDB.child("Users").child(id).observeSingleEvent(of: .value, with: { (snapshot) in
+//                                guard let userValue = snapshot.value as? [String: Any] else {
+//                                    return
+//                                }
+//                                
+//                                if userValue["name"] != nil && userValue["car"] != nil && userValue["photo"] != nil {
+//                                    self.insertIntoConnections(key: "unselected", index: value.index(of: id)!, object: Connection(hostId: userId!, userId: id , name: userValue["name"] as! String, photo: userValue["photo"] as! String, car: userValue["car"] as! [String: Any], index: value.index(of: id)!)!)
+//    //                                self.connections["unselected"].insert(Connection(hostId: userId!, userId: id as! String, name: userValue["name"]!, photo: userValue["photo"]!, car: userValue["car"]!, index: value.index(of: id))!, at: value.index(of: id))
+//                                    self.tableView?.reloadData()
+//                                }
+//                            })
+                        }
+                    }
+                } else {
+                    os_log("No user connections", log: OSLog.default, type: .debug)
+                }
+            }
+        })
     }
     
     private func loadUnconnectedUsers(userIds: Array<String>, completion: @escaping (Array<Connection>)->()) {
-        if RideDB != nil {
-            RideDB?.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
-                let users = snapshot.value as! NSMutableDictionary
-                // Remove users already displayed
-                for id in userIds {
-                    users.removeObject(forKey: id)
-                }
+        RideDB.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
+            let users = snapshot.value as! NSMutableDictionary
+            // Remove users already displayed
+            for id in userIds {
+                users.removeObject(forKey: id)
+            }
+            
+            if users.value(forKey: (Auth.auth().currentUser?.uid)!) != nil {
+                users.removeObject(forKey: Auth.auth().currentUser?.uid as Any)
+            }
+            
+            // Create a connection for each user
+            var userConnections: Array<Connection> = []
+            var userDetails: [String: Any]
+            for user in users {
+                userDetails = user.value as! [String : Any]
                 
-                if users.value(forKey: (currentUser?.uid)!) != nil {
-                    users.removeObject(forKey: currentUser?.uid as Any)
-                }
-                
-                // Create a connection for each user
-                var userConnections: Array<Connection> = []
-                var userDetails: [String: Any]
-                for user in users {
-                    userDetails = user.value as! [String : Any]
-                    
-                    if userDetails["name"] != nil && userDetails["car"] != nil && userDetails["photo"] != nil {
-                        let connection = Connection(hostId: "none", userId: user.key as! String, name: userDetails["name"]! as! String, photo: userDetails["photo"]! as! String, car: userDetails["car"]! as! [String: Any], index: -1)!
-                        if !userConnections.contains(connection) {
-                            userConnections.append(connection)
-                        }
+                if userDetails["name"] != nil && userDetails["car"] != nil && userDetails["photo"] != nil {
+                    let connection = Connection(hostId: "none", userId: user.key as! String, name: userDetails["name"]! as! String, photo: userDetails["photo"]! as! String, car: userDetails["car"]! as! [String: Any], index: -1)!
+                    if !userConnections.contains(connection) {
+                        userConnections.append(connection)
                     }
                 }
-                
-                completion(userConnections)
-            })
-        }
+            }
+            
+            completion(userConnections)
+        })
     }
     
     private func appendToConnections(key: String, object: Connection) {

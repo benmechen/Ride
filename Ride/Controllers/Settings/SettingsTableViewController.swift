@@ -45,19 +45,17 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     
     
     weak var welcomeViewControllerDelegate: WelcomeViewControllerDelegate?
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     var imagePicker = UIImagePickerController()
     var selectedType: String?
     var carTypes = ["Hatchback", "Estate", "SUV", "Saloon", "Coupe", "MPV", "Convertible", "Pick Up", "Other"]
     var handle: UInt? = nil
+    var currentUserCarType = ""
     let locationManager = CLLocationManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        guard mainUser != nil else {
-            moveToLoginController()
-            return
-        }
         
         tableView.keyboardDismissMode = .onDrag // .interactive
         tableView.tableFooterView = UIView()
@@ -76,105 +74,120 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
             profilePhoto.isUserInteractionEnabled = true
             profilePhoto.addGestureRecognizer(tapGestureRecognizer)
             
-            profilePhoto.kf.setImage(
-                with: mainUser?._userPhotoURL,
-                placeholder: UIImage(named: "groupPlaceholder"),
-                options: [
-                    .transition(.fade(1)),
-                    .cacheOriginalImage
-                ])
+            userManager?.getCurrentUser(completion: { (success, user) in
+                guard success && user != nil else {
+                    return
+                }
+                
+                self.profilePhoto.kf.setImage(
+                    with: user!.photo,
+                    placeholder: UIImage(named: "groupPlaceholder"),
+                    options: [
+                        .transition(.fade(1)),
+                        .cacheOriginalImage
+                    ])
+            })
             
-            nameTextField.text = currentUser?.displayName
+            nameTextField.text = Auth.auth().currentUser?.displayName
             
-            RideDB?.child("stripe_customers").child(mainUser!._userID).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
-                if let value = snapshot.value as? String {
-                    Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
-                        if let error = response.error {
-                            print(error)
-                        } else {
-                            self.driverStatusLabel.text = "Driver status: Verified"
-                            self.driverStatusIcon.image = UIImage(named: "check")
-                            self.verificationCell.isUserInteractionEnabled = false
-                            self.verificationCell.accessoryType = UITableViewCell.AccessoryType.none
+            RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
+                if let value = snapshot.value as? String, let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                    appDelegate.getSecretKey(completion: { (secretKey) in
+                        Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+                            if let error = response.error {
+                                print(error)
+                            } else {
+                                self.driverStatusLabel.text = "Driver status: Verified"
+                                self.driverStatusIcon.image = UIImage(named: "check")
+                                self.verificationCell.isUserInteractionEnabled = false
+                                self.verificationCell.accessoryType = UITableViewCell.AccessoryType.none
 
-                            if let result = response.result.value as? NSDictionary {
-                                RideDB?.child("stripe_customers").child(mainUser!._userID).child("account").setValue(result)
-                                if let verification = result["verification"] as? NSDictionary {
-                                    if let fieldsNeeded = verification["fields_needed"] as? NSArray {
-                                        if fieldsNeeded.count > 0 {
-                                            self.verificationCell.isUserInteractionEnabled = true
-                                            self.verificationCell.accessoryType = UITableViewCell.AccessoryType.disclosureIndicator
-                                            self.driverStatusLabel.text = "Driver status: Unverified"
-                                            if let legalEntity = result["legal_entity"] as? NSDictionary, let legalEntityVerification = legalEntity["verification"] as? NSDictionary {
-                                                if let status = legalEntityVerification["status"] as? String {
-                                                    if status == "pending" {
-                                                        self.driverStatusLabel.text = "Driver status: Pending"
+                                if let result = response.result.value as? NSDictionary {
+                                    self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account").setValue(result)
+                                    if let verification = result["verification"] as? NSDictionary {
+                                        if let fieldsNeeded = verification["fields_needed"] as? NSArray {
+                                            if fieldsNeeded.count > 0 {
+                                                self.verificationCell.isUserInteractionEnabled = true
+                                                self.verificationCell.accessoryType = UITableViewCell.AccessoryType.disclosureIndicator
+                                                self.driverStatusLabel.text = "Driver status: Unverified"
+                                                if let legalEntity = result["legal_entity"] as? NSDictionary, let legalEntityVerification = legalEntity["verification"] as? NSDictionary {
+                                                    if let status = legalEntityVerification["status"] as? String {
+                                                        if status == "pending" {
+                                                            self.driverStatusLabel.text = "Driver status: Pending"
+                                                        }
                                                     }
                                                 }
+                                                
+                                                self.driverStatusIcon.image = UIImage(named: "alert")
                                             }
-                                            
-                                            self.driverStatusIcon.image = UIImage(named: "alert")
                                         }
                                     }
                                 }
                             }
-                        }
+                        })
                     })
                 }
             })
             
-            versionNumber.text = Bundle.main.infoDictionary!["CFBundleShortVersionString"] as? String
+            versionNumber.text = "v" + ((Bundle.main.infoDictionary!["CFBundleShortVersionString"] as? String)!) + " Build " + ((Bundle.main.infoDictionary!["CFBundleVersion"] as? String)!)
 
         }
         
-        if self.carTypeDetail != nil {
-            self.carTypeDetail.text = mainUser?._userCar._carType
-            self.carMPGDetail.text = mainUser?._userCar._carMPG
-            self.carSeatsDetail.text = mainUser?._userCar._carSeats
-            self.carRegistrationDetail.text = mainUser?._userCar._carRegistration
-        } else if self.carTypeTextField != nil {
-            self.createPickerView(type: mainUser?._userCar._carType)
-            self.createToolbar()
-            self.selectedType = mainUser?._userCar._carType
-            self.carTypeTextField.text = mainUser?._userCar._carType
-        } else if self.carMPGTextField != nil {
-            self.carMPGTextField.text = ""
-            if mainUser?._userCar._carMPG != "nil" {
-                self.carMPGTextField.text = mainUser?._userCar._carMPG
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
             }
-        } else if self.carSeatsTextField != nil {
-            self.carSeatsTextField.text = ""
-            if mainUser?._userCar._carSeats != "nil" {
-                self.carSeatsTextField.text = mainUser?._userCar._carSeats
-            }
-        } else if self.carRegistrationTextField != nil {
-            self.carRegistrationTextField.text = ""
-            if mainUser?._userCar._carRegistration != "nil" {
-                self.carRegistrationTextField.text = mainUser?._userCar._carRegistration
-            }
-        } else if self.verificationErrorLabel != nil {
             
-            self.tableView.tableFooterView = UIView()
-            RideDB?.child("stripe_customers").child(mainUser!._userID).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
-                if let value = snapshot.value as? String {
-                    Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
-                        if let error = response.error {
-                            print(error)
-                        } else {
-                            if let result = response.result.value as? NSDictionary {
-                                print(result)
-                                if let legalEntity = result["legal_entity"] as? NSDictionary, let verification = legalEntity["verification"] as? NSDictionary {
-                                    if let details = verification["details"] as? String {
-                                        self.verificationActivityIndicator.stopAnimating()
-                                        self.verificationErrorLabel.text = details
+            if self.carTypeDetail != nil {
+                self.carTypeDetail.text = user!.car._carType
+                self.carMPGDetail.text = user!.car._carMPG
+                self.carSeatsDetail.text = user!.car._carSeats
+                self.carRegistrationDetail.text = user!.car._carRegistration
+            } else if self.carTypeTextField != nil {
+                self.createPickerView(type: user!.car._carType)
+                self.createToolbar()
+                self.selectedType = user!.car._carType
+                self.carTypeTextField.text = user!.car._carType
+            } else if self.carMPGTextField != nil {
+                self.carMPGTextField.text = ""
+                if user!.car._carMPG != "nil" {
+                    self.carMPGTextField.text = user!.car._carMPG
+                }
+            } else if self.carSeatsTextField != nil {
+                self.carSeatsTextField.text = ""
+                if user!.car._carSeats != "nil" {
+                    self.carSeatsTextField.text = user!.car._carSeats
+                }
+            } else if self.carRegistrationTextField != nil {
+                self.carRegistrationTextField.text = ""
+                if user!.car._carRegistration != "nil" {
+                    self.carRegistrationTextField.text = user!.car._carRegistration
+                }
+            } else if self.verificationErrorLabel != nil {
+                self.tableView.tableFooterView = UIView()
+                self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
+                    if let value = snapshot.value as? String, let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                        appDelegate.getSecretKey(completion: { (secretKey) in
+                            Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+                                if let error = response.error {
+                                    print(error)
+                                } else {
+                                    if let result = response.result.value as? NSDictionary {
+                                        print(result)
+                                        if let legalEntity = result["legal_entity"] as? NSDictionary, let verification = legalEntity["verification"] as? NSDictionary {
+                                            if let details = verification["details"] as? String {
+                                                self.verificationActivityIndicator.stopAnimating()
+                                                self.verificationErrorLabel.text = details
+                                            }
+                                        }
                                     }
                                 }
-                            }
-                        }
-                    })
-                }
-            })
-        }
+                            })
+                        })
+                    }
+                })
+            }
+        })
         
         if carTypeTextField != nil {
             carTypeTextField.borderStyle = UITextField.BorderStyle.none
@@ -195,41 +208,34 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(true)
         
-        if carTypeDetail != nil {
-            self.carTypeDetail.text = mainUser?._userCar._carType
-            self.carMPGDetail.text = ""
-            self.carSeatsDetail.text = ""
-            self.carRegistrationDetail.text = ""
-            if mainUser?._userCar._carMPG != "nil" {
-                self.carMPGDetail.text = mainUser?._userCar._carMPG
-            }
-            if mainUser?._userCar._carSeats != "nil" {
-                self.carSeatsDetail.text = mainUser?._userCar._carSeats
-            }
-            if mainUser?._userCar._carRegistration != "nil" {
-                self.carRegistrationDetail.text = mainUser?._userCar._carRegistration
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
             }
             
-//            RideDB?.child("Users").child((currentUser?.uid)!).observeSingleEvent(of: .value, with: { (snapshot) in
-//                let value = snapshot.value as? NSDictionary
-//                var car = value!["car"] as! [String: String]
-//
-//                if car["type"] == "none" {
-//                    car["type"] = ""
-//                    car["mpg"] = ""
-//                    car["seats"] = ""
-//                }
-//
-//                self.carTypeDetail.text = car["type"]
-//                self.carMPGDetail.text = car["mpg"]
-//                self.carSeatsDetail.text = car["seats"]
-//            })
-        }
+            self.currentUserCarType = user!.car._carType
+            
+            if self.carTypeDetail != nil {
+                self.carTypeDetail.text = user!.car._carType
+                self.carMPGDetail.text = ""
+                self.carSeatsDetail.text = ""
+                self.carRegistrationDetail.text = ""
+                if user!.car._carMPG != "nil" {
+                    self.carMPGDetail.text = user!.car._carMPG
+                }
+                if user!.car._carSeats != "nil" {
+                    self.carSeatsDetail.text = user!.car._carSeats
+                }
+                if user!.car._carRegistration != "nil" {
+                    self.carRegistrationDetail.text = user!.car._carRegistration
+                }
+            }
+        })
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         if self.handle != nil {
-            RideDB?.removeObserver(withHandle: self.handle!)
+            RideDB.removeObserver(withHandle: self.handle!)
         }
     }
 
@@ -329,14 +335,14 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     @IBAction func nameTextFieldReturn(_ sender: UITextField) {
         sender.resignFirstResponder()
         
-        let changeRequest = currentUser?.createProfileChangeRequest()
+        let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
         
         changeRequest?.displayName = self.nameTextField.text
         
-        RideDB?.child("Users").child((mainUser?._userID)!).child("name").setValue(self.nameTextField.text)
+        RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("name").setValue(self.nameTextField.text)
         
-        mainUser?._userName = self.nameTextField.text!
-        
+        userManager?.updateCurrentUser()
+            
         changeRequest?.commitChanges { error in
             if let error = error {
                 let alert = UIAlertController(title: "An error occurred. Please try again.", message: "", preferredStyle: .alert)
@@ -421,7 +427,7 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
             }
             
             if indexPath.section == 1 {
-                if mainUser?._userCar._carType != "" {
+                if currentUserCarType != "" {
                     if indexPath.row == 5 {
                         return 0.0
                     }
@@ -439,11 +445,16 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch indexPath.section {
         case 1:
-            if mainUser?._userCar._carType == "" {
-                if indexPath.row == 0 {
-//                    moveToSetupController(skip: true)
+            userManager?.getCurrentUser(completion: { (success, user) in
+                guard success && user != nil else {
+                    return
                 }
-            }
+                if user!.car._carType == "" {
+                    if indexPath.row == 0 {
+    //                    moveToSetupController(skip: true)
+                    }
+                }
+            })
         case 2:
             if indexPath.row == 2 {
 //                let addCardViewController = STPAddCardViewController()
@@ -485,7 +496,8 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
         }
     }
     
-    @objc func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+    private func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+//    @objc private func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         self.dismiss(animated: true, completion: { () -> Void in
             var image = info["UIImagePickerControllerOriginalImage"] as? UIImage
             
@@ -495,20 +507,20 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
             self.profilePhoto.image = image
             self.welcomeViewControllerDelegate?.changeProfilePhoto(image: image!)
             
-            let profileRef = RideStorage?.reference().child("UserProfiles/" + (currentUser?.uid)! + ".jpg")
+            let profileRef = Storage.storage().reference().child("UserProfiles/" + (Auth.auth().currentUser?.uid)! + ".jpg")
             
             if let imageData = image?.jpeg(.lowest) {
-                profileRef?.putData(imageData, metadata: nil) { metadata, error in
+                profileRef.putData(imageData, metadata: nil) { metadata, error in
                     // You can also access to download URL after upload.
-                    profileRef?.downloadURL { (url, error) in
+                    profileRef.downloadURL { (url, error) in
                         guard let downloadURL = url else {
                             // Uh-oh, an error occurred!
                             return
                         }
                         
-                        RideDB?.child("Users").child((currentUser?.uid)!).child("photo").setValue(downloadURL.absoluteString)
+                        self.RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("photo").setValue(downloadURL.absoluteString)
                         
-                        let changeRequest = currentUser?.createProfileChangeRequest()
+                        let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
                         changeRequest?.photoURL = downloadURL
                         changeRequest?.commitChanges { (error) in
                             if let error = error {
@@ -524,13 +536,12 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     }
 
     
-    private func logOut() {        
-        if fbAccessToken != nil {
-            AccessToken.current = nil
-            fbAccessToken = nil
-        }
+    private func logOut() {
+        AccessToken.current = nil
         
         locationManager.stopUpdatingLocation()
+        
+        RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("token").removeValue()
         
         let firebaseAuth = Auth.auth()
         
@@ -540,18 +551,16 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
             print ("Error signing out: %@", signOutError)
         }
         
+        userManager.logout()
+        
         let loginManager = LoginManager()
         loginManager.logOut()
         
-        RideDB?.child("Users").child(currentUser!.uid).child("token").removeValue()
-        
-        currentUser = nil
-        mainUser = nil
         moveToLoginController()
     }
     
     private func deleteAccount() {
-        let id = currentUser?.uid
+        let id = Auth.auth().currentUser?.uid
         Auth.auth().currentUser?.delete { error in
             if let error = error {
                 let alert = UIAlertController(title: "Could not delete account", message: error.localizedDescription, preferredStyle: .alert)
@@ -561,9 +570,9 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                 self.present(alert, animated: true, completion: nil)
             } else {
                 if id != nil {
-                    RideDB?.child("Users").child(id!).removeValue()
-                    RideDB?.child("Connections").child(id!).removeValue()
-                    RideDB?.child("stripe_customers").child(id!).removeValue()
+                    self.RideDB.child("Users").child(id!).removeValue()
+                    self.RideDB.child("Connections").child(id!).removeValue()
+                    self.RideDB.child("stripe_customers").child(id!).removeValue()
                 }
                 
                 let alert = UIAlertController(title: "Account deleted", message: "", preferredStyle: .alert)
@@ -578,18 +587,18 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     }
     
     private func updateCarType() {
-        RideDB?.child("Users").child((currentUser?.uid)!).child("car").child("type").setValue(selectedType)
+        RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("car").child("type").setValue(selectedType)
     }
     
     private func updateCarMPG() {
-        RideDB?.child("Users").child((currentUser?.uid)!).child("car").child("mpg").setValue(carMPGTextField.text)
+        RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("car").child("mpg").setValue(carMPGTextField.text)
     }
     
     private func updateCarSeats() {
-        RideDB?.child("Users").child((currentUser?.uid)!).child("car").child("seats").setValue(carSeatsTextField.text)
+        RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("car").child("seats").setValue(carSeatsTextField.text)
     }
     
     private func updateCarRegistration() {
-        RideDB?.child("Users").child((currentUser?.uid)!).child("car").child("registration").setValue(carRegistrationTextField.text)
+        RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("car").child("registration").setValue(carRegistrationTextField.text)
     }
 }

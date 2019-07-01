@@ -25,6 +25,7 @@ enum Result {
 class StripeClient: NSObject, STPEphemeralKeyProvider {
     
     static let shared = StripeClient()
+    lazy var RideDB = Database.database().reference()
     
     enum CustomerKeyError: Error {
         case missingBaseURL
@@ -50,7 +51,8 @@ class StripeClient: NSObject, STPEphemeralKeyProvider {
             ]
         ]
         
-        RideDB?.child("stripe_customers").child(mainUser!._userID).child("charges").childByAutoId().setValue(params) { (error, ref) -> Void in
+            
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("charges").childByAutoId().setValue(params) { (error, ref) -> Void in
             ref.observe(.value, with: { snapshot in
                 if let value = snapshot.value as? [String: Any] {
                     if snapshot.hasChild("error") {
@@ -74,7 +76,8 @@ class StripeClient: NSObject, STPEphemeralKeyProvider {
         
         print("Parameters:", parameters)
         
-        RideDB?.child("stripe_customers").child(mainUser!._userID).child("ephemeral_keys").setValue(parameters) { (error, ref) -> Void in
+            
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("ephemeral_keys").setValue(parameters) { (error, ref) -> Void in
             if error != nil {
                 completion(nil, CustomerKeyError.invalidResponse)
             } else {

@@ -20,10 +20,13 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
     @IBOutlet weak var welcome: UILabel!
     @IBOutlet weak var changeLoginMethod: UIButton!
     
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.welcome.textColor = rideRed
-        self.changeLoginMethod.setTitleColor(rideClickableRed, for: .normal)
+        self.welcome.textColor = UIColor(named: "Main")
+        self.changeLoginMethod.setTitleColor(UIColor(named: "Accent"), for: .normal)
     }
 
     override func didReceiveMemoryWarning() {
@@ -42,55 +45,70 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
             case .success(let grantedPermissions, let declinedPermissions, let accessToken):
                 print(grantedPermissions)
                 print(declinedPermissions)
-                fbAccessToken = accessToken
-                let credential = FacebookAuthProvider.credential(withAccessToken: (fbAccessToken?.authenticationToken)!)
-                Auth.auth().signInAndRetrieveData(with: credential, completion: { (user, error) in
+                let credential = FacebookAuthProvider.credential(withAccessToken: (accessToken.authenticationToken))
+                Auth.auth().signIn(with: credential) { (user, error) in
                     if let error = error {
                         print(error)
                         return
                     }
-                    currentUser = Auth.auth().currentUser
                     
-                    if fbAccessToken?.userId != nil && currentUser?.uid != nil {
-                        RideDB?.child("IDs").observeSingleEvent(of: .value, with: { (snapshot) in
+                    if accessToken.userId != nil && Auth.auth().currentUser?.uid != nil {
+                        self.RideDB.child("IDs").observeSingleEvent(of: .value, with: { (snapshot) in
                             if let value = snapshot.value as? NSDictionary {
-                                if value[fbAccessToken?.userId as Any] == nil {
+                                if value[accessToken.userId as Any] == nil {
                                     print("Adding user id")
-                                    RideDB?.child("IDs").updateChildValues([(fbAccessToken?.userId)!: currentUser?.uid as Any])
+                                    self.RideDB.child("IDs").updateChildValues([(accessToken.userId)!: Auth.auth().currentUser?.uid as Any])
                                 } else {
                                     print("Entry already exists")
                                 }
                             }
                         })
                     } else {
-                        //TODO: Sort out whole file
-                        moveToLoginController()
+                        let alert = UIAlertController(title: "An error occurred. Please try again.", message: "", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+                            os_log("Error logging in with Facebook")
+                        }))
+                        sender.resignFirstResponder()
+                        self.present(alert, animated: true, completion: {
+                            self.dismiss(animated: true, completion: nil)
+                        })
                         return
                     }
                     
-                    RideDB?.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
-                        if !snapshot.hasChild((currentUser?.uid)!){
-                            RideDB?.child("Users").child((currentUser?.uid)!).setValue(["name": currentUser?.displayName as Any, "photo": currentUser?.photoURL?.absoluteString as Any, "car": ["type": "", "mpg": "", "seats": "", "registration": ""]])
-                            
-                            mainUser = User(id: (currentUser?.uid)!, name: (currentUser?.displayName)!, photo: (currentUser?.photoURL?.absoluteString)!, car: ["type": "", "mpg": "", "seats": "", "registration": ""], available: [:], location: [:], timestamp: 0.0)
-                        } else {
-                            getMainUser(welcome: true)
+                    self.RideDB.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
+                        if !snapshot.hasChild((Auth.auth().currentUser?.uid)!){
+                            self.RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).setValue(["name": Auth.auth().currentUser?.displayName as Any, "photo": Auth.auth().currentUser?.photoURL?.absoluteString as Any, "car": ["type": "", "mpg": "", "seats": "", "registration": ""]])
                         }
-                        self.populateFriends(userId: (fbAccessToken?.userId)!, completion: { success, data in
+                        
+                        self.userManager?.getCurrentUser(completion: { (_, _) in })
+                        
+                        self.populateFriends(userId: (accessToken.userId)!, completion: { success, data in
                             if success {
                                 for id in data {
-                                    RideDB?.child("Connections").child((currentUser?.uid)!).child(id).setValue(true)
-                                    RideDB?.child("Connections").child(id).child((currentUser?.uid)!).setValue(true)
+                                    self.RideDB.child("Connections").child((Auth.auth().currentUser?.uid)!).child(id).setValue(true)
+                                    self.RideDB.child("Connections").child(id).child((Auth.auth().currentUser?.uid)!).setValue(true)
                                 }
                             } else {
                                 os_log("Error populating friends", log: .default, type: .error)
                             }
+                            
+//                            self.performSegue(withIdentifier: "showMainNav", sender: nil)
                             moveToWelcomeController()
                         })
                     })
                     
-                    print("\(String(describing: currentUser)) logged in")
-                })
+                    print("\(String(describing: Auth.auth().currentUser)) logged in")
+                }
+            }
+        }
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        super.prepare(for: segue, sender: sender)
+        
+        if segue.identifier == "showEmailLogin" {
+            if let navigationViewController = segue.destination as? UINavigationController, let emailLoginViewController = navigationViewController.children.first as? EmailLoginViewController {
+                emailLoginViewController.userManager = self.userManager
             }
         }
     }
@@ -108,7 +126,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                         var i = 1
                         for idDict in ids {
                             if let id = idDict as? NSDictionary {
-                                RideDB?.child("IDs").observeSingleEvent(of: .value, with: { (snapshot) in
+                                self.RideDB.child("IDs").observeSingleEvent(of: .value, with: { (snapshot) in
                                     let value = snapshot.value as? NSDictionary
                                     if let uid = value?[id["id"] as Any] as? String {
                                         idArray.append(uid)

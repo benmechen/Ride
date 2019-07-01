@@ -102,13 +102,13 @@ class AlertPageViewController: UIViewController, UIPageViewControllerDataSource,
         //FROM COCOAPOD
         if let bundleURL = podBundle.url(forResource: "AlertOnboardingXib", withExtension: "bundle") {
             if let bundle = Bundle(url: bundleURL) {
-                pageContentViewController = UINib(nibName: "AlertChildPageViewController", bundle: bundle).instantiate(withOwner: nil, options: nil)[0] as! AlertChildPageViewController
+                pageContentViewController = UINib(nibName: "AlertChildPageViewController", bundle: bundle).instantiate(withOwner: nil, options: nil)[0] as? AlertChildPageViewController
             } else {
                 assertionFailure("Could not load the bundle.. Please re-install AlertOnboarding via Cocoapod or install it manually.")
             }
             //FROM MANUAL INSTALL
         }else {
-            pageContentViewController = UINib(nibName: "AlertChildPageViewController", bundle: nil).instantiate(withOwner: nil, options: nil)[0] as! AlertChildPageViewController
+            pageContentViewController = UINib(nibName: "AlertChildPageViewController", bundle: nil).instantiate(withOwner: nil, options: nil)[0] as? AlertChildPageViewController
         }
         
         pageContentViewController.pageIndex = index // 0

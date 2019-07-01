@@ -8,6 +8,7 @@
 
 import UIKit
 import Crashlytics
+import Firebase
 import MapKit
 
 class RequestFromViewController: UIViewController {
@@ -15,6 +16,8 @@ class RequestFromViewController: UIViewController {
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var select: UIButton!
     
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     var user: User? = nil
     let locationManager = CLLocationManager()
     var searchController: UISearchController? = nil
@@ -71,7 +74,7 @@ class RequestFromViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
-        RideDB?.child("Groups").child("UserGroups").child(mainUser!._userID).child("groupIDs").observeSingleEvent(of: .value, with: { snapshot in
+        RideDB.child("Groups").child("UserGroups").child(Auth.auth().currentUser!.uid).child("groupIDs").observeSingleEvent(of: .value, with: { snapshot in
             var count = 0
             if let value = snapshot.value as? [String: Bool] {
                 for key in value.keys {

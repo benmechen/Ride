@@ -15,30 +15,26 @@ import Stripe
 import UserNotifications
 
 
-var fbAccessToken: AccessToken? = AccessToken(authenticationToken: "EAAE9cjLdKLMBAD2eGDzdgKa8Am7lL1026f7mOUzObhm296MaFUf4LNeZAqW7qeZCb0wqtcdYg5NhzR2cK3snISqzWaghQw3v7hFQNWX7xY0K2NrkD7eTXZBlWMlIvsN6RpkBYEp4v0VzIk3iODHu7IEpPTVq5cZCeQm0B90vjPiZAAmvsEivNNKE4oxxOf25pBFOefeZC5f8TgUAbZCVHhfzZBzlDW3sA85D08RZBAAczntXoS6DrNPd7")
-var mainUser: User?
-var currentFBUser: UserProfile?
-var RideDB: DatabaseReference?
-var RideStorage: Storage?
-var currentUser: FirebaseAuth.User?
-var rideRed: UIColor = UIColor(red:0.67, green:0.00, blue:0.10, alpha:1.00)
-var rideClickableRed: UIColor = UIColor(red:1.00, green:0.17, blue:0.33, alpha:1.0)
-var updateLastSeen = true
-var vSpinner : UIView?
-var publishKey = ""
-var secretKey = ""
-//var dataManager: DataManager = DataManager()
-
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
     
     var window: UIWindow?
+    var userManager: UserManagerProtocol!
     let locationManager = CLLocationManager()
+    var RideDB: DatabaseReference?
+    var RideStorage: Storage?
     var selectedIndex: Int = 0
+    var publishKey = ""
+    var secretKey = ""
+    var updateLastSeen = true
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        
+        self.window = UIWindow(frame: UIScreen.main.bounds)
+        
+        
         //To change Navigation Bar Background Color
-        UINavigationBar.appearance().barTintColor = rideRed
+        UINavigationBar.appearance().barTintColor = UIColor(named: "Main")
         //To change Back button title & icon color
         UINavigationBar.appearance().tintColor = UIColor.white
         //To change Navigation Bar Title Color
@@ -46,20 +42,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         
         // Override point for customization after application launch.
         FirebaseApp.configure()
+        userManager = UserManager()
         Messaging.messaging().delegate = self
         SDKApplicationDelegate.shared.application(application, didFinishLaunchingWithOptions: launchOptions)
         RideDB = Database.database().reference()
         RideStorage = Storage.storage()
         
-        currentUser = Auth.auth().currentUser
         
-        if currentUser?.uid == nil {
-            //Not already logged in
-            moveToLoginController()
-        } else {
-            //Already logged in
-            getMainUser(welcome: true)
-        }
+        
+        // Check if user logged in
+//        userManager?.getCurrentUser(completion: { (success, _) in
+//            if success {
+//                moveToWelcomeController()
+//            } else {
+//                moveToLoginController()
+//            }
+//        })
         
         RideDB?.child("stripe_keys").observeSingleEvent(of: .value, with: { (snapshot) in
             if let value = snapshot.value as? [String: String] {
@@ -67,12 +65,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                     fatalError("Unable to fetch Stripe API keys")
                 }
                 
-                publishKey = _publishKey
-                secretKey = _secretKey
+                self.publishKey = _publishKey
+                self.secretKey = _secretKey
                 
-                STPPaymentConfiguration.shared().publishableKey = publishKey
+                STPPaymentConfiguration.shared().publishableKey = self.publishKey
                 STPPaymentConfiguration.shared().appleMerchantIdentifier = "merchant.com.ride"
-                STPTheme.default().accentColor = rideClickableRed
+                STPTheme.default().accentColor = UIColor(named: "Accent")
             }
         })
         
@@ -98,18 +96,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
             self.selectedIndex = 1
         }
         
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        
+        if Auth.auth().currentUser != nil {
+            if let initialViewController = storyboard.instantiateViewController(withIdentifier: "welcomeTVC-NC") as? UINavigationController {
+                if let tabViewController = initialViewController.children.first as? TabViewController {
+                    tabViewController.userManager = self.userManager
+                    tabViewController.selectedIndex = self.selectedIndex
+                    
+                    for child in tabViewController.viewControllers ?? [] {
+                        if let top = child as? UserManagerClient {
+                            top.setUserManager(tabViewController.userManager)
+                        }
+                    }
+                    self.window?.rootViewController = initialViewController
+                }
+            }
+        } else {
+            if let initialViewController = storyboard.instantiateViewController(withIdentifier: "loginVC") as? FBLoginViewController {
+                initialViewController.userManager = userManager
+                self.window?.rootViewController = initialViewController
+            }
+        }
+        
+        self.window?.makeKeyAndVisible()
+        
         return true
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if currentUser != nil {
+        if Auth.auth().currentUser != nil {
             guard let location: CLLocationCoordinate2D = manager.location?.coordinate else { return }
         
             let locationDict = ["latitude": location.latitude,
                                 "longitude": location.longitude] as [String : Any]
             
             updateLastSeen = true
-            RideDB?.child("Users").child((currentUser?.uid)!).child("location").setValue(locationDict)
+            RideDB?.child("Users").child((Auth.auth().currentUser?.uid)!).child("location").setValue(locationDict)
         }
     }
     
@@ -128,11 +151,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
         
-        if (mainUser != nil) {
-            if !((mainUser?._userAvailable.isEmpty)!) {
-                if (mainUser?._userAvailable.values.contains(true))! {
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
+            
+            if !(user!.available.isEmpty) {
+                if user!.available.values.contains(true) {
                     if CLLocationManager.locationServicesEnabled() {
-//                        self.locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+                        //                        self.locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
                         self.locationManager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
                         self.locationManager.startMonitoringSignificantLocationChanges()
                     } else {
@@ -142,52 +169,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                     self.locationManager.stopUpdatingLocation()
                 }
                 
-                if updateLastSeen {
-                    updateLastSeen = false
+                if self.updateLastSeen {
+                    self.updateLastSeen = false
                 }
             }
-        } else {
-            if currentUser != nil {
-                RideDB?.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
-                    if !snapshot.hasChild((currentUser?.uid)!){
-                        RideDB?.child("Users").child((currentUser?.uid)!).setValue(["name": currentUser?.displayName as Any, "photo": currentUser?.photoURL?.absoluteString as Any, "car": ["type": "", "mpg": "", "seats": ""]])
-                        
-                        mainUser = User(id: (currentUser?.uid)!, name: (currentUser?.displayName)!, photo: (currentUser?.photoURL?.absoluteString)!, car: ["type": "", "mpg": "", "seats": ""], available: [:], location: [:], timestamp: 0.0)
-                    }
-                })
-            }
-        }
+        })
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
         // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
-        if (mainUser != nil) {
-            if !((mainUser?._userAvailable.isEmpty)!) {
-                if (mainUser?._userAvailable.values.contains(true))! {
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
+            
+            if !(user!.available.isEmpty) {
+                if user!.available.values.contains(true) {
                     if CLLocationManager.locationServicesEnabled() {
                         self.locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
                         self.locationManager.stopMonitoringSignificantLocationChanges()
                         self.locationManager.startUpdatingLocation()
                     }
                     
-                    if updateLastSeen {
-                        updateLastSeen = false
+                    if self.updateLastSeen {
+                        self.updateLastSeen = false
                     }
                 }
             }
-        } else {
-            guard currentUser != nil else {
-                return
-            }
-            
-            RideDB?.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
-                if !snapshot.hasChild((currentUser?.uid)!) {
-                    RideDB?.child("Users").child((currentUser?.uid)!).setValue(["name": currentUser?.displayName as Any, "photo": currentUser?.photoURL?.absoluteString as Any, "car": ["type": "", "mpg": "", "seats": "", "registration": ""]])
-                    
-                    mainUser = User(id: (currentUser?.uid)!, name: (currentUser?.displayName)!, photo: (currentUser?.photoURL?.absoluteString)!, car: ["type": "", "mpg": "", "seats": "", "registration": ""], available: [:], location: [:], timestamp: 0.0)
-                }
-            })
-        }
+        })
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
@@ -217,8 +226,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         let dataDict: [String: String] = ["token": fcmToken]
         NotificationCenter.default.post(name: Notification.Name("FCMToken"), object: nil, userInfo: dataDict)
 
-        if currentUser?.uid != nil {
-            RideDB?.child("Users").child(currentUser!.uid).child("token").setValue(fcmToken)
+        if Auth.auth().currentUser?.uid != nil {
+            RideDB?.child("Users").child(Auth.auth().currentUser!.uid).child("token").setValue(fcmToken)
         }
     }
     
@@ -246,7 +255,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                 tabViewController.tabBar.items?[1].badgeValue = String((Int(tabViewController.tabBar.items?[1].badgeValue ?? "0") ?? 0) + 1)
             }
             
-            tabViewController.tabBar.items?[1].badgeColor = rideClickableRed
+            tabViewController.tabBar.items?[1].badgeColor = UIColor(named: "Accent")
             completionHandler(.newData)
         }
         
@@ -258,105 +267,133 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
     
     public func updateUserLocation() {
-        if !((mainUser?._userAvailable.isEmpty)!) {
-            if (mainUser?._userAvailable.values.contains(true))! {
-                self.locationManager.requestAlwaysAuthorization()
-                self.locationManager.requestWhenInUseAuthorization()
-                if CLLocationManager.locationServicesEnabled() {
-                    self.locationManager.delegate = self
-                    self.locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-                    
-                    self.locationManager.pausesLocationUpdatesAutomatically = true
-                    self.locationManager.activityType = .automotiveNavigation
-                    self.locationManager.allowsBackgroundLocationUpdates = true
-                    
-                    self.locationManager.startUpdatingLocation()
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
+            
+            if !(user!.available.isEmpty) {
+                if user!.available.values.contains(true) {
+                    self.locationManager.requestAlwaysAuthorization()
+                    self.locationManager.requestWhenInUseAuthorization()
+                    if CLLocationManager.locationServicesEnabled() {
+                        self.locationManager.delegate = self
+                        self.locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+                        
+                        self.locationManager.pausesLocationUpdatesAutomatically = true
+                        self.locationManager.activityType = .automotiveNavigation
+                        self.locationManager.allowsBackgroundLocationUpdates = true
+                        
+                        self.locationManager.startUpdatingLocation()
+                    } else {
+                        self.locationManager.stopUpdatingLocation()
+                    }
                 } else {
                     self.locationManager.stopUpdatingLocation()
                 }
-            } else {
-                self.locationManager.stopUpdatingLocation()
+                
+                if self.updateLastSeen {
+                    self.updateLastSeen = false
+                }
             }
-            
-            if updateLastSeen {
-                updateLastSeen = false
-            }
-        }
+        })
     }
     
     public func stopUpdatingLocation() {
         self.locationManager.stopUpdatingLocation()
         
-        guard let keys = (mainUser?._userAvailable as NSDictionary?)?.allKeys(for: true) else {
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
+            
+            guard let keys = (user!.available as NSDictionary?)?.allKeys(for: true) else {
+                return
+            }
+            
+            for key in keys {
+                self.RideDB?.child("Users").child((Auth.auth().currentUser?.uid)!).child("available").child(key as! String).setValue(false)
+                self.RideDB?.child("Groups").child("GroupMeta").child(key as! String).child("available").child((Auth.auth().currentUser?.uid)!).setValue(false)
+            }
+        })
+    }
+    
+    func getSecretKey(completion: @escaping (String)->()) {
+        guard self.secretKey != "" else {
+            RideDB?.child("stripe_keys").observeSingleEvent(of: .value, with: { (snapshot) in
+                if let value = snapshot.value as? [String: String] {
+                    guard let _secretKey = value["secret"] else {
+                        fatalError("Unable to fetch Stripe API keys")
+                    }
+                    completion(_secretKey)
+                }
+            })
             return
         }
         
-        for key in keys {
-            RideDB?.child("Users").child((currentUser?.uid)!).child("available").child(key as! String).setValue(false)
-            RideDB?.child("Groups").child("GroupMeta").child(key as! String).child("available").child((currentUser?.uid)!).setValue(false)
-        }
+        completion(self.secretKey)
     }
 }
 
-func getMainUser(welcome: Bool) {
-    var _welcome = welcome
-    RideDB?.child("Users").child((currentUser?.uid)!).observe(.value, with: { (snapshot) in
-        if snapshot.value != nil && !(snapshot.value is NSNull) {
-            if var user = snapshot.value as? [String: Any] {
-                if user["name"] != nil && user["photo"] != nil {
-                    if user["car"] == nil {
-                        user["car"] = ["type": "", "mpg": "", "seats": "", "registration": ""]
-                    }
-                    if user["available"] == nil {
-                        user["available"] = [:]
-                    }
-                    if user["location"] == nil {
-                        user["location"] = [:]
-                    }
-                    if user["timestamp"] == nil {
-                        user["timestamp"] = 0.0
-                    }
-                    
-                    if currentUser?.uid != nil {
-                        mainUser = User(id: (currentUser?.uid)!, name: user["name"] as! String, photo: user["photo"] as! String, car: user["car"] as! [String: String], available: user["available"] as! [String : Bool], location: user["location"] as! [String : CLLocationDegrees], timestamp: user["timestamp"] as! TimeInterval)
-                        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                        
-                        InstanceID.instanceID().instanceID { (result, error) in
-                            if let error = error {
-                                print("Error fetching remote instance ID: \(error)")
-                            } else if let result = result {
-                                if currentUser?.uid != nil {
-                                    RideDB?.child("Users").child(currentUser!.uid).child("token").setValue(result.token)
-                                }
-                            }
-                        }
-
-                        
-                        var available = false
-                        for key in (user["available"] as! [String: Bool]).keys {
-                            if (user["available"] as! [String: Bool])[key]! {
-                                available = true
-                            }
-                        }
-                        
-                        if available {
-                            appDelegate.updateUserLocation()
-                        } else {
-                            appDelegate.locationManager.stopUpdatingLocation()
-                        }
-                    }
-                } else {
-                    moveToLoginController()
-                }
-            }
-        }
-        
-        if _welcome {
-            _welcome = false
-            moveToWelcomeController()
-        }
-    })
-}
+//func getMainUser(welcome: Bool) {
+//    var _welcome = welcome
+//    RideDB?.child("Users").child((Auth.auth().currentUser?.uid)!).observe(.value, with: { (snapshot) in
+//        if snapshot.value != nil && !(snapshot.value is NSNull) {
+//            if var user = snapshot.value as? [String: Any] {
+//                if user["name"] != nil && user["photo"] != nil {
+//                    if user["car"] == nil {
+//                        user["car"] = ["type": "", "mpg": "", "seats": "", "registration": ""]
+//                    }
+//                    if user["available"] == nil {
+//                        user["available"] = [:]
+//                    }
+//                    if user["location"] == nil {
+//                        user["location"] = [:]
+//                    }
+//                    if user["timestamp"] == nil {
+//                        user["timestamp"] = 0.0
+//                    }
+//
+//                    if Auth.auth().currentUser?.uid != nil {
+//                        mainUser = User(id: (Auth.auth().currentUser?.uid)!, name: user["name"] as! String, photo: user["photo"] as! String, car: user["car"] as! [String: String], available: user["available"] as! [String : Bool], location: user["location"] as! [String : CLLocationDegrees])
+//                        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+//
+//                        InstanceID.instanceID().instanceID { (result, error) in
+//                            if let error = error {
+//                                print("Error fetching remote instance ID: \(error)")
+//                            } else if let result = result {
+//                                if Auth.auth().currentUser?.uid != nil {
+//                                    RideDB?.child("Users").child(Auth.auth().currentUser!.uid).child("token").setValue(result.token)
+//                                }
+//                            }
+//                        }
+//
+//
+//                        var available = false
+//                        for key in (user["available"] as! [String: Bool]).keys {
+//                            if (user["available"] as! [String: Bool])[key]! {
+//                                available = true
+//                            }
+//                        }
+//
+//                        if available {
+//                            appDelegate.updateUserLocation()
+//                        } else {
+//                            appDelegate.locationManager.stopUpdatingLocation()
+//                        }
+//                    }
+//                } else {
+//                    moveToLoginController()
+//                }
+//            }
+//        }
+//
+//        if _welcome {
+//            _welcome = false
+//            moveToWelcomeController()
+//        }
+//    })
+//}
 
 func moveToSetupController(skip: Bool = false) {
     let mainStoryBoard: UIStoryboard = UIStoryboard(name: "Main", bundle: nil)
@@ -380,18 +417,27 @@ func moveToWelcomeController() {
 //    appDelegate.updateUserLocation()
     appDelegate.window?.rootViewController = welcomeViewController
     if let tabViewController = appDelegate.window?.rootViewController?.children.first as? TabViewController {
+        tabViewController.userManager = appDelegate.userManager
         tabViewController.selectedIndex = appDelegate.selectedIndex
+        
+        for child in tabViewController.viewControllers ?? [] {
+            if let top = child as? UserManagerClient {
+                top.setUserManager(tabViewController.userManager)
+            }
+        }
     }
     currentViewController?.present(welcomeViewController, animated: true, completion: nil)
 }
 
 func moveToLoginController() {
     let mainStoryBoard: UIStoryboard = UIStoryboard(name: "Main", bundle: nil)
-    let loginViewController: UIViewController = mainStoryBoard.instantiateViewController(withIdentifier: "loginVC")
-    let appDelegate = UIApplication.shared.delegate as! AppDelegate
-    let currentViewController = appDelegate.window?.rootViewController
-    appDelegate.window?.rootViewController = loginViewController
-    currentViewController?.present(loginViewController, animated: true, completion: nil)
+    if let loginViewController = mainStoryBoard.instantiateViewController(withIdentifier: "loginVC") as? FBLoginViewController {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let currentViewController = appDelegate.window?.rootViewController
+        loginViewController.userManager = appDelegate.userManager
+        appDelegate.window?.rootViewController = loginViewController
+        currentViewController?.present(loginViewController, animated: true, completion: nil)
+    }
 }
 
 func getDataFromUrl(url: URL, completion: @escaping (Data?, URLResponse?, Error?) -> ()) {

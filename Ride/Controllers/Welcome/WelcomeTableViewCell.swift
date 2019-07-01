@@ -15,6 +15,8 @@ class WelcomeTableViewCell: UITableViewCell {
     @IBOutlet weak var groupImage: UIImageView!
     @IBOutlet weak var groupAvailable: UILabel!
     
+    var userManager: UserManagerProtocol!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
@@ -32,29 +34,18 @@ class WelcomeTableViewCell: UITableViewCell {
     }
     
     func checkIfAvailable(groupID: String) {
-        if mainUser?._userAvailable[groupID] != nil && mainUser?._userAvailable[groupID] == true {
-            self.groupImage.layer.borderWidth = 1.5
-            self.groupImage.layer.borderColor = UIColor.red.cgColor
-        } else {
-            self.groupImage.layer.borderWidth = 0
-        }
-
-        
-        
-        //        RideDB?.child("Users").child(currentUser!.uid).observeSingleEvent(with: .value, with: { (snapshot) in
-//            if !(snapshot.value is NSNull) {
-//                let value = snapshot.value as! NSDictionary
-//
-//                let availableList = value["available"] as? [String: Bool] ?? [:]
-//
-//                if availableList[groupID] != nil && availableList[groupID] == true {
-//                    self.groupImage.layer.borderWidth = 1.5
-//                    self.groupImage.layer.borderColor = UIColor.red.cgColor
-//                } else {
-//                    self.groupImage.layer.borderWidth = 0
-//                }
-//            }
-//        })
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
+            
+            if user!.available[groupID] != nil && user!.available[groupID] == true {
+                self.groupImage.layer.borderWidth = 1.5
+                self.groupImage.layer.borderColor = UIColor.red.cgColor
+            } else {
+                self.groupImage.layer.borderWidth = 0
+            }
+        })
     }
 
 }

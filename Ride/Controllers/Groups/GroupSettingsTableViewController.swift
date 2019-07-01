@@ -27,8 +27,11 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var memberCount: UILabel!
     @IBOutlet weak var available: UISwitch!
+    
+    var userManager: UserManagerProtocol!
+    lazy var RideDB = Database.database().reference()
     var imagePicker = UIImagePickerController()
-    var group: Group = Group()!
+    var group: Group!
     var payoutsEnabled: Bool = false
     var locationManager = CLLocationManager()
     weak var groupViewControllerDelegate: GroupViewControllerDelegate?
@@ -51,7 +54,7 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
         groupPhoto.addGestureRecognizer(tapGestureRecognizer)
 
         groupPhoto.kf.setImage(
-            with: group._groupPhoto!,
+            with: group?._groupPhoto!,
             placeholder: UIImage(named: "groupPlaceholder"),
             options: ([
                 .transition(.fade(1)),
@@ -65,15 +68,15 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
                     }
         }
         
-        nameTextField.text = group._groupName
+        nameTextField.text = group?._groupName
         
 
         // Get members
-        RideDB?.child("Groups").child("GroupUsers").child(self.group._groupID).child("userIDs").observe(.value, with: { (snapshot) in
+        RideDB.child("Groups").child("GroupUsers").child(self.group!._groupID).child("userIDs").observe(.value, with: { (snapshot) in
             let value = snapshot.value as? NSDictionary
             
             if value != nil {
-                self.memberCount.text = String(value!.count)
+                self.memberCount.text = String(value!.count - 1)
             }
         })
     }
@@ -81,30 +84,38 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        RideDB?.child("stripe_customers").child(mainUser!._userID).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
-            if let value = snapshot.value as? String {
-                Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
-                    if let error = response.error {
-                        print(error)
-                    } else {
-                        if let result = response.result.value as? NSDictionary {
-                            if let enabled = result["payouts_enabled"] as? Bool {
-                                self.payoutsEnabled = enabled
-                                if enabled {
-                                    self.available.isEnabled = true
-                                    if mainUser?._userAvailable[self.group._groupID] != nil  && mainUser?._userAvailable[self.group._groupID] == true {
-                                        self.available.isOn = true
-                                    } else {
-                                        self.available.isOn = false
+        userManager?.getCurrentUser(completion: { (success, user) in
+            guard success && user != nil else {
+                return
+            }
+            
+            self.RideDB.child("stripe_customers").child(user!.id).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
+                if let value = snapshot.value as? String, let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                    appDelegate.getSecretKey(completion: { (secretKey) in
+                        Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+                            if let error = response.error {
+                                print(error)
+                            } else {
+                                if let result = response.result.value as? NSDictionary {
+                                    if let enabled = result["payouts_enabled"] as? Bool {
+                                        self.payoutsEnabled = enabled
+                                        if enabled {
+                                            self.available.isEnabled = true
+                                            if user!.available[self.group._groupID] != nil  && user!.available[self.group._groupID] == true {
+                                                self.available.isOn = true
+                                            } else {
+                                                self.available.isOn = false
+                                            }
+                                        } else {
+                                            self.available.isOn = false
+                                        }
                                     }
-                                } else {
-                                    self.available.isOn = false
                                 }
                             }
-                        }
-                    }
-                })
-            }
+                        })
+                    })
+                }
+            })
         })
     }
     
@@ -113,7 +124,7 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
         switch indexPath.section {
         case 3:
             if indexPath.row == 0 {
-                group.removeUser(id: currentUser!.uid)
+                group?.removeUser(id: Auth.auth().currentUser!.uid)
                 locationManager.stopUpdatingLocation()
                 moveToWelcomeController()
             }
@@ -146,7 +157,7 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
             let navVC = segue.destination as? UINavigationController
             let groupSettingsMembersViewController = navVC?.viewControllers.first as! GroupSettingsMembersTableViewController
             
-            groupSettingsMembersViewController.group = group
+            groupSettingsMembersViewController.group = group!
             groupSettingsMembersViewController.groupSettingsViewControllerDelegate = self
         case "showMembers":
             os_log("Showing group members", log: OSLog.default, type: .debug)
@@ -154,7 +165,7 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
             let navVC = segue.destination as? UINavigationController
             let groupSettingsMembersViewController = navVC?.viewControllers.first as! GroupSettingsMembersTableViewController
 
-            groupSettingsMembersViewController.group = group
+            groupSettingsMembersViewController.group = group!
             groupSettingsMembersViewController.groupSettingsViewControllerDelegate = self
         default:
             fatalError("Unexpected Segue Identifier: \(String(describing: segue.identifier))")
@@ -165,8 +176,8 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
     @IBAction func nameTextFieldReturn(_ sender: UITextField) {
         sender.resignFirstResponder()
         
-        RideDB?.child("Groups").child("GroupMeta").child(group._groupID).child("name").setValue(self.nameTextField.text!)
-        RideDB?.child("Groups").child("GroupMeta").child(group._groupID).child("timestamp").setValue(ServerValue.timestamp())
+        RideDB.child("Groups").child("GroupMeta").child(group!._groupID).child("name").setValue(self.nameTextField.text!)
+        RideDB.child("Groups").child("GroupMeta").child(group!._groupID).child("timestamp").setValue(ServerValue.timestamp())
         
         group._groupName = self.nameTextField.text
         
@@ -182,10 +193,10 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
     
     @IBAction func availableSwitch(_ sender: Any) {
         if available.isOn {
-            RideDB?.child("Users").child((currentUser?.uid)!).child("available").child(group._groupID).setValue(true)
-            RideDB?.child("Groups").child("GroupMeta").child(group._groupID).child("timestamp").setValue(ServerValue.timestamp())
+            RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("available").child(group._groupID).setValue(true)
+            RideDB.child("Groups").child("GroupMeta").child(group._groupID).child("timestamp").setValue(ServerValue.timestamp())
         } else {
-            RideDB?.child("Users").child((currentUser?.uid)!).child("available").child(group._groupID).setValue(false)
+            RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("available").child(group._groupID).setValue(false)
         }
     }
     
@@ -211,27 +222,27 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
         }
     }
     
-    @objc func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+    private func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         self.dismiss(animated: true, completion: { () -> Void in
-            var image = info["UIImagePickerControllerOriginalImage"] as? UIImage
+            var image = info[.originalImage] as? UIImage
             
             // Crop to square
             image = image?.resize(width: 250)
             
             self.groupPhoto.image = image
             
-            let profileRef = RideStorage?.reference().child("GroupPhotos/" + self.group._groupID + ".jpg")
+            let profileRef = Storage.storage().reference().child("GroupPhotos/" + self.group._groupID + ".jpg")
             
             if let imageData = image?.jpeg(.lowest) {
-                profileRef?.putData(imageData, metadata: nil) { metadata, error in
-                    profileRef?.downloadURL { (url, error) in
+                profileRef.putData(imageData, metadata: nil) { metadata, error in
+                    profileRef.downloadURL { (url, error) in
                         guard let downloadURL = url else {
                             return
                         }
                         
-                        RideDB?.child("Groups").child("GroupMeta").child(self.group._groupID).child("photo").setValue(downloadURL.absoluteString)
+                        self.RideDB.child("Groups").child("GroupMeta").child(self.group._groupID).child("photo").setValue(downloadURL.absoluteString)
                         
-                        let changeRequest = currentUser?.createProfileChangeRequest()
+                        let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
                         changeRequest?.photoURL = downloadURL
                         changeRequest?.commitChanges { (error) in
                             if let error = error {
