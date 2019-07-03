@@ -20,6 +20,7 @@ class SentRequestsPageViewController: UIPageViewController {
     
     weak var pageControlDelegate: SentRequestsPageViewControllerDelegate?
     
+    var userManager: UserManagerProtocol!
     var request: Request? = nil
     var userName: String? = nil
     
@@ -64,6 +65,13 @@ class SentRequestsPageViewController: UIPageViewController {
     }
     
     override func viewDidLoad() {
+        // Setup user manager on child pages
+        for child in self.pages {
+            if let top = child as? UserManagerClient {
+                top.setUserManager(self.userManager)
+            }
+        }
+        
         super.viewDidLoad()
         
 //        self.view.backgroundColor = UIColor.white
@@ -165,4 +173,3 @@ extension SentRequestsPageViewController: UIPageViewControllerDelegate {
         }
     }
 }
-

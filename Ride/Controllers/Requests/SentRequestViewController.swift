@@ -22,6 +22,7 @@ protocol PaymentDelegate {
 
 class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPaymentContextDelegate, PaymentDelegate {
     
+    var userManager: UserManagerProtocol!
     lazy var RideDB = Database.database().reference()
     var request: Request? = nil
     var userName: String? = nil
@@ -604,6 +605,12 @@ extension SentRequestViewController: STPAddCardViewControllerDelegate {
                 completion(nil)
             }
         }
+    }
+}
+
+extension SentRequestViewController: UserManagerClient {
+    func setUserManager(_ userManager: UserManagerProtocol) {
+        self.userManager = userManager
     }
 }
 

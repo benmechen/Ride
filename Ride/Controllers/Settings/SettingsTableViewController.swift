@@ -316,6 +316,7 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
             let navigationController = segue.destination as! UINavigationController
             let setupViewController = navigationController.viewControllers.first as! SetupViewController
             setupViewController.skip = true
+            setupViewController.userManager = userManager
         }
         
         if segue.identifier == "showPrivacyPolicy" {
@@ -328,6 +329,10 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
             let navigationController = segue.destination as! UINavigationController
             let legalViewController = navigationController.viewControllers.first as! LegalViewController
             legalViewController.url = URL(string: "https://stripe.com/gb/ssa")
+        }
+        
+        if let destination = segue.destination as? SettingsTableViewController {
+            destination.userManager = userManager
         }
     }
     

@@ -19,6 +19,7 @@ class ReceivedRequestsPageViewController: UIPageViewController {
     
     weak var pageControlDelegate: ReceivedRequestsPageViewControllerDelegate?
     
+    var userManager: UserManagerProtocol!
     var request: Request? = nil
     var userName: String? = nil
     var currentIndex = 0
@@ -65,6 +66,13 @@ class ReceivedRequestsPageViewController: UIPageViewController {
     }
     
     override func viewDidLoad() {
+        // Set up user manager on child pages
+        for child in self.pages {
+            if let top = child as? UserManagerClient {
+                top.setUserManager(self.userManager)
+            }
+        }
+        
         super.viewDidLoad()
                 
         self.view.backgroundColor = UIColor(red:0.70, green:0.01, blue:0.11, alpha:1.0)

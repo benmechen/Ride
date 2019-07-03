@@ -394,6 +394,12 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     }
 }
 
+extension ReceivedRequestViewController: UserManagerClient {
+    func setUserManager(_ userManager: UserManagerProtocol) {
+        self.userManager = userManager
+    }
+}
+
 extension String {
     
     // formatting text for currency textField

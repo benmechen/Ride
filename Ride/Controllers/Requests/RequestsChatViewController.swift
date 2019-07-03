@@ -8,7 +8,7 @@
 
 import UIKit
 import MessageKit
-//import MessageInputBar
+import InputBarAccessoryView
 import Firebase
 import Crashlytics
 
@@ -47,6 +47,8 @@ class RequestsChatViewController: MessagesViewController {
         while request == nil && userName == nil {
             print("Waiting for request")
         }
+        
+        self.inputAccessoryView?.becomeFirstResponder()
         
         self.messageInputBar.isHidden = true
         if self.receivedInput != nil {
@@ -255,11 +257,11 @@ extension RequestsChatViewController: MessagesDisplayDelegate {
     }
 }
 
-extension RequestsChatViewController: MessageInputBarDelegate {
-    func messageInputBar(_ inputBar: MessageInputBar, didPressSendButtonWith text: String) {
+extension RequestsChatViewController: InputBarAccessoryViewDelegate {
+    func inputBar(_ inputBar: InputBarAccessoryView, didPressSendButtonWith text: String) {
         let newMessage = Message(member: member, text: text, messageId: UUID().uuidString, date: Date())
         
-//        messages.append(newMessage)
+        //        messages.append(newMessage)
         inputBar.inputTextView.text = ""
         send(newMessage)
         messagesCollectionView.reloadData()
@@ -284,6 +286,11 @@ extension RequestsChatViewController: MessageInputBarDelegate {
     }
 }
 
+extension RequestsChatViewController: UserManagerClient {
+    func setUserManager(_ userManager: UserManagerProtocol) {
+        self.userManager = userManager
+    }
+}
 
 extension UIColor {
     

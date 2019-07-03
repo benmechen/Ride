@@ -135,7 +135,7 @@ PODS:
     - GoogleUtilities/Logger
   - GTMSessionFetcher/Core (1.2.2)
   - InputBarAccessoryView (4.2.2)
-  - Kingfisher (5.6.0)
+  - Kingfisher (5.7.0)
   - leveldb-library (1.20)
   - mailcore2-ios (0.6.4)
   - MessageKit (3.0.0):
@@ -165,7 +165,7 @@ DEPENDENCIES:
   - Firebase/Storage
   - Kingfisher
   - mailcore2-ios
-  - MessageKit
+  - MessageKit (~> 3.0.0)
   - Stripe
   - SwiftyJSON
 
@@ -233,7 +233,7 @@ SPEC CHECKSUMS:
   GoogleUtilities: c7a0b08bda3bf808be823ed151f0e28ac6866e71
   GTMSessionFetcher: 61bb0f61a4cb560030f1222021178008a5727a23
   InputBarAccessoryView: 2b937602598e2fab3149f37f51dd7ad795653812
-  Kingfisher: 1a50df6880a60bae26f3e21a0df3d17b892f5e0b
+  Kingfisher: c7d211b54f1f30d8060aadab177d52b4349c825b
   leveldb-library: 08cba283675b7ed2d99629a4bc5fd052cd2bb6a5
   mailcore2-ios: 3ff0be2fa553d4da9c11d39c11d51863c768f24f
   MessageKit: e892a9ca49ebe6d82684d3a93ad84021fa23e2c6
@@ -242,6 +242,6 @@ SPEC CHECKSUMS:
   Stripe: 2c4d0a88817361a102886315ff452d90f65e898b
   SwiftyJSON: 36413e04c44ee145039d332b4f4e2d3e8d6c4db7
 
-PODFILE CHECKSUM: e62ea242e0e7859e227254c0b1f01f763091e3d0
+PODFILE CHECKSUM: 8f1bfb78c0af7bde0de5c02cf232518828f7ea1c
 
 COCOAPODS: 1.7.1

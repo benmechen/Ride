@@ -10,6 +10,9 @@
 		1B6B72A91AB2BEB26838F08B /* Pods_RideTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 70BDEB610B2664ADAB99DA26 /* Pods_RideTests.framework */; };
 		3AA66D80617DC1AE1A5DAF46 /* Pods_RideUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 798D781082561D0019EFDADA /* Pods_RideUITests.framework */; };
 		B502A74021D97BF6004E381D /* LocationSearchTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B502A73F21D97BF6004E381D /* LocationSearchTable.swift */; };
+		B5074FBB22CABE580022139B /* ColourTheme.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B5074FBA22CABE580022139B /* ColourTheme.xcassets */; };
+		B5074FBC22CABE580022139B /* ColourTheme.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B5074FBA22CABE580022139B /* ColourTheme.xcassets */; };
+		B5074FBD22CABE580022139B /* ColourTheme.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B5074FBA22CABE580022139B /* ColourTheme.xcassets */; };
 		B50984C420FFAA3F009280C3 /* CreateGroupTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50984C320FFAA3F009280C3 /* CreateGroupTableViewCell.swift */; };
 		B50C57C621DA90C2000117CB /* RequestFromViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50C57C521DA90C2000117CB /* RequestFromViewController.swift */; };
 		B50C57C821DBCBAC000117CB /* RequestSendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50C57C721DBCBAC000117CB /* RequestSendViewController.swift */; };
@@ -116,6 +119,7 @@
 		9774A59671D5D80A96B46FBD /* Pods-RideUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RideUITests.debug.xcconfig"; path = "Target Support Files/Pods-RideUITests/Pods-RideUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		98665A0EF570FBE0957B98F5 /* Pods-Ride.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Ride.debug.xcconfig"; path = "Target Support Files/Pods-Ride/Pods-Ride.debug.xcconfig"; sourceTree = "<group>"; };
 		B502A73F21D97BF6004E381D /* LocationSearchTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSearchTable.swift; sourceTree = "<group>"; };
+		B5074FBA22CABE580022139B /* ColourTheme.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = ColourTheme.xcassets; path = "../../Ride copy/Ride/ColourTheme.xcassets"; sourceTree = "<group>"; };
 		B50984C320FFAA3F009280C3 /* CreateGroupTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateGroupTableViewCell.swift; sourceTree = "<group>"; };
 		B50C57C521DA90C2000117CB /* RequestFromViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestFromViewController.swift; sourceTree = "<group>"; };
 		B50C57C721DBCBAC000117CB /* RequestSendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestSendViewController.swift; sourceTree = "<group>"; };
@@ -359,6 +363,7 @@
 				B5CBD03520F29A2D00FD86D8 /* AppDelegate.swift */,
 				B5CBD03920F29A2D00FD86D8 /* Main.storyboard */,
 				B5CBD03C20F29A3000FD86D8 /* Assets.xcassets */,
+				B5074FBA22CABE580022139B /* ColourTheme.xcassets */,
 				B5CBD03E20F29A3000FD86D8 /* LaunchScreen.storyboard */,
 				B5CBD04120F29A3000FD86D8 /* Info.plist */,
 				B5CBD06320F29C4200FD86D8 /* GoogleService-Info.plist */,
@@ -558,6 +563,7 @@
 				B5CBD06420F29C4200FD86D8 /* GoogleService-Info.plist in Resources */,
 				B5CBD03D20F29A3000FD86D8 /* Assets.xcassets in Resources */,
 				B5A791BE2243A0A400D3D4B7 /* AlertChildPageViewController.xib in Resources */,
+				B5074FBB22CABE580022139B /* ColourTheme.xcassets in Resources */,
 				B5CBD03B20F29A2D00FD86D8 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -566,6 +572,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5074FBC22CABE580022139B /* ColourTheme.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -573,6 +580,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5074FBD22CABE580022139B /* ColourTheme.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

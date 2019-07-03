@@ -440,6 +440,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
             sentRequestsPageViewController.request = sentRequests[section]?[sentRequestIDs[section]![index.row]]
             sentRequestsPageViewController.userName = self.userName
             sentRequestsPageViewController.navigationItem.title = userName
+            sentRequestsPageViewController.userManager = userManager
             
             if sentRequests[section]?[sentRequestIDs[section]![index.row]]?.new ?? false {
                 if let value = Int(self.tabBarController?.tabBar.items?[1].badgeValue ?? "0") {
@@ -455,6 +456,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
             receivedRequestsPageViewController.request = receivedRequests[section]?[receivedRequestIDs[section]![index.row]]
             receivedRequestsPageViewController.userName = self.userName
             receivedRequestsPageViewController.navigationItem.title = userName
+            receivedRequestsPageViewController.userManager = userManager
             
             if receivedRequests[section]?[receivedRequestIDs[section]![index.row]]?.new ?? false {
                 if let value = Int(self.tabBarController?.tabBar.items?[1].badgeValue ?? "0") {
@@ -631,8 +633,8 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
     }
 }
 
-extension RequestViewController: UserManagerClient {
+extension RequestsViewController: UserManagerClient {
     func setUserManager(_ userManager: UserManagerProtocol) {
-        self.userManager = userManager
+            self.userManager = userManager
     }
 }

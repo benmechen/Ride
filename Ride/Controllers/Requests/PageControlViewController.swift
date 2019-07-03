@@ -13,6 +13,7 @@ class PageControlViewController: UIViewController {
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var pageControl: UIPageControl!
     
+    var userManager: UserManagerProtocol!
     var request: Request? = nil
     var userName: String? = nil
     
@@ -45,12 +46,14 @@ class PageControlViewController: UIViewController {
             receivedRequestsPageViewController.pageControlDelegate = self
             receivedRequestsPageViewController.request = self.request!
             receivedRequestsPageViewController.userName = self.userName
+            receivedRequestsPageViewController.userManager = self.userManager
         }
         
         if let sentRequestsPageViewController = segue.destination as? SentRequestsPageViewController {
             sentRequestsPageViewController.pageControlDelegate = self
             sentRequestsPageViewController.request = self.request
             sentRequestsPageViewController.userName = self.userName
+            sentRequestsPageViewController.userManager = self.userManager
         }
     }
 }
