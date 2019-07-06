@@ -19,6 +19,7 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
     var userManager: UserManagerProtocol!
     lazy var RideDB = Database.database().reference()
     var profileButton: UIImageView!
+    override var canResignFirstResponder: Bool {return false}
     
     override func viewDidLoad() {
         super.viewDidLoad()

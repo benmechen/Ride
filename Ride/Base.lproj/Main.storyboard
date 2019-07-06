@@ -936,60 +936,6 @@
             </objects>
             <point key="canvasLocation" x="1319" y="34"/>
         </scene>
-        <!--Page Control View Controller-->
-        <scene sceneID="o0O-7w-1aX">
-            <objects>
-                <viewController id="1ko-4W-LoM" customClass="PageControlViewController" customModule="Ride" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="Iat-fe-Fu9">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="jmF-pR-GOA">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                <connections>
-                                    <segue destination="yZg-q0-MYT" kind="embed" id="63p-jc-iCQ"/>
-                                </connections>
-                            </containerView>
-                            <pageControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" numberOfPages="3" translatesAutoresizingMaskIntoConstraints="NO" id="NWB-u5-55R">
-                                <rect key="frame" x="168" y="64" width="39" height="37"/>
-                            </pageControl>
-                        </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <constraints>
-                            <constraint firstItem="jmF-pR-GOA" firstAttribute="leading" secondItem="O2t-Kb-q3p" secondAttribute="leading" id="Ba9-gs-4Zy"/>
-                            <constraint firstItem="NWB-u5-55R" firstAttribute="centerX" secondItem="jmF-pR-GOA" secondAttribute="centerX" id="JsO-be-Oec"/>
-                            <constraint firstItem="NWB-u5-55R" firstAttribute="top" secondItem="jmF-pR-GOA" secondAttribute="top" constant="64" id="Q0n-kX-VRp"/>
-                            <constraint firstItem="jmF-pR-GOA" firstAttribute="trailing" secondItem="O2t-Kb-q3p" secondAttribute="trailing" id="Yg5-LN-9gr"/>
-                            <constraint firstItem="jmF-pR-GOA" firstAttribute="bottom" secondItem="O2t-Kb-q3p" secondAttribute="bottom" id="joI-7N-AvA"/>
-                            <constraint firstItem="jmF-pR-GOA" firstAttribute="top" secondItem="Iat-fe-Fu9" secondAttribute="top" id="tG9-gU-CB6"/>
-                        </constraints>
-                        <viewLayoutGuide key="safeArea" id="O2t-Kb-q3p"/>
-                    </view>
-                    <connections>
-                        <outlet property="containerView" destination="jmF-pR-GOA" id="8yY-wI-iVg"/>
-                        <outlet property="pageControl" destination="NWB-u5-55R" id="fQU-dg-ejr"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="O01-m7-jG6" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="3319" y="1594"/>
-        </scene>
-        <!--Received Requests Page View Controller-->
-        <scene sceneID="lLj-A6-MnI">
-            <objects>
-                <pageViewController autoresizesArchivedViewToFullSize="NO" transitionStyle="scroll" navigationOrientation="horizontal" spineLocation="none" id="yZg-q0-MYT" customClass="ReceivedRequestsPageViewController" customModule="Ride" customModuleProvider="target" sceneMemberID="viewController"/>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="dA1-XV-5Cs" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="3319" y="2309"/>
-        </scene>
-        <!--Sent Requests Page View Controller-->
-        <scene sceneID="FeI-FE-EH2">
-            <objects>
-                <pageViewController autoresizesArchivedViewToFullSize="NO" transitionStyle="scroll" navigationOrientation="horizontal" spineLocation="none" id="Dhi-ou-LqM" customClass="SentRequestsPageViewController" customModule="Ride" customModuleProvider="target" sceneMemberID="viewController"/>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="q8N-yk-EWZ" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="2594" y="2309"/>
-        </scene>
         <!--Lifts-->
         <scene sceneID="ya3-zs-NbN">
             <objects>
@@ -998,7 +944,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hyk-kD-RLc">
+                            <view opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hyk-kD-RLc">
                                 <rect key="frame" x="0.0" y="44" width="375" height="66"/>
                                 <subviews>
                                     <segmentedControl opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="LT0-KS-NSC">
@@ -1014,14 +960,14 @@
                                         </connections>
                                     </segmentedControl>
                                 </subviews>
-                                <color key="backgroundColor" red="0.71372549019999998" green="0.154867053" blue="0.2359057665" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="backgroundColor" red="0.70588235294117641" green="0.15294117647058825" blue="0.24313725490196078" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="height" relation="lessThanOrEqual" constant="46" id="ycU-bF-ssY"/>
                                 </constraints>
                             </view>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="T0r-2Q-1Zk">
                                 <rect key="frame" x="0.0" y="89" width="375" height="529"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="backgroundColor" xcode11CocoaTouchSystemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="RequestsTableCell" rowHeight="80" id="m34-0U-4mc" customClass="RequestsTableViewCell" customModule="Ride" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="28" width="375" height="80"/>
@@ -1290,7 +1236,7 @@
                                 </prototypes>
                             </tableView>
                         </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <color key="backgroundColor" xcode11CocoaTouchSystemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
                             <constraint firstItem="hyk-kD-RLc" firstAttribute="leading" secondItem="md5-at-Wl6" secondAttribute="leading" id="Hhc-qg-vhc"/>
                             <constraint firstItem="T0r-2Q-1Zk" firstAttribute="top" secondItem="md5-at-Wl6" secondAttribute="top" id="MOu-Tj-KK8"/>
@@ -1314,8 +1260,14 @@
                         <outlet property="segmentedControl" destination="LT0-KS-NSC" id="jXS-gG-kAT"/>
                         <outlet property="segmentedView" destination="hyk-kD-RLc" id="P8g-Tb-ztI"/>
                         <outlet property="sentRequestsTable" destination="T0r-2Q-1Zk" id="rmM-x6-nhm"/>
-                        <segue destination="1ko-4W-LoM" kind="show" identifier="moveToReceivedRequest" id="wIV-PH-H7Y"/>
-                        <segue destination="IlG-L2-CPy" kind="show" identifier="moveToSentRequest" id="yTB-CK-mEO"/>
+                        <segue destination="Ylb-SR-NV2" kind="show" identifier="moveToReceivedRequest_page1" id="oBQ-dW-t5A"/>
+                        <segue destination="PAs-pr-JM2" kind="show" identifier="moveToReceivedRequest_page2" id="g1N-Et-ygI"/>
+                        <segue destination="tJM-qY-htW" kind="show" identifier="moveToReceivedRequest_page3" id="ICW-CP-7zG"/>
+                        <segue destination="5Oz-M5-0Xd" kind="show" identifier="moveToReceivedRequest_page4" id="L4r-bb-RL3"/>
+                        <segue destination="t57-c4-ell" kind="show" identifier="moveToSentRequest_page1" id="DNY-RB-D8a"/>
+                        <segue destination="ONO-t2-4UH" kind="show" identifier="moveToSentRequest_page2" id="JYj-Rr-Klw"/>
+                        <segue destination="5Xp-Zy-OwD" kind="show" identifier="moveToSentRequest_page3" id="pUS-rM-spn"/>
+                        <segue destination="Aez-qc-Hnb" kind="show" identifier="moveToSentRequest_page4" id="blA-2K-3hn"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="vrm-KL-nLj" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -1327,11 +1279,11 @@
             <objects>
                 <viewController storyboardIdentifier="ReceivedMessagesController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="syn-u0-kVn" customClass="RequestsChatViewController" customModule="Ride" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="YZG-XA-KOY">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="647"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="The other user has deleted this request" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="PUl-dW-L3A">
-                                <rect key="frame" x="0.0" y="617" width="375" height="50"/>
+                                <rect key="frame" x="0.0" y="597" width="375" height="50"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="50" id="hYH-bi-6O7"/>
                                 </constraints>
@@ -1339,62 +1291,40 @@
                                 <color key="textColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="New Message" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="iGH-Vz-1ig">
-                                <rect key="frame" x="0.0" y="622" width="375" height="45"/>
-                                <color key="backgroundColor" red="0.95294117647058818" green="0.96078431372549022" blue="0.96470588235294119" alpha="1" colorSpace="calibratedRGB"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="45" id="cVy-jz-Oje"/>
-                                </constraints>
-                                <nil key="textColor"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
-                                <textInputTraits key="textInputTraits"/>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
-                                        <real key="value" value="0.0"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="borderWidth">
-                                        <real key="value" value="1"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="color" keyPath="borderColor">
-                                        <color key="value" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                    </userDefinedRuntimeAttribute>
-                                </userDefinedRuntimeAttributes>
-                                <connections>
-                                    <action selector="hideReceivedInput:" destination="syn-u0-kVn" eventType="editingDidBegin" id="ng6-F0-Nzd"/>
-                                    <action selector="removeReceivedInputText:" destination="syn-u0-kVn" eventType="editingDidEnd" id="Kas-me-lGU"/>
-                                </connections>
-                            </textField>
                         </subviews>
                         <color key="backgroundColor" xcode11CocoaTouchSystemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
                             <constraint firstItem="PUl-dW-L3A" firstAttribute="bottom" secondItem="55k-b2-3cS" secondAttribute="bottom" id="Ddi-6W-0mm"/>
-                            <constraint firstItem="iGH-Vz-1ig" firstAttribute="centerX" secondItem="55k-b2-3cS" secondAttribute="centerX" id="Ta3-lo-CeA"/>
                             <constraint firstItem="PUl-dW-L3A" firstAttribute="trailing" secondItem="55k-b2-3cS" secondAttribute="trailing" id="V76-A6-QeA"/>
-                            <constraint firstItem="iGH-Vz-1ig" firstAttribute="leading" secondItem="55k-b2-3cS" secondAttribute="leading" id="ZH6-z5-but"/>
                             <constraint firstItem="PUl-dW-L3A" firstAttribute="leading" secondItem="55k-b2-3cS" secondAttribute="leading" id="uUR-gH-urE"/>
-                            <constraint firstItem="55k-b2-3cS" firstAttribute="bottom" secondItem="iGH-Vz-1ig" secondAttribute="bottom" id="w2r-Do-0eV"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="55k-b2-3cS"/>
                     </view>
+                    <navigationItem key="navigationItem" id="MUG-Jr-HIP">
+                        <barButtonItem key="leftBarButtonItem" title="Close" image="chevron.down" catalog="system" id="ih5-SO-2X3">
+                            <connections>
+                                <action selector="closeChat:" destination="syn-u0-kVn" id="Vgt-AB-NQV"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
-                        <outlet property="receivedInput" destination="iGH-Vz-1ig" id="vDo-7R-DZg"/>
                         <outlet property="requestDeletedSent" destination="PUl-dW-L3A" id="9XT-pv-bFg"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="L6F-VI-s5M" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3951" y="2980"/>
+            <point key="canvasLocation" x="5137" y="1716"/>
         </scene>
         <!--Requests Chat View Controller-->
         <scene sceneID="Xa0-wX-9VP">
             <objects>
                 <viewController storyboardIdentifier="SentMessagesController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="kh8-hb-kC9" customClass="RequestsChatViewController" customModule="Ride" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="J55-uP-9Mx">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="647"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="The other user has deleted this request" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mDm-qU-6iK">
-                                <rect key="frame" x="0.0" y="617" width="375" height="50"/>
+                                <rect key="frame" x="0.0" y="597" width="375" height="50"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="50" id="QYd-lp-C5r"/>
                                 </constraints>
@@ -1402,52 +1332,29 @@
                                 <color key="textColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="New Message" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="4Gv-Tp-Ywc">
-                                <rect key="frame" x="0.0" y="622" width="375" height="45"/>
-                                <color key="backgroundColor" red="0.95294117649999999" green="0.96078431369999995" blue="0.96470588239999999" alpha="1" colorSpace="calibratedRGB"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="45" id="gQJ-Eb-vWw"/>
-                                </constraints>
-                                <nil key="textColor"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
-                                <textInputTraits key="textInputTraits"/>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
-                                        <real key="value" value="0.0"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="borderWidth">
-                                        <real key="value" value="1"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="color" keyPath="borderColor">
-                                        <color key="value" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                    </userDefinedRuntimeAttribute>
-                                </userDefinedRuntimeAttributes>
-                                <connections>
-                                    <action selector="hideSentInput:" destination="kh8-hb-kC9" eventType="editingDidBegin" id="RZw-rp-zyP"/>
-                                    <action selector="removeSentInputText:" destination="kh8-hb-kC9" eventType="editingDidEnd" id="YdP-N2-NLl"/>
-                                </connections>
-                            </textField>
                         </subviews>
                         <color key="backgroundColor" xcode11CocoaTouchSystemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
-                            <constraint firstItem="jSZ-CF-Tb0" firstAttribute="bottom" secondItem="4Gv-Tp-Ywc" secondAttribute="bottom" id="5js-5s-eFc"/>
-                            <constraint firstItem="jSZ-CF-Tb0" firstAttribute="trailing" secondItem="4Gv-Tp-Ywc" secondAttribute="trailing" id="Fhk-ww-QMe"/>
                             <constraint firstItem="mDm-qU-6iK" firstAttribute="bottom" secondItem="jSZ-CF-Tb0" secondAttribute="bottom" id="Rhf-5E-8cH"/>
-                            <constraint firstItem="4Gv-Tp-Ywc" firstAttribute="centerX" secondItem="jSZ-CF-Tb0" secondAttribute="centerX" id="dep-5a-PUP"/>
                             <constraint firstItem="mDm-qU-6iK" firstAttribute="leading" secondItem="jSZ-CF-Tb0" secondAttribute="leading" id="hEA-pD-nvy"/>
-                            <constraint firstItem="4Gv-Tp-Ywc" firstAttribute="leading" secondItem="jSZ-CF-Tb0" secondAttribute="leading" id="pXU-f6-Nq2"/>
                             <constraint firstItem="mDm-qU-6iK" firstAttribute="trailing" secondItem="jSZ-CF-Tb0" secondAttribute="trailing" id="xta-eq-iKZ"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="jSZ-CF-Tb0"/>
                     </view>
+                    <navigationItem key="navigationItem" id="6O4-HR-1z5">
+                        <barButtonItem key="leftBarButtonItem" title="Close" image="chevron.down" catalog="system" id="GdK-Mn-z1s">
+                            <connections>
+                                <action selector="closeChat:" destination="kh8-hb-kC9" id="wVv-u4-JHo"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="requestDeletedReceived" destination="mDm-qU-6iK" id="eZQ-Xg-nf4"/>
-                        <outlet property="sentInput" destination="4Gv-Tp-Ywc" id="Az4-Tj-egi"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="40d-Vo-hfD" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1920.8" y="2979.7601199400301"/>
+            <point key="canvasLocation" x="766" y="1716"/>
         </scene>
         <!--Tab View Controller-->
         <scene sceneID="N4i-ts-tRW">
@@ -3496,44 +3403,6 @@
             </objects>
             <point key="canvasLocation" x="390" y="-1413"/>
         </scene>
-        <!--Page Control View Controller-->
-        <scene sceneID="A5Z-gR-4go">
-            <objects>
-                <viewController id="IlG-L2-CPy" customClass="PageControlViewController" customModule="Ride" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="Cqy-th-q88">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lUa-cb-F18">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                <connections>
-                                    <segue destination="Dhi-ou-LqM" kind="embed" id="iEn-eq-Lqn"/>
-                                </connections>
-                            </containerView>
-                            <pageControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" numberOfPages="3" translatesAutoresizingMaskIntoConstraints="NO" id="J91-ut-Yqc">
-                                <rect key="frame" x="168" y="64" width="39" height="37"/>
-                            </pageControl>
-                        </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <constraints>
-                            <constraint firstItem="J91-ut-Yqc" firstAttribute="centerX" secondItem="lUa-cb-F18" secondAttribute="centerX" id="6sz-Am-tYk"/>
-                            <constraint firstItem="J91-ut-Yqc" firstAttribute="top" secondItem="lUa-cb-F18" secondAttribute="top" constant="64" id="7U0-Nd-B10"/>
-                            <constraint firstItem="lUa-cb-F18" firstAttribute="leading" secondItem="Pyh-9W-xpa" secondAttribute="leading" id="AIN-o2-gWv"/>
-                            <constraint firstItem="lUa-cb-F18" firstAttribute="top" secondItem="Cqy-th-q88" secondAttribute="top" id="DcB-lu-wVY"/>
-                            <constraint firstItem="lUa-cb-F18" firstAttribute="trailing" secondItem="Pyh-9W-xpa" secondAttribute="trailing" id="JXy-9C-bni"/>
-                            <constraint firstItem="lUa-cb-F18" firstAttribute="bottom" secondItem="Pyh-9W-xpa" secondAttribute="bottom" id="pxW-0C-uLo"/>
-                        </constraints>
-                        <viewLayoutGuide key="safeArea" id="Pyh-9W-xpa"/>
-                    </view>
-                    <connections>
-                        <outlet property="containerView" destination="lUa-cb-F18" id="WdW-hA-SIJ"/>
-                        <outlet property="pageControl" destination="J91-ut-Yqc" id="3mZ-rU-05Q"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="sL2-gQ-HEf" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="2594" y="1593"/>
-        </scene>
         <!--Sent Request View Controller-->
         <scene sceneID="M2h-tE-9C5">
             <objects>
@@ -3555,7 +3424,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="Your request has been sent to " textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3bQ-I2-qYE">
-                                <rect key="frame" x="16" y="91" width="343" height="210"/>
+                                <rect key="frame" x="16" y="135" width="343" height="166"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="37"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
@@ -3587,7 +3456,15 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="UyO-Ln-fy2"/>
                     </view>
-                    <navigationItem key="navigationItem" id="iGj-mu-uXo"/>
+                    <navigationItem key="navigationItem" id="iGj-mu-uXo">
+                        <barButtonItem key="rightBarButtonItem" title="Message" image="bubble.right" catalog="system" id="Kd3-lO-PGo">
+                            <connections>
+                                <segue destination="TjB-9s-vUA" kind="popoverPresentation" popoverAnchorBarButtonItem="Kd3-lO-PGo" id="Idk-DX-0qX">
+                                    <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                </segue>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="page1MapView" destination="SpB-jK-Z6z" id="njx-g8-HfA"/>
                         <outlet property="page1Passengers" destination="THg-sw-T6B" id="srX-qD-Br4"/>
@@ -3597,7 +3474,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="p5y-Mj-Jg1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2592.8000000000002" y="2979.7601199400301"/>
+            <point key="canvasLocation" x="2582" y="1716"/>
         </scene>
         <!--Sent Request View Controller-->
         <scene sceneID="omw-w0-HQC">
@@ -3608,7 +3485,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="This Ride request has been deleted by " textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oxN-PW-NgV">
-                                <rect key="frame" x="16" y="91" width="343" height="180"/>
+                                <rect key="frame" x="16" y="135" width="343" height="180"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="180" id="2Mq-09-BKY"/>
                                 </constraints>
@@ -3625,14 +3502,22 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="lUK-Eb-Ovo"/>
                     </view>
-                    <navigationItem key="navigationItem" id="RfE-Sh-qxQ"/>
+                    <navigationItem key="navigationItem" id="RfE-Sh-qxQ">
+                        <barButtonItem key="rightBarButtonItem" title="Message" image="bubble.right" catalog="system" id="0nh-1R-aeo">
+                            <connections>
+                                <segue destination="TjB-9s-vUA" kind="popoverPresentation" popoverAnchorBarButtonItem="0nh-1R-aeo" id="lDR-Kk-4w9">
+                                    <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                </segue>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="page2Deleted" destination="oxN-PW-NgV" id="Ya0-SK-M22"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="4r5-BR-1f6" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2592.8000000000002" y="3631.9340329835086"/>
+            <point key="canvasLocation" x="2582" y="2369"/>
         </scene>
         <!--Received Request View Controller-->
         <scene sceneID="2AV-nV-tVn">
@@ -3655,7 +3540,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="Request received from " textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dZX-pZ-Elb">
-                                <rect key="frame" x="16" y="32" width="343" height="210"/>
+                                <rect key="frame" x="16" y="76" width="343" height="166"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="37"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
@@ -3730,7 +3615,15 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="nrx-vH-Ry4"/>
                     </view>
-                    <navigationItem key="navigationItem" id="l32-6Y-sC5"/>
+                    <navigationItem key="navigationItem" id="l32-6Y-sC5">
+                        <barButtonItem key="rightBarButtonItem" title="Message" image="bubble.right" catalog="system" id="nDA-Vw-Gia">
+                            <connections>
+                                <segue destination="uyz-Oo-4RE" kind="popoverPresentation" popoverAnchorBarButtonItem="nDA-Vw-Gia" id="ZJF-Kv-eOG">
+                                    <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                </segue>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="page1Accept" destination="fvX-ac-ddn" id="oRM-7F-dPE"/>
                         <outlet property="page1MapView" destination="zVt-yG-qrS" id="EAj-Cd-DE4"/>
@@ -3741,7 +3634,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="YEW-F0-0Pq" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3317.5999999999999" y="2979.7601199400301"/>
+            <point key="canvasLocation" x="3305" y="1716"/>
         </scene>
         <!--Received Request View Controller-->
         <scene sceneID="0Bz-82-HuG">
@@ -3752,7 +3645,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="Enter a price for the Ride:" textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nzC-fq-EG1">
-                                <rect key="frame" x="16" y="-52" width="343" height="292"/>
+                                <rect key="frame" x="16" y="-8" width="343" height="292"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="292" id="B4I-o2-RFc"/>
                                 </constraints>
@@ -3777,7 +3670,7 @@
                                 </connections>
                             </button>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" placeholder="Ride Price" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="L8B-Bx-ybr">
-                                <rect key="frame" x="53" y="187" width="269" height="41"/>
+                                <rect key="frame" x="53" y="231" width="269" height="41"/>
                                 <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="41" id="3c6-Di-rcp"/>
@@ -3800,37 +3693,37 @@
                                 </connections>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Fuel Cost (one way):" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VXW-qM-24p">
-                                <rect key="frame" x="62" y="248" width="250" height="21"/>
+                                <rect key="frame" x="62" y="292" width="250" height="21"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Your Profit:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZBv-xY-GfC">
-                                <rect key="frame" x="62" y="306" width="250" height="21"/>
+                                <rect key="frame" x="62" y="350" width="250" height="21"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="+" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZJ5-ph-YnC">
-                                <rect key="frame" x="182" y="277" width="11" height="21"/>
+                                <rect key="frame" x="182" y="321" width="11" height="21"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Medium" family="Helvetica Neue" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="+" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xZp-TJ-zMo">
-                                <rect key="frame" x="182" y="335" width="11" height="21"/>
+                                <rect key="frame" x="182" y="379" width="11" height="21"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Medium" family="Helvetica Neue" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Total charged to " textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ecP-ZL-D35">
-                                <rect key="frame" x="53" y="166" width="123" height="21"/>
+                                <rect key="frame" x="53" y="210" width="123" height="21"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Light" family="Helvetica Neue" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Ride Fees:" textAlignment="center" lineBreakMode="wordWrap" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="enE-s1-ypf">
-                                <rect key="frame" x="62" y="350" width="250" height="59"/>
+                                <rect key="frame" x="62" y="394" width="250" height="59"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="59" id="Spn-Ur-8Yt"/>
                                 </constraints>
@@ -3868,7 +3761,15 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="8Ea-cO-t2N"/>
                     </view>
-                    <navigationItem key="navigationItem" id="MaU-b2-bhm"/>
+                    <navigationItem key="navigationItem" id="MaU-b2-bhm">
+                        <barButtonItem key="rightBarButtonItem" title="Message" image="bubble.right" catalog="system" id="UEI-E1-2LT">
+                            <connections>
+                                <segue destination="uyz-Oo-4RE" kind="popoverPresentation" popoverAnchorBarButtonItem="UEI-E1-2LT" id="tDj-Yr-gDt">
+                                    <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                </segue>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="page3Fees" destination="enE-s1-ypf" id="Jth-RW-m2Z"/>
                         <outlet property="page3Fuel" destination="VXW-qM-24p" id="f4g-eO-ia4"/>
@@ -3883,7 +3784,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="SIM-Pv-A1c" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3317.5999999999999" y="4285.9070464767619"/>
+            <point key="canvasLocation" x="3305" y="3027"/>
         </scene>
         <!--Sent Request View Controller-->
         <scene sceneID="OZU-4l-SAh">
@@ -3894,7 +3795,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="Quote recieved from " textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aaR-bl-TLH">
-                                <rect key="frame" x="16" y="91" width="343" height="128"/>
+                                <rect key="frame" x="16" y="135" width="343" height="128"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="128" id="s7S-YM-4we"/>
                                 </constraints>
@@ -3903,7 +3804,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <textField opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" placeholder="Ride Price" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Ype-T1-2nE">
-                                <rect key="frame" x="53" y="313" width="269" height="41"/>
+                                <rect key="frame" x="53" y="357" width="269" height="41"/>
                                 <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <accessibility key="accessibilityConfiguration">
                                     <accessibilityTraits key="traits" notEnabled="YES"/>
@@ -3980,7 +3881,15 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="7md-G2-GGK"/>
                     </view>
-                    <navigationItem key="navigationItem" id="BMK-Nv-MXN"/>
+                    <navigationItem key="navigationItem" id="BMK-Nv-MXN">
+                        <barButtonItem key="rightBarButtonItem" title="Message" image="bubble.right" catalog="system" id="kwP-QV-aND">
+                            <connections>
+                                <segue destination="TjB-9s-vUA" kind="popoverPresentation" popoverAnchorBarButtonItem="kwP-QV-aND" id="mPg-Yb-Adm">
+                                    <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                </segue>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="page3Price" destination="Ype-T1-2nE" id="2Gb-j1-lsg"/>
                         <outlet property="page3Title" destination="aaR-bl-TLH" id="ljM-vD-pjB"/>
@@ -3988,7 +3897,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="MBS-5U-GfC" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2592.8000000000002" y="4285.9070464767619"/>
+            <point key="canvasLocation" x="2580" y="3027"/>
         </scene>
         <!--Sent Request View Controller-->
         <scene sceneID="JX2-ws-oME">
@@ -4094,7 +4003,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="K3l-38-8Ah" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1013.6" y="4942.5787106446778"/>
+            <point key="canvasLocation" x="1030" y="3685"/>
         </scene>
         <!--Sent Request View Controller-->
         <scene sceneID="fGg-Li-uD5">
@@ -4105,37 +4014,37 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="Ride Booked" textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0wH-8Z-mhP">
-                                <rect key="frame" x="16" y="37" width="343" height="44"/>
+                                <rect key="frame" x="16" y="81" width="343" height="44"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="37"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pickup Time: " textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zlQ-cw-zRD">
-                                <rect key="frame" x="16" y="129" width="343" height="25"/>
+                                <rect key="frame" x="16" y="173" width="343" height="25"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="21"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Price: " textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hFA-pD-QkD">
-                                <rect key="frame" x="16" y="162" width="342" height="25"/>
+                                <rect key="frame" x="16" y="206" width="342" height="25"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="21"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Passengers: " textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vJK-zU-Nqt">
-                                <rect key="frame" x="15" y="195" width="343" height="25"/>
+                                <rect key="frame" x="15" y="239" width="343" height="25"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="21"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Car:" textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="e0f-Tc-3vs">
-                                <rect key="frame" x="15" y="228" width="343" height="25"/>
+                                <rect key="frame" x="15" y="272" width="343" height="25"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="21"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="mutedStandard" rotateEnabled="NO" pitchEnabled="NO" showsBuildings="NO" showsCompass="NO" translatesAutoresizingMaskIntoConstraints="NO" id="AlV-9C-Bbh">
-                                <rect key="frame" x="17" y="288" width="343" height="283"/>
+                                <rect key="frame" x="17" y="332" width="343" height="239"/>
                             </mapView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" hasAttributedTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="E7x-mo-lUZ">
                                 <rect key="frame" x="139" y="627" width="97" height="20"/>
@@ -4201,7 +4110,15 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="AQT-Zy-ove"/>
                     </view>
-                    <navigationItem key="navigationItem" id="glQ-6k-8I8"/>
+                    <navigationItem key="navigationItem" id="glQ-6k-8I8">
+                        <barButtonItem key="rightBarButtonItem" title="Message" image="bubble.right" catalog="system" id="i9C-CE-b1g">
+                            <connections>
+                                <segue destination="TjB-9s-vUA" kind="popoverPresentation" popoverAnchorBarButtonItem="i9C-CE-b1g" id="yXB-v0-yEN">
+                                    <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                </segue>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="page4Cancel" destination="E7x-mo-lUZ" id="yNN-P8-6Qh"/>
                         <outlet property="page4Car" destination="e0f-Tc-3vs" id="nyr-2A-82K"/>
@@ -4216,7 +4133,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="J7K-O6-aYn" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2574" y="4943"/>
+            <point key="canvasLocation" x="2580" y="3684"/>
         </scene>
         <!--Received Request View Controller-->
         <scene sceneID="Ee0-Kz-GO2">
@@ -4227,7 +4144,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="This Ride request has been deleted by " textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bF1-f5-xF3">
-                                <rect key="frame" x="16" y="91" width="343" height="180"/>
+                                <rect key="frame" x="16" y="135" width="343" height="180"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="180" id="O6y-hZ-Znw"/>
                                 </constraints>
@@ -4244,14 +4161,22 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="Scg-hw-IKX"/>
                     </view>
-                    <navigationItem key="navigationItem" id="5ge-6G-evV"/>
+                    <navigationItem key="navigationItem" id="5ge-6G-evV">
+                        <barButtonItem key="rightBarButtonItem" title="Message" image="bubble.right" catalog="system" id="azF-mN-gc6">
+                            <connections>
+                                <segue destination="uyz-Oo-4RE" kind="popoverPresentation" popoverAnchorBarButtonItem="azF-mN-gc6" id="pMN-ay-dX7">
+                                    <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                </segue>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="page2Title" destination="bF1-f5-xF3" id="Zbu-3x-M6F"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="IfD-oL-dYw" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3318" y="3632"/>
+            <point key="canvasLocation" x="3305" y="2369"/>
         </scene>
         <!--Received Request View Controller-->
         <scene sceneID="cXy-sy-hFB">
@@ -4262,31 +4187,31 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="Ride Booked" textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lBn-VV-gUJ">
-                                <rect key="frame" x="88" y="49" width="199.5" height="44"/>
+                                <rect key="frame" x="88" y="93" width="199.5" height="44"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="37"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pickup Time: " textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KZ8-iT-5e8">
-                                <rect key="frame" x="16" y="183" width="342" height="25"/>
+                                <rect key="frame" x="16" y="227" width="342" height="25"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="21"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Price: " textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wXU-Ii-HXQ">
-                                <rect key="frame" x="16" y="217" width="342" height="25"/>
+                                <rect key="frame" x="16" y="261" width="342" height="25"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="21"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Passengers: " textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eu8-P0-woN">
-                                <rect key="frame" x="15" y="250" width="343" height="25"/>
+                                <rect key="frame" x="15" y="294" width="343" height="25"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="21"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="mutedStandard" rotateEnabled="NO" pitchEnabled="NO" showsBuildings="NO" showsCompass="NO" showsTraffic="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LKI-TO-vYB">
-                                <rect key="frame" x="16" y="326" width="343" height="283"/>
+                                <rect key="frame" x="16" y="370" width="343" height="239"/>
                             </mapView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" hasAttributedTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="uYG-AH-qc9">
                                 <rect key="frame" x="261" y="620.5" width="97" height="33.5"/>
@@ -4306,7 +4231,7 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Status:" textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="jip-1Y-aHd">
-                                <rect key="frame" x="16" y="283" width="343" height="25"/>
+                                <rect key="frame" x="16" y="327" width="343" height="25"/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="21"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
@@ -4359,7 +4284,15 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="CST-eS-B8V"/>
                     </view>
-                    <navigationItem key="navigationItem" id="w4o-Fg-kG7"/>
+                    <navigationItem key="navigationItem" id="w4o-Fg-kG7">
+                        <barButtonItem key="rightBarButtonItem" title="Message" image="bubble.right" catalog="system" id="ZR8-xV-vYY">
+                            <connections>
+                                <segue destination="uyz-Oo-4RE" kind="popoverPresentation" popoverAnchorBarButtonItem="ZR8-xV-vYY" id="RWe-1B-ayc">
+                                    <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                </segue>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="page4MapView" destination="LKI-TO-vYB" id="YVb-u2-mh0"/>
                         <outlet property="page4Passengers" destination="eu8-P0-woN" id="oaH-qB-3s6"/>
@@ -4370,7 +4303,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="nRh-xR-UF5" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3298" y="4943"/>
+            <point key="canvasLocation" x="3324" y="3684"/>
         </scene>
         <!--Setup View Controller-->
         <scene sceneID="ims-qa-EqF">
@@ -4969,7 +4902,7 @@ Please ensure your photo is taken from directly above, that your license lines u
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="yRo-U0-SBq" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1783" y="4943"/>
+            <point key="canvasLocation" x="1798" y="3685"/>
         </scene>
         <!--Registration-->
         <scene sceneID="ezO-KF-K9K">
@@ -5315,7 +5248,7 @@ Please ensure your photo is taken from directly above, that your license lines u
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="fM6-Xh-byk" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="170" y="4943"/>
+            <point key="canvasLocation" x="185" y="3685"/>
         </scene>
         <!--Split payments with-->
         <scene sceneID="sP2-BF-5JD">
@@ -5405,7 +5338,7 @@ Please ensure your photo is taken from directly above, that your license lines u
                     </connections>
                 </searchDisplayController>
             </objects>
-            <point key="canvasLocation" x="-662" y="4943"/>
+            <point key="canvasLocation" x="-647" y="3685"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="Jwc-dH-L6w">
@@ -5871,12 +5804,50 @@ Please ensure your photo is taken from directly above, that your license lines u
             </objects>
             <point key="canvasLocation" x="2580" y="-4799"/>
         </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="RXr-et-jAP">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="uyz-Oo-4RE" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="DNK-LJ-efA">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="56"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="syn-u0-kVn" kind="relationship" relationship="rootViewController" id="8nz-Wf-xwq"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="gGk-1m-QEY" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="4198" y="1716"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="sAf-TO-OuA">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="TjB-9s-vUA" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="a28-uG-WFC">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="56"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="kh8-hb-kC9" kind="relationship" relationship="rootViewController" id="byR-Hp-C1A"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="wuA-wi-PUN" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1641" y="1716"/>
+        </scene>
     </scenes>
     <resources>
         <image name="Line" width="25" height="71"/>
         <image name="background" width="1500" height="1000"/>
         <image name="bank" width="246" height="215.5"/>
+        <image name="bubble.right" catalog="system" width="64" height="54"/>
         <image name="cards" width="248" height="227"/>
+        <image name="chevron.down" catalog="system" width="64" height="34"/>
         <image name="group" width="35" height="23"/>
         <image name="groupPlaceholder" width="300" height="300"/>
         <image name="members" width="128" height="128"/>
@@ -5886,7 +5857,9 @@ Please ensure your photo is taken from directly above, that your license lines u
         <image name="titleIcon" width="512" height="512"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="h8V-bt-68Z"/>
+        <segue reference="Idk-DX-0qX"/>
+        <segue reference="RWe-1B-ayc"/>
+        <segue reference="HtT-Vw-tM9"/>
         <segue reference="cKU-Gw-i0f"/>
     </inferredMetricsTieBreakers>
 </document>

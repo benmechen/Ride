@@ -222,6 +222,26 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         }
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationController?.view.backgroundColor = .clear
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        self.navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
+        self.navigationController?.navigationBar.shadowImage = nil
+        self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationController?.view.backgroundColor = UIColor(named: "Main")
+    }
+    
+    // Mark: - Actions
+    
     @IBAction func accept(_ sender: Any) {
         RideDB.child("Requests").child(request!._id!).child("status").setValue(2)
         RideDB.child("Users").child((request?._driver)!).child("requests").child("received").child((request?._id)!).child("new").setValue(true)
@@ -318,6 +338,14 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             createGroupTableViewController.paymentMode = true
             createGroupTableViewController.connections = self.connections
             createGroupTableViewController.driver = self.request!._driver
+        }
+        
+        if let navigationViewController = segue.destination as? UINavigationController {
+            if let requestsChatViewController = navigationViewController.viewControllers.first as? RequestsChatViewController {
+                requestsChatViewController.userManager = userManager
+                requestsChatViewController.request = request
+                requestsChatViewController.userName = userName
+            }
         }
     }
     

@@ -18,7 +18,6 @@ class RequestsChatViewController: MessagesViewController {
     
     @IBOutlet weak var requestDeletedReceived: UILabel!
     @IBOutlet weak var requestDeletedSent: UILabel!
-    @IBOutlet weak var receivedInput: UITextField!
     @IBOutlet weak var sentInput: UITextField!
     
     var userManager: UserManagerProtocol!
@@ -27,10 +26,12 @@ class RequestsChatViewController: MessagesViewController {
     var messages: [Message] = []
     var member: Member!
     var userName: String? = nil
+    override var canBecomeFirstResponder: Bool { return true }
+    override var canResignFirstResponder: Bool { return true }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         // Do any additional setup after loading the view.
 //        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
 //        self.navigationController?.navigationBar.shadowImage = UIImage()
@@ -48,24 +49,13 @@ class RequestsChatViewController: MessagesViewController {
             print("Waiting for request")
         }
         
-        self.inputAccessoryView?.becomeFirstResponder()
-        
-        self.messageInputBar.isHidden = true
-        if self.receivedInput != nil {
-            self.view.bringSubviewToFront(receivedInput)
-        } else {
-            self.view.bringSubviewToFront(sentInput)
-        }
-        
         if request == nil {
             return
         }
         
         if (request?.deleted)! {
             self.messageInputBar.isHidden = true
-            if self.receivedInput != nil {
-                self.receivedInput.isHidden = true
-            } else {
+            if self.sentInput != nil {
                 self.sentInput.isHidden = true
             }
             
@@ -90,36 +80,23 @@ class RequestsChatViewController: MessagesViewController {
         messagesCollectionView.messagesDisplayDelegate = self
         
         listenForMessagesForRequest((request?._id)!)
-        self.view.bringSubviewToFront(messageInputBar)
-        messageInputBar.becomeFirstResponder()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        if self.receivedInput != nil {
-            self.receivedInput.isHidden = request?.deleted ?? false
-        } else {
+        if self.sentInput != nil {
             self.sentInput.isHidden = request?.deleted ?? false
         }
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        messageInputBar.isHidden = false
-        messageInputBar.becomeFirstResponder()
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
         
-        if receivedInput != nil {
-            receivedInput.text = messageInputBar.inputTextView.text
-        } else {
-            sentInput.text = messageInputBar.inputTextView.text
-        }
-        messageInputBar.isHidden = true
-        messageInputBar.resignFirstResponder()
+        self.becomeFirstResponder()
+        self.messageInputBar.becomeFirstResponder()
+        self.messageInputBar.isHidden = false
+        self.messageInputBar.inputTextView.becomeFirstResponder()
     }
 
     /*
@@ -131,13 +108,18 @@ class RequestsChatViewController: MessagesViewController {
         // Pass the selected object to the new view controller.
     }
     */
-    @IBAction func hideReceivedInput(_ sender: Any) {
-        receivedInput.isHidden = true
-        messageInputBar.inputTextView.becomeFirstResponder()
-    }
+//    @IBAction func hideReceivedInput(_ sender: Any) {
+//        receivedInput.isHidden = true
+//        messageInputBar.inputTextView.becomeFirstResponder()
+//    }
+//
+//    @IBAction func removeReceivedInputText(_ sender: Any) {
+//        receivedInput.text = ""
+//    }
     
-    @IBAction func removeReceivedInputText(_ sender: Any) {
-        receivedInput.text = ""
+    @IBAction func closeChat(_ sender: Any) {
+        self.resignFirstResponder()
+        self.dismiss(animated: true, completion: nil)
     }
     
     @IBAction func hideSentInput(_ sender: Any) {
@@ -302,5 +284,23 @@ extension UIColor {
         return UIColor(red: 230 / 255, green: 230 / 255, blue: 230 / 255, alpha: 1)
     }
     
+}
+
+
+
+
+// MARK: Delete - First Responder Testing
+extension UIView {
+    var firstResponder: UIView? {
+        guard !isFirstResponder else { return self }
+        
+        for subview in subviews {
+            if let firstResponder = subview.firstResponder {
+                return firstResponder
+            }
+        }
+        
+        return nil
+    }
 }
 

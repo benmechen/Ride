@@ -250,6 +250,18 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
                 self.message = value
             }
         })
+        
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationController?.view.backgroundColor = .clear
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        self.navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
+        self.navigationController?.navigationBar.shadowImage = nil
+        self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationController?.view.backgroundColor = UIColor(named: "Main")
     }
     
 
@@ -264,15 +276,20 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     }
     
     
-    /*
-     // MARK: - Navigation
-     
-     // In a storyboard-based application, you will often want to do a little preparation before navigation
-     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-     // Get the new view controller using segue.destination.
-     // Pass the selected object to the new view controller.
-     }
-     */
+    // MARK: - Navigation
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let navigationViewController = segue.destination as? UINavigationController {
+            if let requestsChatViewController = navigationViewController.viewControllers.first as? RequestsChatViewController {
+                requestsChatViewController.userManager = userManager
+                requestsChatViewController.request = request
+                requestsChatViewController.userName = userName
+            }
+        }
+    }
+    
+    
+    // Mark: - Actions
     @IBAction func accept(_ sender: Any) {
         if let parent = self.parent as? ReceivedRequestsPageViewController {
             let secondViewController = self.storyboard?.instantiateViewController(withIdentifier: "ReceivedRequestController_Page3") as! ReceivedRequestViewController

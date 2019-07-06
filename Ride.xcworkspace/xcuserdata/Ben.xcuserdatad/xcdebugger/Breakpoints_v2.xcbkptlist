@@ -49,10 +49,10 @@
             timestampString = "574474195.205495"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "372"
-            endingLineNumber = "372"
-            landmarkName = "ReceivedRequestViewController"
-            landmarkType = "3">
+            startingLineNumber = "386"
+            endingLineNumber = "386"
+            landmarkName = "removeSpecialCharsFromString(text:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -66,8 +66,8 @@
             timestampString = "575984537.670808"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "273"
-            endingLineNumber = "273"
+            startingLineNumber = "272"
+            endingLineNumber = "272"
             landmarkName = "tableView(_:cellForRowAt:)"
             landmarkType = "7">
          </BreakpointContent>

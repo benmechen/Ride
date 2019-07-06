@@ -28,6 +28,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
     var index: IndexPath = IndexPath(row: -1, section: -1)
     var userName = ""
     var sectionChanged: Bool = false
+    override var canResignFirstResponder: Bool {return false}
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -382,10 +383,49 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         
         self.userName = cell.name.text ?? ""
         
-        if tableView == self.sentRequestsTable {
-            self.performSegue(withIdentifier: "moveToSentRequest", sender: self)
+        var section = ""
+        if index.section == 0 {
+            section = "upcoming"
         } else {
-            self.performSegue(withIdentifier: "moveToReceivedRequest", sender: self)
+            section = "previous"
+        }
+        
+        if tableView == self.sentRequestsTable {
+            if indexPath.row < sentRequestIDs[section]?.count ?? 0, let id = sentRequestIDs[section]?[indexPath.row] {
+                print(id)
+                if let request = sentRequests[section]?[id] {
+                    switch request.status {
+                    case 0:
+                        self.performSegue(withIdentifier: "moveToSentRequest_page1", sender: self)
+                    case 1:
+                        self.performSegue(withIdentifier: "moveToSentRequest_page3", sender: self)
+                    case 2, 3, 4:
+                        self.performSegue(withIdentifier: "moveToSentRequest_page4", sender: self)
+                    default:
+                        if request.deleted {
+                            self.performSegue(withIdentifier: "moveToSentRequest_page2", sender: self)
+                        }
+                    }
+                }
+            }
+        } else {
+            if indexPath.row < receivedRequestIDs[section]?.count ?? 0, let id = receivedRequestIDs[section]?[indexPath.row] {
+                print(id)
+                if let request = receivedRequests[section]?[id] {
+                    switch request.status {
+                    case 0:
+                        self.performSegue(withIdentifier: "moveToReceivedRequest_page1", sender: self)
+                    case 1:
+                        self.performSegue(withIdentifier: "moveToReceivedRequest_page3", sender: self)
+                    case 2, 3, 4:
+                        self.performSegue(withIdentifier: "moveToReceivedRequest_page4", sender: self)
+                    default:
+                        if request.deleted {
+                            self.performSegue(withIdentifier: "moveToReceivedRequest_page2", sender: self)
+                        }
+                    }
+                }
+            }
         }
         
         tableView.deselectRow(at: indexPath, animated: true)
@@ -422,6 +462,8 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         return [delete]
     }
     
+    
+    // MARK: - Navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         super.prepare(for: segue, sender: sender)
         
@@ -435,12 +477,17 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         }
         
         switch(segue.identifier ?? "") {
-        case "moveToSentRequest":
-            let sentRequestsPageViewController = segue.destination as! PageControlViewController
-            sentRequestsPageViewController.request = sentRequests[section]?[sentRequestIDs[section]![index.row]]
-            sentRequestsPageViewController.userName = self.userName
-            sentRequestsPageViewController.navigationItem.title = userName
-            sentRequestsPageViewController.userManager = userManager
+        case "moveToSentRequest_page1", "moveToSentRequest_page2", "moveToSentRequest_page3", "moveToSentRequest_page4":
+            guard let request = sentRequests[section]?[sentRequestIDs[section]![index.row]] else {
+                return
+            }
+            
+            if let sentRequestViewController = segue.destination as? SentRequestViewController {
+                sentRequestViewController.userManager = userManager
+                sentRequestViewController.request = request
+                sentRequestViewController.userName = userName
+                sentRequestViewController.navigationItem.title = userName
+            }
             
             if sentRequests[section]?[sentRequestIDs[section]![index.row]]?.new ?? false {
                 if let value = Int(self.tabBarController?.tabBar.items?[1].badgeValue ?? "0") {
@@ -451,36 +498,24 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                     }
                 }
             }
-        case "moveToReceivedRequest":
-            let receivedRequestsPageViewController = segue.destination as! PageControlViewController
-            receivedRequestsPageViewController.request = receivedRequests[section]?[receivedRequestIDs[section]![index.row]]
-            receivedRequestsPageViewController.userName = self.userName
-            receivedRequestsPageViewController.navigationItem.title = userName
-            receivedRequestsPageViewController.userManager = userManager
+        case "moveToReceivedRequest_page1", "moveToReceivedRequest_page2", "moveToReceivedRequest_page3", "moveToReceivedRequest_page4":
+            guard let request = receivedRequests[section]?[receivedRequestIDs[section]![index.row]] else {
+                return
+            }
             
-            if receivedRequests[section]?[receivedRequestIDs[section]![index.row]]?.new ?? false {
-                if let value = Int(self.tabBarController?.tabBar.items?[1].badgeValue ?? "0") {
-                    if value > 1 {
-                        self.tabBarController?.tabBar.items?[1].badgeValue = String(value - 1)
-                    } else {
-                        self.tabBarController?.tabBar.items?[1].badgeValue = nil
-                    }
-                }
+            if let receivedRequestViewController = segue.destination as? ReceivedRequestViewController {
+                receivedRequestViewController.userManager = userManager
+                receivedRequestViewController.request = request
+                receivedRequestViewController.userName = userName
+                receivedRequestViewController.navigationItem.title = userName
             }
         default:
-            fatalError("Unexpected Segue Identifier; \(String(describing: segue.identifier))")
+            fatalError("Unknown segue identifier - RequestViewController")
         }
     }
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
+    
+    // Mark: - Actions
+    
     @IBAction func switchSections(_ sender: Any) {
         switch segmentedControl.selectedSegmentIndex {
         case 0:
