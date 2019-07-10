@@ -97,15 +97,8 @@ class RequestSendViewController: UIViewController {
     }
     
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
+    // MARK: - Actions
+    
     @IBAction func selectNoOfPeople(_ sender: Any) {
         let toolBar = UIToolbar()
         toolBar.sizeToFit()
@@ -138,7 +131,7 @@ class RequestSendViewController: UIViewController {
         if let noOfPeople = Int(peopleTextField.text!) {
             let request = Request(driver: (user?.id)!, sender: Auth.auth().currentUser!.uid, from: (from?.coordinate)!, fromName: (from?.title)!, to: (to?.coordinate)!, toName: (to?.title)! , time: timestampInt, passengers: noOfPeople, status: 0)
             
-            request.send { (success, key) in
+            request.send(userManager: userManager) { (success, key) in
                 if success {
                     let alert = UIAlertController(title: "Request sent", message: "Once the other user has accepted the request and sent a price back, you will be notified", preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
@@ -146,6 +139,11 @@ class RequestSendViewController: UIViewController {
                     }))
                     self.present(alert, animated: true, completion: nil)
                 } else {
+                    let alert = UIAlertController(title: "Error", message: "Something went wrong, please try again", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+                        self.dismiss(animated: true, completion: nil)
+                    }))
+                    self.present(alert, animated: true, completion: nil)
                 }
                 self.removeSpinner(spinner: self.vSpinner!)
             }
@@ -172,7 +170,9 @@ class RequestSendViewController: UIViewController {
         timeFormatter.dateStyle = DateFormatter.Style.medium
         timeFormatter.timeStyle = DateFormatter.Style.short
         
-        let date = timeFormatter.date(from: timeFormatter.string(from: sender.date))
+        var date = timeFormatter.date(from: timeFormatter.string(from: sender.date))
+        let offset = timeFormatter.timeZone.daylightSavingTimeOffset(for: date!)
+        date! += offset
         dateStamp = date?.timeIntervalSince1970
         
         timeTextField.text = timeFormatter.string(from: sender.date)

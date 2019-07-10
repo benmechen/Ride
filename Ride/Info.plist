@@ -65,7 +65,6 @@
 	<string>Allows users in your groups to see how close to them you are when available for Rides. Select "Always Allow" to make it easier for your friends to get Rides from you.</string>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>location</string>
 		<string>remote-notification</string>
 	</array>
 	<key>UILaunchStoryboardName</key>

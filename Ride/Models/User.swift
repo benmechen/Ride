@@ -13,7 +13,11 @@ import os.log
 import MapKit
 import MessageKit
 
-struct User: SenderType {
+struct User: SenderType, Equatable {
+    static func == (lhs: User, rhs: User) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
     let id: String
     let name: String
     let photo: URL!
@@ -43,20 +47,21 @@ class UserManager: UserManagerProtocol {
     private var userCache = [User]()
     private var references = [DatabaseReference]()
     fileprivate var currentUser: User?
+    private var currentUserReference: Int?
     
-    
-    // Create current user
+    /// Create current user
     init () {
         guard Auth.auth().currentUser != nil else {
             return
         }
         
-        self.fetch(byID: Auth.auth().currentUser!.uid) { (success, user) in
+        fetch(byID: Auth.auth().currentUser!.uid) { (success, user) in
             guard success else {
                 return
             }
             
             self.currentUser = user
+            self.watch()
         }
     }
     
@@ -66,8 +71,8 @@ class UserManager: UserManagerProtocol {
             return
         }
         
-        if self.currentUser == nil {
-            self.fetch(byID: Auth.auth().currentUser!.uid) { (success, user) in
+        if currentUser == nil {
+            fetch(byID: Auth.auth().currentUser!.uid) { (success, user) in
                 guard success else {
                     return
                 }
@@ -81,7 +86,7 @@ class UserManager: UserManagerProtocol {
     }
     
     func updateCurrentUser() {
-        self.fetch(byID: Auth.auth().currentUser!.uid) { (success, user) in
+        fetch(byID: Auth.auth().currentUser!.uid) { (success, user) in
             guard success else {
                 return
             }
@@ -91,18 +96,24 @@ class UserManager: UserManagerProtocol {
     }
     
     func logout() {
-        self.currentUser = nil
+        currentUser = nil
+        userCache.removeAll()
     }
     
     func fetch(byID id: String, completion: @escaping (Bool, User?)->()) {
-        let search = self.userCache.filter{$0.id == id}
-        if search.count > 0 {
-            completion(true, search[0])
-            return
-        }
+        /// User cache disabled
+//        let search = self.userCache.filter{$0.id == id}
+//        if search.count > 0 {
+//            completion(true, search[0])
+//            return
+//        }
 
         let RideDB = Database.database().reference()
-        self.references.append(RideDB)
+        RideDB.keepSynced(true)
+        references.append(RideDB)
+        if id == Auth.auth().currentUser!.uid {
+            self.currentUserReference = self.references.count - 1
+        }
 
         RideDB.child("Users").child(id).observe(.value, with: { (snapshot) in
             if var value = snapshot.value as? [String: Any] {
@@ -132,6 +143,30 @@ class UserManager: UserManagerProtocol {
         })
     }
     
+    /// Watch user for availability updates
+    private func watch() {
+        let reference = references[currentUserReference ?? 0]
+        reference.child("Users").child(currentUser!.id).child("available").observe(.value) { (snapshot) in
+            if let value = snapshot.value as? [String: Bool] {
+                var available = false
+                for group in value.keys {
+                    if value[group]! {
+                        available = true
+                        break
+                    }
+                }
+                
+                let appDelegate = UIApplication.shared.delegate as? AppDelegate
+                
+                if available {
+                    appDelegate?.updateUserLocation()
+                } else {
+                    appDelegate?.locationManager.stopUpdatingLocation()
+                }
+            }
+        }
+    }
+    
     deinit {
         for reference in self.references {
             reference.removeAllObservers()
@@ -140,94 +175,3 @@ class UserManager: UserManagerProtocol {
     
 
 }
-
-//var _userID: String
-//var _userName: String
-//var _userPhotoURL: URL!
-//var _userCar: Car
-//var _userAvailable: [String: Bool]
-//var _userLocation: [String: CLLocationDegrees]
-//private var references = [DatabaseReference]()
-//static private var currentUserCached: User!
-//
-//static var currentUser: User {
-//    get {
-//        guard Auth.auth().currentUser?.uid != nil else {
-//            return User(id: "", name: "", photo: "", car: [:], available: [:], location: [:])!
-//        }
-//
-//        if self.currentUserCached != nil && self.currentUserCached._userID == Auth.auth().currentUser?.uid {
-//            return self.currentUserCached
-//        }
-//
-//        self.currentUserCached = User(uid: Auth.auth().currentUser!.uid)
-//        return self.currentUserCached
-//    }
-//}
-//
-//init? (id: String, name: String, photo: String, car: [String: String], available: [String: Bool], location: [String: CLLocationDegrees]) {
-//
-//    var car = car
-//    //TODO: Validation
-//    if car["type"] == nil {
-//        car["type"] = ""
-//    }
-//
-//    if car["mpg"] == nil {
-//        car["mpg"] = ""
-//    }
-//
-//    if car["seats"] == nil {
-//        car["seats"] = ""
-//    }
-//
-//    if car["registration"] == nil {
-//        car["registration"] = ""
-//    }
-//
-//    _userID = id
-//    _userName = name
-//    _userCar = Car(type: car["type"]!, mpg: car["mpg"]!, seats: car["seats"]!, registration: (car["registration"] ?? ""))
-//    _userPhotoURL = URL(string: photo)!
-//    _userAvailable = available
-//    _userLocation = location
-//
-//}
-//
-//init (uid: String) {
-//    let RideDB = Database.database().reference()
-//    self.references.append(RideDB)
-//    _userID = uid
-//    _userName = ""
-//    _userCar = Car(type: "", mpg: "", seats: "", registration: "")
-//    //        _userPhotoURL = URL(string: "")!
-//    _userAvailable = [:]
-//    _userLocation = [:]
-//
-//    RideDB.child("Users").child(uid).observe(.value, with: { (snapshot) in
-//        if var value = snapshot.value as? [String: Any] {
-//            guard value["name"] != nil && value["photo"] != nil else {
-//                return
-//            }
-//
-//            if value["car"] == nil {
-//                value["car"] = ["type": "", "mpg": "", "seats": "", "registration": ""]
-//            }
-//            if value["available"] == nil {
-//                value["available"] = [:]
-//            }
-//            if value["location"] == nil {
-//                value["location"] = [:]
-//            }
-//
-//            var car = value["car"] as! [String: String]
-//
-//            self._userID = uid
-//            self._userName = value["name"] as! String
-//            self._userCar = Car(type: car["type"]  ?? "", mpg: car["mpg"] ?? "", seats: car["seats"] ?? "", registration: car["registration"] ?? "")
-//            self._userPhotoURL = URL(string: value["photo"] as! String)!
-//            self._userAvailable = value["available"] as! [String : Bool]
-//            self._userLocation = value["location"] as! [String : CLLocationDegrees]
-//        }
-//    })
-//}

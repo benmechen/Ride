@@ -179,7 +179,7 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
                 cell.groupAvailable.text = String(group.availableCount) + " available"
 //                cell.groupName.frame.origin.y = 2.0
             } else {
-                cell.groupAvailable.text = ""
+                cell.groupAvailable.text = " "
 //                print(cell.groupName.frame.origin.y)
 //                cell.groupName.frame.origin.y = 7.0
             }

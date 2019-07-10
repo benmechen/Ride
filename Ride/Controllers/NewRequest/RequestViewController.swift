@@ -94,23 +94,9 @@ class RequestViewController: UIViewController {
         })
     }
 
-    /*
+    
     // MARK: - Navigation
 
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-    @IBAction func selectDestination(_ sender: Any) {
-        
-    }
-    
-    @IBAction func cancel(_ sender: Any) {
-        self.dismiss(animated: true, completion: nil)
-    }
-    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         super.prepare(for: segue, sender: sender)
         
@@ -121,6 +107,7 @@ class RequestViewController: UIViewController {
             requestFromViewController.region = region
             requestFromViewController.destination = selectedPin
             requestFromViewController.user = user
+            requestFromViewController.userManager = userManager
             // Set back button
             let backButton = UIBarButtonItem()
             backButton.title = "Back"
@@ -128,6 +115,15 @@ class RequestViewController: UIViewController {
         }
     }
     
+    
+    // MARK: - Actions
+    @IBAction func selectDestination(_ sender: Any) {
+        
+    }
+    
+    @IBAction func cancel(_ sender: Any) {
+        self.dismiss(animated: true, completion: nil)
+    }
 }
 
 extension RequestViewController : CLLocationManagerDelegate {

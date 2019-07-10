@@ -396,8 +396,8 @@ exports.sendRideCreationNotification = functions.database.ref('/Requests/{pushId
             console.log(tokenID);
             var message = {
               notification: {
-                title: `Request from ${destination_user_name}`,
-                body: `${snap.val().from.name} at ${date.toLocaleTimeString()} on ${date.toDateString()}`
+                title: `Ride request from ${destination_user_name}`,
+                body: `Pickup from ${snap.val().from.name} at ${date.toLocaleTimeString()} on ${date.toDateString()}`
               },
               apns: {
                 payload: {

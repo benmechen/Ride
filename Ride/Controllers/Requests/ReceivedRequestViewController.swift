@@ -277,7 +277,6 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     
     
     // MARK: - Navigation
-    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let navigationViewController = segue.destination as? UINavigationController {
             if let requestsChatViewController = navigationViewController.viewControllers.first as? RequestsChatViewController {
@@ -286,36 +285,20 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
                 requestsChatViewController.userName = userName
             }
         }
+        
+        if segue.identifier == "moveToReceivedRequest_page1-3" || segue.identifier == "moveToReceivedRequest_page3-4" {
+            if let receivedRequestsViewController = segue.destination as? ReceivedRequestViewController {
+                receivedRequestsViewController.userManager = userManager
+                receivedRequestsViewController.request = request
+                receivedRequestsViewController.userName = userName
+            }
+        }
     }
     
     
-    // Mark: - Actions
+    // MARK: - Actions
     @IBAction func accept(_ sender: Any) {
-        if let parent = self.parent as? ReceivedRequestsPageViewController {
-            let secondViewController = self.storyboard?.instantiateViewController(withIdentifier: "ReceivedRequestController_Page3") as! ReceivedRequestViewController
-            
-            secondViewController.request = self.request
-            secondViewController.userName = self.userName
-            secondViewController.distance = self.distance
-            
-            parent.setViewControllers([secondViewController], direction: .forward, animated: true, completion: nil)
-            
-            parent.pageControlDelegate?.receivedRequestsPageViewController(receivedRequestsPageViewController: parent, didUpdatePageCount: 0)
-        }
-    }
-    
-    @IBAction func decline(_ sender: Any) {
-        RideDB.child("Requests").child(request!._id!).child("deleted").setValue(true)
-        RideDB.child("Requests").child(request!._id!).child("status").setValue(-1)
-        RideDB.child("Users").child(request!._driver!).child("requests").child("received").child(request!._id!).removeValue()
-        self.navigationController?.popViewController(animated: true)
-    }
-    
-    // MARK - Private functions
-    @IBAction func priceFieldDidChange(_ sender: Any) {
-        if let amountString = page3Price.text?.currencyInputFormatting() {
-            page3Price.text = amountString
-        }
+        self.performSegue(withIdentifier: "moveToReceivedRequest_page1-3", sender: self)
     }
     
     @IBAction func updateFees(_ sender: Any) {
@@ -359,11 +342,30 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
         
         MKMapItem.openMaps(with: [from, to], launchOptions: [MKLaunchOptionsDirectionsModeKey : MKLaunchOptionsDirectionsModeDriving])
         
-//        to.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey : MKLaunchOptionsDirectionsModeDriving])
+        //        to.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey : MKLaunchOptionsDirectionsModeDriving])
+    }
+    
+    @IBAction func decline(_ sender: Any) {
+        RideDB.child("Requests").child(request!._id!).child("deleted").setValue(true)
+        RideDB.child("Requests").child(request!._id!).child("status").setValue(-1)
+        RideDB.child("Users").child(request!._driver!).child("requests").child("received").child(request!._id!).removeValue()
+        self.navigationController?.popViewController(animated: true)
+    }
+    
+    // MARK: - Private functions
+    @IBAction func priceFieldDidChange(_ sender: Any) {
+        if let amountString = page3Price.text?.currencyInputFormatting() {
+            page3Price.text = amountString
+        }
     }
     
     @objc func dismissKeyboard() {
         view.endEditing(true)
+    }
+    
+    @objc func dismissView() {
+        self.navigationController?.popViewController(animated: true)
+//        self.dismiss(animated: true, completion: nil)
     }
     
     func page3Sent() {

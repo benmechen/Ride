@@ -126,13 +126,16 @@ class Group {
     }
     
     private func loadUsers() {
+        self._groupUsers.removeAll()
         for member in self._groupMembers! {
             userManager?.fetch(byID: member) { (success, user) in
                 guard success && user != nil else {
                     return
                 }
                 
-                self._groupUsers.append(user!)
+                if !self._groupUsers.contains(user!) {
+                    self._groupUsers.append(user!)
+                }
             }
         }
         

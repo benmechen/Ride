@@ -26,10 +26,10 @@ class Request {
     var new: Bool = false
     var status: Int = 0
     var deleted: Bool = false
-    var userManager: UserManagerProtocol!
+    var sent: Int!
     lazy var RideDB = Database.database().reference()
     
-    init (id: String? = nil, driver: String, sender: String, from: CLLocationCoordinate2D, fromName: String, to: CLLocationCoordinate2D, toName: String, time: Int, passengers: Int, status: Int) {
+    init (id: String? = nil, driver: String, sender: String, from: CLLocationCoordinate2D, fromName: String, to: CLLocationCoordinate2D, toName: String, time: Int, passengers: Int, status: Int, sent: Int? = 0) {
         
         self._id = id
         self._driver = driver
@@ -41,10 +41,11 @@ class Request {
         self._time = time
         self._passengers = passengers
         self.status = status
+        self.sent = sent
     }
     
-    public func send(completion: @escaping (Bool, String?)->()) {
-        userManager?.getCurrentUser(completion: { (success, user) in
+    public func send(userManager: UserManagerProtocol, completion: @escaping (Bool, String?)->()) {
+        userManager.getCurrentUser(completion: { (success, user) in
             guard success && user != nil else {
                 return
             }

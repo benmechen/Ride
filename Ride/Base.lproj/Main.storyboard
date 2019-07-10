@@ -4,6 +4,7 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14790.5"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
         <capability name="iOS 13.0 system colors" minToolsVersion="11.0"/>
@@ -960,7 +961,7 @@
                                         </connections>
                                     </segmentedControl>
                                 </subviews>
-                                <color key="backgroundColor" red="0.70588235294117641" green="0.15294117647058825" blue="0.24313725490196078" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="backgroundColor" name="Nav bar"/>
                                 <constraints>
                                     <constraint firstAttribute="height" relation="lessThanOrEqual" constant="46" id="ycU-bF-ssY"/>
                                 </constraints>
@@ -3630,6 +3631,7 @@
                         <outlet property="page1Passengers" destination="5US-mI-vAi" id="YOw-PH-lYd"/>
                         <outlet property="page1Time" destination="hYA-e6-yCN" id="EeU-8A-BTd"/>
                         <outlet property="page1Title" destination="dZX-pZ-Elb" id="CfY-1C-9cD"/>
+                        <segue destination="tJM-qY-htW" kind="show" identifier="moveToReceivedRequest_page1-3" id="Azk-MW-aky"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="YEW-F0-0Pq" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -3780,6 +3782,7 @@
                         <outlet property="page3Send" destination="ajW-fh-Ck0" id="JsR-Ky-ad1"/>
                         <outlet property="page3Title" destination="nzC-fq-EG1" id="r82-xt-R7Z"/>
                         <outlet property="page3Total" destination="ecP-ZL-D35" id="TWs-bb-o2X"/>
+                        <segue destination="5Oz-M5-0Xd" kind="show" identifier="moveToReceivedRequest_page3-4" id="lgI-58-Hke"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="SIM-Pv-A1c" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -5855,11 +5858,16 @@ Please ensure your photo is taken from directly above, that your license lines u
         <image name="plane" width="46.5" height="38"/>
         <image name="timeArrow" width="51" height="16"/>
         <image name="titleIcon" width="512" height="512"/>
+        <namedColor name="Nav bar">
+            <color red="0.70588235294117652" green="0.15294117647058825" blue="0.24313725490196078" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="Idk-DX-0qX"/>
-        <segue reference="RWe-1B-ayc"/>
+        <segue reference="tDj-Yr-gDt"/>
         <segue reference="HtT-Vw-tM9"/>
+        <segue reference="L4r-bb-RL3"/>
+        <segue reference="ICW-CP-7zG"/>
         <segue reference="cKU-Gw-i0f"/>
     </inferredMetricsTieBreakers>
 </document>

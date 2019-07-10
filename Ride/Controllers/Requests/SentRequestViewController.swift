@@ -246,15 +246,17 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         RideDB.child("Requests").child(request!._id!).child("status").setValue(2)
         RideDB.child("Users").child((request?._driver)!).child("requests").child("received").child((request?._id)!).child("new").setValue(true)
         
-        if let parent = self.parent as? SentRequestsPageViewController {
-            let secondViewController = self.storyboard?.instantiateViewController(withIdentifier: "SentRequestController_Page4") as! SentRequestViewController
+        if let parent = self.parent as? RequestsViewController {
+//            let secondViewController = self.storyboard?.instantiateViewController(withIdentifier: "SentRequestController_Page4") as! SentRequestViewController
+//            
+//            secondViewController.request = self.request
+//            secondViewController.userName = self.userName
             
-            secondViewController.request = self.request
-            secondViewController.userName = self.userName
+            parent.performSegue(withIdentifier: "moveToSentRequest_page4", sender: parent)
             
-            parent.setViewControllers([secondViewController], direction: .forward, animated: true, completion: nil)
-            
-            parent.pageControlDelegate?.sentRequestsPageViewController(sentRequestsPageViewController: parent, didUpdatePageCount: 0)
+//            parent.setViewControllers([secondViewController], direction: .forward, animated: true, completion: nil)
+//
+//            parent.pageControlDelegate?.sentRequestsPageViewController(sentRequestsPageViewController: parent, didUpdatePageCount: 0)
         }
     }
     

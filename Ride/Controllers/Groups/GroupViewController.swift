@@ -263,15 +263,7 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
     }
     
 
-    /*
     // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         super.prepare(for: segue, sender: sender)
@@ -295,6 +287,7 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
             requestViewController.region = self.groupMapView.region
             let user = sender as! User
             requestViewController.user = user
+            requestViewController.userManager = userManager
         default:
             fatalError("Unexpected Segue Identifier: \(String(describing: segue.identifier))")
         }
@@ -340,6 +333,8 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
         self.availableMembers = []
         self.unavailableMembers = []
         self.memberAnnotations = []
+        
+        print(group._groupUsers)
         
         for user in group._groupUsers {
             if user.id != Auth.auth().currentUser?.uid {

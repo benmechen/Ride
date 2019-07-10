@@ -57,6 +57,7 @@ class RequestFromViewController: UIViewController {
         definesPresentationContext = true
     }
     
+    
     // MARK: - Search controller
     
     override func viewWillAppear(_ animated: Bool) {
@@ -71,38 +72,9 @@ class RequestFromViewController: UIViewController {
         }
     }
     
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        
-        RideDB.child("Groups").child("UserGroups").child(Auth.auth().currentUser!.uid).child("groupIDs").observeSingleEvent(of: .value, with: { snapshot in
-            var count = 0
-            if let value = snapshot.value as? [String: Bool] {
-                for key in value.keys {
-                    if value[key]!{
-                        count += 1
-                    }
-                }
-            }
-            
-            if count == 0 {
-                self.locationManager.stopUpdatingLocation()
-            }
-        })
-    }
     
-    /*
-     // MARK: - Navigation
-     
-     // In a storyboard-based application, you will often want to do a little preparation before navigation
-     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-     // Get the new view controller using segue.destination.
-     // Pass the selected object to the new view controller.
-     }
-     */
-    @IBAction func selectDestination(_ sender: Any) {
-        
-    }
-    
+    // MARK: - Navigation
+
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         super.prepare(for: segue, sender: sender)
         
@@ -113,11 +85,18 @@ class RequestFromViewController: UIViewController {
             requestSendViewController.to = destination
             requestSendViewController.from = selectedPin
             requestSendViewController.user = user
+            requestSendViewController.userManager = userManager
             // Set back button
             let backButton = UIBarButtonItem()
             backButton.title = "Back"
             navigationItem.backBarButtonItem = backButton
         }
+    }
+    
+    
+    // MARK: - Actions
+    @IBAction func selectDestination(_ sender: Any) {
+        
     }
     
 }

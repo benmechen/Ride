@@ -155,7 +155,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
             guard success && user != nil else {
                 return
             }
-            
+
             if !(user!.available.isEmpty) {
                 if user!.available.values.contains(true) {
                     if CLLocationManager.locationServicesEnabled() {
@@ -166,9 +166,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                         self.locationManager.stopUpdatingLocation()
                     }
                 } else {
-                    self.locationManager.stopUpdatingLocation()
+
                 }
-                
+
                 if self.updateLastSeen {
                     self.updateLastSeen = false
                 }

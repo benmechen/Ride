@@ -28,6 +28,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
     var index: IndexPath = IndexPath(row: -1, section: -1)
     var userName = ""
     var sectionChanged: Bool = false
+    var refreshControl = UIRefreshControl()
     override var canResignFirstResponder: Bool {return false}
     
     override func viewDidLoad() {
@@ -39,8 +40,8 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         self.navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
         
         //Set titles
-        segmentedControl.setTitle("Requests", forSegmentAt: 0)
-        segmentedControl.setTitle("Received", forSegmentAt: 1)
+        segmentedControl.setTitle("Sent Requests", forSegmentAt: 0)
+        segmentedControl.setTitle("Received Requests", forSegmentAt: 1)
         
         //Get NavBar width
         let navigationBarWidth = Int(self.navigationController!.navigationBar.frame.width)
@@ -83,6 +84,11 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         sentRequestsTable.dataSource = self
         receivedRequestsTable.delegate = self
         receivedRequestsTable.dataSource = self
+        
+        refreshControl.attributedTitle = NSAttributedString(string: "Pull to refresh")
+        refreshControl.addTarget(self, action: "refresh:", for: .valueChanged)
+        sentRequestsTable.addSubview(refreshControl)
+        receivedRequestsTable.addSubview(refreshControl)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -94,6 +100,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         receivedRequests["previous"]?.removeAll()
         receivedRequestIDs["upcoming"]?.removeAll()
         receivedRequestIDs["previous"]?.removeAll()
+        
         getUserRequests()
         
         //Set navigation bar title to custom text for logo
@@ -118,6 +125,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
             tabViewController.navigationBar.titleView = rideLabel
         }
     }
+    
     
     // MARK: - Table stuff
     
@@ -164,6 +172,13 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         
         if tableView == self.sentRequestsTable {
             if indexPath.section == 0 {
+                guard self.sentRequestIDs["upcoming"]!.count > indexPath.row else {
+                    self.sentRequestsTable.reloadData()
+                    let cell = sentRequestsTable.dequeueReusableCell(withIdentifier: "BlankRequestTableCell", for: indexPath) as! BlankRequestTableViewCell
+                    
+                    return cell
+                }
+                
                 if self.sentRequestIDs["upcoming"]?[indexPath.row] == "nil" {
                     let cell = sentRequestsTable.dequeueReusableCell(withIdentifier: "BlankRequestTableCell", for: indexPath) as! BlankRequestTableViewCell
                     
@@ -227,6 +242,8 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
             
             dateFormatter.timeStyle = .none
             dateFormatter.dateStyle = .short
+            dateFormatter.doesRelativeDateFormatting = true
+            dateFormatter.locale = Locale(identifier: "en_UK")
             
             cell.people.text = cell.people.text! + " | " + dateFormatter.string(from: date)
             
@@ -509,12 +526,22 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                 receivedRequestViewController.userName = userName
                 receivedRequestViewController.navigationItem.title = userName
             }
+            
+            if receivedRequests[section]?[receivedRequestIDs[section]![index.row]]?.new ?? false {
+                if let value = Int(self.tabBarController?.tabBar.items?[1].badgeValue ?? "0") {
+                    if value > 1 {
+                        self.tabBarController?.tabBar.items?[1].badgeValue = String(value - 1)
+                    } else {
+                        self.tabBarController?.tabBar.items?[1].badgeValue = nil
+                    }
+                }
+            }
         default:
             fatalError("Unknown segue identifier - RequestViewController")
         }
     }
     
-    // Mark: - Actions
+    // MARK: - Actions
     
     @IBAction func switchSections(_ sender: Any) {
         switch segmentedControl.selectedSegmentIndex {
@@ -526,10 +553,15 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
             receivedRequestsTable.isHidden = false
         default:
             break
-        }
-    }
+        }    }
+    
     
     // MARK: - Private functions
+    
+    @objc func refresh(sender: AnyObject) {
+        getUserRequests()
+        refreshControl.endRefreshing()
+    }
     
     private func getUserRequests() {
         self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("sent").queryOrdered(byChild: "timestamp").observe(.value, with: { (snapshot) in
@@ -547,7 +579,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                         let toLong: Double = to["longitude"] as! Double
                         let toName: String = to["name"] as! String
                         
-                        let request = Request(id: snap.key, driver: sentValue["driver"] as! String, sender: sentValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: sentValue["time"] as! Int, passengers: sentValue["passengers"] as! Int, status: sentValue["status"] as! Int)
+                        let request = Request(id: snap.key, driver: sentValue["driver"] as! String, sender: sentValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: sentValue["time"] as! Int, passengers: sentValue["passengers"] as! Int, status: sentValue["status"] as! Int, sent: sentValue["sent"] as! Int)
                         
                         if let value = snap.value as? [String: Any] {
                             request.new = value["new"] as! Bool
@@ -563,7 +595,8 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                         } else {
                             self.sentRequests["upcoming"]?[snap.key] = request
                             if !(self.sentRequestIDs["upcoming"]?.contains(snap.key))! {
-                                self.sentRequestIDs["upcoming"]?.append(snap.key)
+                                self.sentRequestIDs["upcoming"]?.insert(snap.key, at: 0)
+//                                self.sentRequestIDs["upcoming"]?.append(snap.key)
                             }
                         }
                         
@@ -611,7 +644,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                         let toLong: Double = to["longitude"] as! Double
                         let toName: String = to["name"] as! String
                         
-                        let request = Request(id: snap.key, driver: receivedValue["driver"] as! String, sender: receivedValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: receivedValue["time"] as! Int, passengers: receivedValue["passengers"] as! Int, status: receivedValue["status"] as! Int)
+                        let request = Request(id: snap.key, driver: receivedValue["driver"] as! String, sender: receivedValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: receivedValue["time"] as! Int, passengers: receivedValue["passengers"] as! Int, status: receivedValue["status"] as! Int, sent: receivedValue["sent"] as? Int)
                         
                         if let value = snap.value as? [String: Any] {
                             request.new = value["new"] as! Bool
@@ -627,26 +660,32 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                         } else {
                             self.receivedRequests["upcoming"]?[snap.key] = request
                             if !(self.receivedRequestIDs["upcoming"]?.contains(snap.key))! {
-                                self.receivedRequestIDs["upcoming"]?.append(snap.key)
+                                self.receivedRequestIDs["upcoming"]?.insert(snap.key, at: 0)
+//                                self.receivedRequestIDs["upcoming"]?.append(snap.key)
                             }
                         }
+                        
+                        var section = 0
+                        var time = 0
+                        for id in self.sentRequestIDs["upcoming"]! {
+                            if self.sentRequests["upcoming"]![id]!.sent > time {
+                                time = self.sentRequests["upcoming"]![id]!.sent
+                                section = 0
+                            }
+                        }
+                        
+                        for id in self.receivedRequestIDs["upcoming"]! {
+                            if self.receivedRequests["upcoming"]![id]!.sent > time {
+                                time = self.receivedRequests["upcoming"]![id]!.sent
+                                section = 1
+                            }
+                        }
+                        
+                        self.segmentedControl.selectedSegmentIndex = section
+                        self.switchSections(self)
                         
                         self.receivedRequestsTable.reloadData()
                         self.receivedRequestsTable.numberOfRows(inSection: 0)
-                        
-                        let sentCount = self.sentRequestIDs["upcoming"]!.count + self.sentRequestIDs["previous"]!.count
-                        let receivedCount = self.receivedRequestIDs["upcoming"]!.count + self.receivedRequestIDs["previous"]!.count
-                        
-                        if (sentCount > 0 || receivedCount > 0) && !self.sectionChanged {
-                            if sentCount < receivedCount {
-                                self.segmentedControl.selectedSegmentIndex = 1
-                            } else {
-                                self.segmentedControl.selectedSegmentIndex = 0
-                            }
-                            
-                            self.switchSections(self)
-                            self.sectionChanged = true
-                        }
                     }
                 })
             }
