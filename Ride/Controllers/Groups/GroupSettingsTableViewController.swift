@@ -9,7 +9,6 @@
 import UIKit
 import Crashlytics
 import Firebase
-import FacebookLogin
 import FacebookCore
 import Kingfisher
 import Alamofire
@@ -194,9 +193,11 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
     @IBAction func availableSwitch(_ sender: Any) {
         if available.isOn {
             RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("available").child(group._groupID).setValue(true)
+            RideDB.child("Groups").child("GroupMeta").child(group._groupID).child("available").child(Auth.auth().currentUser!.uid).setValue(true)
             RideDB.child("Groups").child("GroupMeta").child(group._groupID).child("timestamp").setValue(ServerValue.timestamp())
         } else {
             RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("available").child(group._groupID).setValue(false)
+            RideDB.child("Groups").child("GroupMeta").child(group._groupID).child("available").child(Auth.auth().currentUser!.uid).setValue(false)
         }
     }
     

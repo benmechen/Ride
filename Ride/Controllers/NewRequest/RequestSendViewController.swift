@@ -20,7 +20,8 @@ class RequestSendViewController: UIViewController {
     @IBOutlet weak var sendRequestButton: UIButton!
     
     var userManager: UserManagerProtocol!
-    var user: User? = nil
+    var users: [User] = []
+    var groupID: String!
     var from: MKPlacemark? = nil
     var to: MKPlacemark? = nil
     let datePickerView = UIDatePicker()
@@ -31,33 +32,38 @@ class RequestSendViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        guard user != nil, let latitude = user?.location["latitude"], let longitude = user?.location["longitude"] else {
+        guard users.count > 0 else {
             self.dismiss(animated: true, completion: nil)
             return
         }
         
-        let directionsRequest = MKDirections.Request()
-        let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-        let sourcePlacemark = MKPlacemark(coordinate: coordinate)
-        let destination = MKMapItem(placemark: from!)
-        let source = MKMapItem(placemark: sourcePlacemark)
-        directionsRequest.destination = destination
-        directionsRequest.source = source
-        directionsRequest.transportType = .automobile
-        
-        let directions = MKDirections(request: directionsRequest)
-        directions.calculateETA { (etaResponse, error) in
-            if let error = error {
-                let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: UIAlertController.Style.alert)
-                alert.addAction(UIAlertAction(title: "Ok", style: UIAlertAction.Style.cancel, handler: { action in
-                    self.dismiss(animated: true, completion: nil)
-                }))
-                self.present(alert, animated: true, completion: nil)
-                return
-            } else {
-                self.eta = etaResponse?.expectedArrivalDate
+        if users.count == 1, (users[0].available[groupID] ?? false) == true, let latitude = users[0].location["latitude"], let longitude = users[0].location["longitude"]  {
+            let directionsRequest = MKDirections.Request()
+            let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+            let sourcePlacemark = MKPlacemark(coordinate: coordinate)
+            let destination = MKMapItem(placemark: from!)
+            let source = MKMapItem(placemark: sourcePlacemark)
+            directionsRequest.destination = destination
+            directionsRequest.source = source
+            directionsRequest.transportType = .automobile
+            
+            let directions = MKDirections(request: directionsRequest)
+            directions.calculateETA { (etaResponse, error) in
+                if let error = error {
+                    let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: UIAlertController.Style.alert)
+                    alert.addAction(UIAlertAction(title: "Ok", style: UIAlertAction.Style.cancel, handler: { action in
+                        self.dismiss(animated: true, completion: nil)
+                    }))
+                    self.present(alert, animated: true, completion: nil)
+                    return
+                } else {
+                    self.eta = etaResponse?.expectedArrivalDate
+                }
             }
+        } else {
+            self.eta = Date()
         }
+        
 
         // Do any additional setup after loading the view.
         fromTextField.text = from?.title
@@ -113,10 +119,12 @@ class RequestSendViewController: UIViewController {
     
     @IBAction func noOfPeopleDidEndEditing(_ sender: Any) {
         if let numberOfPeople = Int(peopleTextField.text!) {
-            if let numberOfSeats =  Int((user?.car._carSeats)!) {
-                if numberOfPeople >= numberOfSeats {
-                    seatsWarning.text = (user?.name)! + "'s car can only take " + String(numberOfSeats - 1) + " passengers. This Ride will require multiple trips."
-                    return
+            if users.count == 1 {
+                if let numberOfSeats = Int(users[0].car._carSeats) {
+                    if numberOfPeople >= numberOfSeats {
+                        seatsWarning.text = (users[0].name) + "'s car can only take " + String(numberOfSeats - 1) + " passengers. This Ride will require multiple trips."
+                        return
+                    }
                 }
             }
         }
@@ -129,23 +137,25 @@ class RequestSendViewController: UIViewController {
         self.vSpinner = self.showSpinner(onView: self.view)
         let timestampInt = Int(dateStamp!)
         if let noOfPeople = Int(peopleTextField.text!) {
-            let request = Request(driver: (user?.id)!, sender: Auth.auth().currentUser!.uid, from: (from?.coordinate)!, fromName: (from?.title)!, to: (to?.coordinate)!, toName: (to?.title)! , time: timestampInt, passengers: noOfPeople, status: 0)
-            
-            request.send(userManager: userManager) { (success, key) in
-                if success {
-                    let alert = UIAlertController(title: "Request sent", message: "Once the other user has accepted the request and sent a price back, you will be notified", preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
-                        self.dismiss(animated: true, completion: nil)
-                    }))
-                    self.present(alert, animated: true, completion: nil)
-                } else {
-                    let alert = UIAlertController(title: "Error", message: "Something went wrong, please try again", preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
-                        self.dismiss(animated: true, completion: nil)
-                    }))
-                    self.present(alert, animated: true, completion: nil)
+            for user in users {
+                let request = Request(driver: user.id, sender: Auth.auth().currentUser!.uid, from: (from?.coordinate)!, fromName: (from?.title)!, to: (to?.coordinate)!, toName: (to?.title)! , time: timestampInt, passengers: noOfPeople, status: 0)
+                
+                request.send(userManager: userManager) { (success, key) in
+                    if success {
+                        let alert = UIAlertController(title: "Request sent", message: "Once the other user has accepted the request and sent a price back, you will be notified", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+                            self.dismiss(animated: true, completion: nil)
+                        }))
+                        self.present(alert, animated: true, completion: nil)
+                    } else {
+                        let alert = UIAlertController(title: "Error", message: "Something went wrong, please try again", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+                            self.dismiss(animated: true, completion: nil)
+                        }))
+                        self.present(alert, animated: true, completion: nil)
+                    }
+                    self.removeSpinner(spinner: self.vSpinner!)
                 }
-                self.removeSpinner(spinner: self.vSpinner!)
             }
         }
     }

@@ -495,11 +495,10 @@ extension CardsTableViewController: STPAddCardViewControllerDelegate {
         }
     }
     
-    func addCardViewController(_ addCardViewController: STPAddCardViewController, didCreateToken token: STPToken, completion: @escaping STPErrorBlock) {
-        
+    func addCardViewController(_ addCardViewController: STPAddCardViewController, didCreatePaymentMethod paymentMethod: STPPaymentMethod, completion: @escaping STPErrorBlock) {
         let cardRef = RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").childByAutoId()
         
-        cardRef.child("token").setValue(token.tokenId) { (error, ref) -> Void in
+        cardRef.child("token").setValue(paymentMethod.stripeId) { (error, ref) -> Void in
             if let error = error {
                 completion(error)
             } else {
@@ -523,6 +522,7 @@ extension CardsTableViewController: STPAddCardViewControllerDelegate {
             }
         }
     }
+    
 }
 
 

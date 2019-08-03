@@ -18,7 +18,8 @@ class RequestFromViewController: UIViewController {
     
     var userManager: UserManagerProtocol!
     lazy var RideDB = Database.database().reference()
-    var user: User? = nil
+    var user: [User] = []
+    var groupID: String!
     let locationManager = CLLocationManager()
     var searchController: UISearchController? = nil
     var matchingItems:[MKMapItem] = []
@@ -84,7 +85,8 @@ class RequestFromViewController: UIViewController {
             let requestSendViewController = segue.destination as! RequestSendViewController
             requestSendViewController.to = destination
             requestSendViewController.from = selectedPin
-            requestSendViewController.user = user
+            requestSendViewController.users = user
+            requestSendViewController.groupID = groupID
             requestSendViewController.userManager = userManager
             // Set back button
             let backButton = UIBarButtonItem()

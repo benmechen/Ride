@@ -163,7 +163,11 @@ class CreateGroupTableViewController: UITableViewController {
             if tableView.cellForRow(at: indexPath as IndexPath)?.accessoryType != .checkmark {
                 if filteredUsers[indexPath.row]._connectionHost != "none" {
                     filteredUsers[indexPath.row].selected = true
-                    insertIntoConnections(key: "selected", index: selectedIndex, object: removeFromConnections(key: "unselected", index: filteredUsers[indexPath.row].index) as! Connection)
+                    if let connection = removeFromConnections(key: "unselected", index: filteredUsers[indexPath.row].index) as? Connection {
+                        insertIntoConnections(key: "selected", index: selectedIndex, object: connection)
+                    } else {
+                        return
+                    }
                 } else {
                     filteredUsers[indexPath.row].selected = true
                     filteredUsers[indexPath.row].index = selectedIndex
@@ -174,6 +178,7 @@ class CreateGroupTableViewController: UITableViewController {
             }
         } else {
             if tableView.cellForRow(at: indexPath as IndexPath)?.accessoryType == .checkmark {
+                print(indexPath.row)
                 if connections["selected"]![indexPath.row]._connectionHost != "none" {
                     connections["selected"]![indexPath.row].selected = false
                     var newIndex = connections["selected"]![indexPath.row].index
@@ -265,16 +270,22 @@ class CreateGroupTableViewController: UITableViewController {
         }
         
         RideDB.child("Connections").child(userId).observeSingleEvent(of: .value, with: { (snapshot) in
-            if let dictionary = snapshot.value as? NSDictionary, let value = dictionary.allKeys as? Array<String> {
+            if let dictionary = snapshot.value as? NSDictionary, var value = dictionary.allKeys as? Array<String> {
                 if value.count > 1 {
+                    if let index = value.index(of: Auth.auth().currentUser!.uid) {
+                        value.remove(at: index)
+                    }
+                    if let index = value.index(of: self.driver) {
+                        value.remove(at: index)
+                    }
                     for id in value {
                         if id != Auth.auth().currentUser!.uid && id != self.driver {
                             self.userManager.fetch(byID: id, completion: { (success, user) in
-                                guard success else {
+                                guard success, user != nil else {
                                     return
                                 }
-                                
-                                self.insertIntoConnections(key: "unselected", index: value.index(of: id)!, object: Connection(hostId: userId, userId: id , name: user!.name, photo: user!.photo.absoluteString, car: ["type": user!.car._carType, "mpg": user!.car._carMPG, "seats": user!.car._carSeats, "registration": user?.car._carRegistration], index: value.index(of: id)!)!)
+                                                                
+                                self.insertIntoConnections(key: "unselected", index: value.index(of: id)!, object: Connection(hostId: userId, userId: id , name: user!.name, photo: user!.photo.absoluteString, car: ["type": user!.car._carType, "mpg": user!.car._carMPG, "seats": user!.car._carSeats, "registration": user!.car._carRegistration], index: value.index(of: id)!)!)
                                 self.tableView?.reloadData()
                             })
                             
@@ -352,7 +363,7 @@ class CreateGroupTableViewController: UITableViewController {
     }
     
     private func removeFromConnections(key: String, index: Int) -> Any {
-        if var arr = connections[key] {
+        if var arr = connections[key], index < arr.count {
             let element = arr.remove(at: index)
             connections[key] = arr
             return element

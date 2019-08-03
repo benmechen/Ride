@@ -163,25 +163,26 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if section == 0 {
-//            if availableMembers.count > 0 {
+            if availableMembers.count == 0 {
+                return 1
+            }
+            
             return availableMembers.count
-//            }
-//            return 1
         } else {
             return unavailableMembers.count
         }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cellIdentifier = "GroupTableViewCell"
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath) as? GroupTableViewCell else {
-            fatalError("The dequeued cell is not an instance of GroupTableViewCell")
-        }
-        
-        cell.selectionStyle = .none
-        
         if indexPath.section == 0 {
             if availableMembers.count > 0 {
+                let cellIdentifier = "GroupTableViewCell"
+                guard let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath) as? GroupTableViewCell else {
+                    fatalError("The dequeued cell is not an instance of GroupTableViewCell")
+                }
+                
+                cell.selectionStyle = .none
+                
                 guard indexPath.row < availableMembers.count else {
                     return cell
                 }
@@ -193,7 +194,7 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
                     cell.delegate = self
                 }
                 
-                cell.user = user
+                cell.user = [user]
                 
                 cell.userName.text = user.name
                 
@@ -221,8 +222,51 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
                 
                 cell.userImage.layer.borderWidth = 1
                 cell.userImage.layer.borderColor = UIColor.red.cgColor
+                
+                return cell
+            } else {
+                let cellIdentifier = "GroupTableViewCell_Broadcast"
+                guard let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath) as? GroupTableViewCellBroadcast else {
+                    fatalError("The dequeued cell is not an instance of GroupTableViewCellBroadcast")
+                }
+                
+                cell.send.isEnabled = true
+                cell.send.isHidden = false
+                cell.sendText.isHidden = false
+                cell.selectionStyle = .none
+                cell.delegate = self
+                userManager.getCurrentUser { (error, user) in
+                    if error && user != nil {
+                        var users: [User] = []
+                        
+                        for groupUser in self.group._groupUsers {
+                            if groupUser != user {
+                                if groupUser.car._carType != "" && groupUser.car._carMPG != "" && groupUser.car._carMPG != "nil" {
+                                    users.append(groupUser)
+                                }
+                            }
+                        }
+                        
+                        if users.count == 0 {
+                            cell.send.isEnabled = false
+                            cell.send.isHidden = true
+                            cell.sendText.isHidden = true
+                        }
+                        
+                        cell.users = users
+                    }
+                }
+                
+                return cell
             }
-        } else if indexPath.section == 1 {
+        } else {
+            let cellIdentifier = "GroupTableViewCell"
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath) as? GroupTableViewCell else {
+                fatalError("The dequeued cell is not an instance of GroupTableViewCell")
+            }
+            
+            cell.selectionStyle = .none
+            
             if unavailableMembers.count > 0 {
                 guard indexPath.row < unavailableMembers.count else {
                     return cell
@@ -257,9 +301,9 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
                             }
                 }
             }
+            
+            return cell
         }
-        
-        return cell
     }
     
 
@@ -285,9 +329,13 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
             let navVC = segue.destination as? UINavigationController
             let requestViewController = navVC?.viewControllers.first as! RequestViewController
             requestViewController.region = self.groupMapView.region
-            let user = sender as! User
-            requestViewController.user = user
-            requestViewController.userManager = userManager
+            if let user = sender as? [User] {
+                requestViewController.user = user
+                requestViewController.groupID = group._groupID
+                requestViewController.userManager = userManager
+            } else {
+                fatalError("Value passed to segue from sender is an incorrect type (expected [User], got \(String(describing: sender))")
+            }
         default:
             fatalError("Unexpected Segue Identifier: \(String(describing: segue.identifier))")
         }

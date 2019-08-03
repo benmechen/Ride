@@ -9,8 +9,8 @@
 import UIKit
 import MapKit
 import Firebase
-import Crashlytics
 import FacebookCore
+import Crashlytics
 import Stripe
 import UserNotifications
 
@@ -151,29 +151,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
         
-        userManager?.getCurrentUser(completion: { (success, user) in
-            guard success && user != nil else {
-                return
-            }
-
-            if !(user!.available.isEmpty) {
-                if user!.available.values.contains(true) {
-                    if CLLocationManager.locationServicesEnabled() {
-                        //                        self.locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-                        self.locationManager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
-                        self.locationManager.startMonitoringSignificantLocationChanges()
-                    } else {
-                        self.locationManager.stopUpdatingLocation()
-                    }
-                } else {
-
-                }
-
-                if self.updateLastSeen {
-                    self.updateLastSeen = false
-                }
-            }
-        })
+        self.locationManager.stopUpdatingLocation()
+        
+//        userManager?.getCurrentUser(completion: { (success, user) in
+//            guard success && user != nil else {
+//                return
+//            }
+//
+//            if !(user!.available.isEmpty) {
+//                if user!.available.values.contains(true) {
+//                    if CLLocationManager.locationServicesEnabled() {
+//                        //                        self.locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+//                        self.locationManager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
+//                        self.locationManager.startMonitoringSignificantLocationChanges()
+//                    } else {
+//                        self.locationManager.stopUpdatingLocation()
+//                    }
+//                } else {
+//
+//                }
+//
+//                if self.updateLastSeen {
+//                    self.updateLastSeen = false
+//                }
+//            }
+//        })
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
@@ -187,7 +189,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                 if user!.available.values.contains(true) {
                     if CLLocationManager.locationServicesEnabled() {
                         self.locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-                        self.locationManager.stopMonitoringSignificantLocationChanges()
                         self.locationManager.startUpdatingLocation()
                     }
                     
@@ -274,7 +275,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
             
             if !(user!.available.isEmpty) {
                 if user!.available.values.contains(true) {
-                    self.locationManager.requestAlwaysAuthorization()
+//                    self.locationManager.requestAlwaysAuthorization()
                     self.locationManager.requestWhenInUseAuthorization()
                     if CLLocationManager.locationServicesEnabled() {
                         self.locationManager.delegate = self

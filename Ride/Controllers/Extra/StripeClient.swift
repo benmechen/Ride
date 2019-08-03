@@ -22,7 +22,7 @@ enum Result {
     case failure(Error)
 }
 
-class StripeClient: NSObject, STPEphemeralKeyProvider {
+class StripeClient: NSObject, STPCustomerEphemeralKeyProvider {
     
     static let shared = StripeClient()
     lazy var RideDB = Database.database().reference()
@@ -40,7 +40,7 @@ class StripeClient: NSObject, STPEphemeralKeyProvider {
     func completeCharge(_ result: STPPaymentResult, customer: String, destination: String, total: Double, user: Double, requestID: String, completion: @escaping STPErrorBlock) {
         
         let params: [String: Any] = [
-            "source": result.source.stripeID,
+            "source": result.paymentMethod.stripeId,
             "customer": customer,
             "total_amount": Int(String(format: "%.2f", total).replacingOccurrences(of: ".", with: ""))!,
             "user_amount": Int(String(format: "%.2f", user).replacingOccurrences(of: ".", with: ""))!,
@@ -57,9 +57,9 @@ class StripeClient: NSObject, STPEphemeralKeyProvider {
                 if let value = snapshot.value as? [String: Any] {
                     if snapshot.hasChild("error") {
                         completion(NSError(domain: "", code: 0, userInfo: ["description": (value["error"] as! String)]))
-                    } else if snapshot.hasChild("outcome") {
-                        if let outcome = value["outcome"] as? [String: Any] {
-                            if (outcome["type"] as! String) == "authorized" {
+                    } else if snapshot.hasChild("status") {
+                        if let status = value["status"] as? String {
+                            if status == "succeeded" {
                                 completion(nil)
                             }
                         }
@@ -76,6 +76,7 @@ class StripeClient: NSObject, STPEphemeralKeyProvider {
         
         print("Parameters:", parameters)
         
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("ephemeral_keys").removeValue()
             
         RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("ephemeral_keys").setValue(parameters) { (error, ref) -> Void in
             if error != nil {

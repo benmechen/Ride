@@ -21,7 +21,7 @@ admin.initializeApp();
 const logging = require('@google-cloud/logging')();
 var nodemailer=require('nodemailer');
 const stripe = require('stripe')(functions.config().stripe.token);
-stripe.setApiVersion('2019-02-19');
+stripe.setApiVersion('2019-05-16');
 const currency = functions.config().stripe.currency || 'GBP';
 var id = null;
 
@@ -43,11 +43,26 @@ exports.createStripeCharge = functions.database.ref('/stripe_customers/{userId}/
             // if (val.source !== null) {
             //   charge.source = val.source;
             // }
-            return stripe.charges.create({
+            // return stripe.charges.create({
+            //   amount: val.total_amount,
+            //   currency: val.currency,
+            //   source: val.source,
+            //   customer: val.customer,
+            //   metadata: val.metadata,
+            //   transfer_data: {
+            //     amount: val.user_amount,
+            //     destination: val.destination,
+            //   },
+            // }, {idempotency_key: idempotencyKey});
+            console.log(stripe.paymentIntents);
+            return stripe.paymentIntents.create({
+              payment_method: val.source,
+              customer: val.customer,
               amount: val.total_amount,
               currency: val.currency,
-              source: val.source,
-              customer: val.customer,
+              confirmation_method: 'manual',
+              confirm: true,
+              setup_future_usage: 'off_session',
               metadata: val.metadata,
               transfer_data: {
                 amount: val.user_amount,
@@ -388,6 +403,8 @@ exports.sendRideCreationNotification = functions.database.ref('/Requests/{pushId
   const destination_user_id = snap.val().driver;
   const destination_user_name = snap.val().sender_name;
   const date = new Date(snap.val().time * 1000);
+
+    console.log(destination_user_ids);
 
     return admin.database().ref(`Users/${destination_user_id}/token`)
           .once('value').then((snapshot) => {

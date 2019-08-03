@@ -208,7 +208,7 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
         self.navigationController?.view.backgroundColor = .clear
     }
     
-    // MARK - Navigation
+    // MARK: - Navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         super.prepare(for: segue, sender: sender)
         
@@ -435,6 +435,7 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
             if self.sortCodeTextField.text?.count != 8 || self.accountNumberTextField.text?.count != 8 {
                 let alert = UIAlertController(title: "Check your details", message: "Please check your sort code and account number are correct", preferredStyle: .alert)
                 
+                alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: nil))
                 self.present(alert, animated: true)
             } else {
                 self.userInfo["sort_code"] = self.sortCodeTextField.text
@@ -625,11 +626,10 @@ extension SetupViewController: STPAddCardViewControllerDelegate {
         navigationController?.popViewController(animated: true)
     }
     
-    func addCardViewController(_ addCardViewController: STPAddCardViewController, didCreateToken token: STPToken, completion: @escaping STPErrorBlock) {
-       
+    func addCardViewController(_ addCardViewController: STPAddCardViewController, didCreatePaymentMethod paymentMethod: STPPaymentMethod, completion: @escaping STPErrorBlock) {
         let cardRef = RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").childByAutoId()
         
-        cardRef.child("token").setValue(token.tokenId) { (error, ref) -> Void in
+        cardRef.child("token").setValue(paymentMethod.stripeId) { (error, ref) -> Void in
             if let error = error {
                 completion(error)
             } else {
@@ -638,7 +638,7 @@ extension SetupViewController: STPAddCardViewControllerDelegate {
                     if snapshot.hasChild("error") {
                         if let value = snapshot.value as? [String: String] {
                             let alert = UIAlertController(title: "Error", message: value["error"], preferredStyle: .alert)
-
+                            
                             alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction) in
                                 self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
                                 self.navigationController?.navigationBar.shadowImage = UIImage()
@@ -646,7 +646,7 @@ extension SetupViewController: STPAddCardViewControllerDelegate {
                                 self.navigationController?.view.backgroundColor = .clear
                                 self.navigationController?.popViewController(animated: true)
                             }))
-
+                            
                             self.present(alert, animated: true)
                         }
                     } else if snapshot.hasChild("id") {
@@ -655,7 +655,7 @@ extension SetupViewController: STPAddCardViewControllerDelegate {
                         self.navigationController?.navigationBar.isTranslucent = true
                         self.navigationController?.view.backgroundColor = .clear
                         
-//                        print(snapshot.value as! [String: String])
+                        //                        print(snapshot.value as! [String: String])
                         
                         if let value = snapshot.value as? [String: Any] {
                             self.addCardButton.setTitle("**** **** **** " + (value["last4"] as! String), for: .normal)

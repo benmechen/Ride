@@ -12,7 +12,7 @@ import Crashlytics
 import MapKit
 import os.log
 
-class RequestsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class RequestsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, RequestsViewControllerDelegate {
 
     @IBOutlet weak var sentRequestsTable: UITableView!
     @IBOutlet weak var receivedRequestsTable: UITableView!
@@ -486,58 +486,68 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         
         print("Preparing to segue: \(String(describing: segue.identifier))")
         
-        var section = ""
-        if index.section == 0 {
-            section = "upcoming"
-        } else {
-            section = "previous"
-        }
-        
-        switch(segue.identifier ?? "") {
-        case "moveToSentRequest_page1", "moveToSentRequest_page2", "moveToSentRequest_page3", "moveToSentRequest_page4":
-            guard let request = sentRequests[section]?[sentRequestIDs[section]![index.row]] else {
-                return
-            }
-            
+        if let sentRequestViewControllerParent = sender as? SentRequestViewController {
             if let sentRequestViewController = segue.destination as? SentRequestViewController {
-                sentRequestViewController.userManager = userManager
-                sentRequestViewController.request = request
-                sentRequestViewController.userName = userName
-                sentRequestViewController.navigationItem.title = userName
+                sentRequestViewController.userManager = sentRequestViewControllerParent.userManager
+                sentRequestViewController.request = sentRequestViewControllerParent.request
+                sentRequestViewController.userName = sentRequestViewControllerParent.userName
+                sentRequestViewController.navigationItem.title = sentRequestViewControllerParent.userName
+            }
+        } else {
+            var section = ""
+            if index.section == 0 {
+                section = "upcoming"
+            } else {
+                section = "previous"
             }
             
-            if sentRequests[section]?[sentRequestIDs[section]![index.row]]?.new ?? false {
-                if let value = Int(self.tabBarController?.tabBar.items?[1].badgeValue ?? "0") {
-                    if value > 1 {
-                        self.tabBarController?.tabBar.items?[1].badgeValue = String(value - 1)
-                    } else {
-                        self.tabBarController?.tabBar.items?[1].badgeValue = nil
+            switch(segue.identifier ?? "") {
+            case "moveToSentRequest_page1", "moveToSentRequest_page2", "moveToSentRequest_page3", "moveToSentRequest_page4":
+                guard let request = sentRequests[section]?[sentRequestIDs[section]![index.row]] else {
+                    return
+                }
+                
+                if let sentRequestViewController = segue.destination as? SentRequestViewController {
+                    sentRequestViewController.userManager = userManager
+                    sentRequestViewController.request = request
+                    sentRequestViewController.userName = userName
+                    sentRequestViewController.navigationItem.title = userName
+                    sentRequestViewController.requestsViewControllerDelegate = self
+                }
+                
+                if sentRequests[section]?[sentRequestIDs[section]![index.row]]?.new ?? false {
+                    if let value = Int(self.tabBarController?.tabBar.items?[1].badgeValue ?? "0") {
+                        if value > 1 {
+                            self.tabBarController?.tabBar.items?[1].badgeValue = String(value - 1)
+                        } else {
+                            self.tabBarController?.tabBar.items?[1].badgeValue = nil
+                        }
                     }
                 }
-            }
-        case "moveToReceivedRequest_page1", "moveToReceivedRequest_page2", "moveToReceivedRequest_page3", "moveToReceivedRequest_page4":
-            guard let request = receivedRequests[section]?[receivedRequestIDs[section]![index.row]] else {
-                return
-            }
-            
-            if let receivedRequestViewController = segue.destination as? ReceivedRequestViewController {
-                receivedRequestViewController.userManager = userManager
-                receivedRequestViewController.request = request
-                receivedRequestViewController.userName = userName
-                receivedRequestViewController.navigationItem.title = userName
-            }
-            
-            if receivedRequests[section]?[receivedRequestIDs[section]![index.row]]?.new ?? false {
-                if let value = Int(self.tabBarController?.tabBar.items?[1].badgeValue ?? "0") {
-                    if value > 1 {
-                        self.tabBarController?.tabBar.items?[1].badgeValue = String(value - 1)
-                    } else {
-                        self.tabBarController?.tabBar.items?[1].badgeValue = nil
+            case "moveToReceivedRequest_page1", "moveToReceivedRequest_page2", "moveToReceivedRequest_page3", "moveToReceivedRequest_page4":
+                guard let request = receivedRequests[section]?[receivedRequestIDs[section]![index.row]] else {
+                    return
+                }
+                
+                if let receivedRequestViewController = segue.destination as? ReceivedRequestViewController {
+                    receivedRequestViewController.userManager = userManager
+                    receivedRequestViewController.request = request
+                    receivedRequestViewController.userName = userName
+                    receivedRequestViewController.navigationItem.title = userName
+                }
+                
+                if receivedRequests[section]?[receivedRequestIDs[section]![index.row]]?.new ?? false {
+                    if let value = Int(self.tabBarController?.tabBar.items?[1].badgeValue ?? "0") {
+                        if value > 1 {
+                            self.tabBarController?.tabBar.items?[1].badgeValue = String(value - 1)
+                        } else {
+                            self.tabBarController?.tabBar.items?[1].badgeValue = nil
+                        }
                     }
                 }
+            default:
+                fatalError("Unknown segue identifier - RequestViewController")
             }
-        default:
-            fatalError("Unknown segue identifier - RequestViewController")
         }
     }
     
@@ -579,7 +589,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                         let toLong: Double = to["longitude"] as! Double
                         let toName: String = to["name"] as! String
                         
-                        let request = Request(id: snap.key, driver: sentValue["driver"] as! String, sender: sentValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: sentValue["time"] as! Int, passengers: sentValue["passengers"] as! Int, status: sentValue["status"] as! Int, sent: sentValue["sent"] as! Int)
+                        let request = Request(id: snap.key, driver: sentValue["driver"] as! String, sender: sentValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: sentValue["time"] as! Int, passengers: sentValue["passengers"] as! Int, status: sentValue["status"] as! Int, sent: sentValue["sent"] as? Int)
                         
                         if let value = snap.value as? [String: Any] {
                             request.new = value["new"] as! Bool

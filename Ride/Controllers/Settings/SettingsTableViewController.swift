@@ -8,10 +8,10 @@
 
 import UIKit
 import Firebase
-import Stripe
-import Crashlytics
 import FacebookLogin
 import FacebookCore
+import Stripe
+import Crashlytics
 import Kingfisher
 import MessageUI
 import MapKit
@@ -78,6 +78,8 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                 guard success && user != nil else {
                     return
                 }
+                
+                print("User:", user)
                 
                 self.profilePhoto.kf.setImage(
                     with: user!.photo,
@@ -441,6 +443,10 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                         return 0.0
                     }
                 }
+            } else if indexPath.section == 2 {
+                if indexPath.row == 0 {
+                    return 0.0
+                }
             }
         }
         
@@ -490,6 +496,9 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
         self.dismiss(animated: true, completion: nil)
     }
     
+    
+    // MARK: - Image Picker
+    
     @objc private func changeProfileImage(tapGestureRecognizer: UITapGestureRecognizer) {
 //        _ = tapGestureRecognizer.view as! UIImageView
         
@@ -501,10 +510,10 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
         }
     }
     
-    private func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
-//    @objc private func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        
         self.dismiss(animated: true, completion: { () -> Void in
-            var image = info["UIImagePickerControllerOriginalImage"] as? UIImage
+            var image = info[.originalImage] as? UIImage
             
             // Crop to square
             image = image?.resize(width: 200)
@@ -541,6 +550,8 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     }
 
     
+    // MARK: - Private methods
+    
     private func logOut() {
         AccessToken.current = nil
         
@@ -556,10 +567,14 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
             print ("Error signing out: %@", signOutError)
         }
         
-        userManager.logout()
+        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+            appDelegate.userManager.logout()
+        }
         
         let loginManager = LoginManager()
         loginManager.logOut()
+        
+//        self.dismiss(animated: true)
         
         moveToLoginController()
     }

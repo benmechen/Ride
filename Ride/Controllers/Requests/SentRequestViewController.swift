@@ -20,10 +20,15 @@ protocol PaymentDelegate {
     func addUsers(users: [String: Array<Connection>])
 }
 
+protocol RequestsViewControllerDelegate {
+    func performSegue(withIdentifier: String, sender: Any?)
+}
+
 class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPaymentContextDelegate, PaymentDelegate {
     
     var userManager: UserManagerProtocol!
     lazy var RideDB = Database.database().reference()
+    var requestsViewControllerDelegate: RequestsViewControllerDelegate!
     var request: Request? = nil
     var userName: String? = nil
     var price: [String: Double] = [:]
@@ -183,12 +188,12 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             if self.request?.status == 4 {
                 self.page4Cancel.isHidden = true
             }
-        } else if (payTitle != nil) {
+        } else if (payTitle != nil) {            
             self.paymentContext.delegate = self
             self.paymentContext.hostViewController = self
             
-            
             let cancel = UIButton()
+            cancel.setTitleColor(UIColor(named: "Accent"), for: .normal)
             cancel.setTitle("Cancel", for: .normal)
             cancel.addTarget(self, action: Selector(("closePay")), for: .touchUpInside)
             
@@ -224,11 +229,18 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
-        self.navigationController?.navigationBar.shadowImage = UIImage()
-        self.navigationController?.navigationBar.isTranslucent = true
-        self.navigationController?.view.backgroundColor = .clear
+        if payTitle != nil {
+            self.navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
+            self.navigationController?.navigationBar.shadowImage = UIImage()
+            self.navigationController?.navigationBar.barTintColor = .white
+            self.navigationController?.navigationBar.isTranslucent = true
+            self.navigationController?.view.backgroundColor = UIColor(named: "Main")
+        } else {
+            self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+            self.navigationController?.navigationBar.shadowImage = UIImage()
+            self.navigationController?.navigationBar.isTranslucent = true
+            self.navigationController?.view.backgroundColor = .clear
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -246,18 +258,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         RideDB.child("Requests").child(request!._id!).child("status").setValue(2)
         RideDB.child("Users").child((request?._driver)!).child("requests").child("received").child((request?._id)!).child("new").setValue(true)
         
-        if let parent = self.parent as? RequestsViewController {
-//            let secondViewController = self.storyboard?.instantiateViewController(withIdentifier: "SentRequestController_Page4") as! SentRequestViewController
-//            
-//            secondViewController.request = self.request
-//            secondViewController.userName = self.userName
-            
-            parent.performSegue(withIdentifier: "moveToSentRequest_page4", sender: parent)
-            
-//            parent.setViewControllers([secondViewController], direction: .forward, animated: true, completion: nil)
-//
-//            parent.pageControlDelegate?.sentRequestsPageViewController(sentRequestsPageViewController: parent, didUpdatePageCount: 0)
-        }
+        requestsViewControllerDelegate.performSegue(withIdentifier: "moveToSentRequest_page4", sender: self)
     }
     
     @IBAction func decline(_ sender: Any) {
@@ -284,7 +285,11 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             os_log("No value assigned to publishableKey in AppDelegate", log: OSLog.default, type: .error)
             return
         }
-        
+                
+//        self.navigationController?.navigationBar.setBackgroundImage(nil, for: .default)
+//        self.navigationController?.navigationBar.shadowImage = nil
+//        self.navigationController?.navigationBar.isTranslucent = true
+//        self.navigationController?.view.backgroundColor = UIColor(named: "Main")
         self.paymentContext.presentPaymentOptionsViewController()
     }
     
@@ -327,6 +332,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         if segue.identifier == "showPay" {
             let navigationController = segue.destination as! UINavigationController
             let sentRequestViewController = navigationController.viewControllers.first as! SentRequestViewController
+            sentRequestViewController.userManager = userManager
             sentRequestViewController.price = self.price
             sentRequestViewController.request = self.request
             sentRequestViewController.userName = self.userName
@@ -336,6 +342,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         if segue.identifier == "showAddUserPay" {
             let navigationController = segue.destination as! UINavigationController
             let createGroupTableViewController = navigationController.viewControllers.first as! CreateGroupTableViewController
+            createGroupTableViewController.userManager = userManager
             createGroupTableViewController.paymentDelegate = self
             createGroupTableViewController.paymentMode = true
             createGroupTableViewController.connections = self.connections
@@ -431,35 +438,51 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         self.getStripeAccountID(destination: self.request!._driver) { destination in
             self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).observeSingleEvent(of: .value, with: { snapshot in
                 if let customerID = (snapshot.value as! [String: Any])["customer_id"] as? String {
+                    var total: Double?
+                    var user: Double?
                     if self.price["split_total"] != nil && self.price["split_user"] != nil || self.request?.status == 4 {
-                        StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: self.price["split_total"]!, user: self.price["split_user"]!, requestID: self.request!._id!, completion: completion)
+//                        StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: self.price["split_total"]!, user: self.price["split_user"]!, requestID: self.request!._id!, completion: completion)
+                        total = self.price["split_total"]
+                        user = self.price["split_user"]
                     } else {
-                        StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: self.price["total"]!, user: self.price["user"]!, requestID: self.request!._id!, completion: completion)
+//                        StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: self.price["total"]!, user: self.price["user"]!, requestID: self.request!._id!, completion: completion)
+                        total = self.price["total"]
+                        user = self.price["user"]
                     }
-                    if let sources = (snapshot.value as! [String: Any])["sources"] as? [String: [String: Any]] {
-                        var found = false
-                        for source in sources.values {
-                            if let id = source["id"] as? String {
-                                if id == paymentResult.source.stripeID {
-                                    found = true
-                                }
-                            }
+                    
+                    StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: total!, user: user!, requestID: self.request!._id!) { (error) in
+                        print("Error:", error)
+                        guard error != nil else {
+                            completion(error)
+                            return
                         }
                         
-                        if !found {
-                            let appDelegate = UIApplication.shared.delegate as? AppDelegate
-                            appDelegate?.getSecretKey(completion: { (secretKey) in
-                                Alamofire.request("https://api.stripe.com/v1/customers/\(customerID)/sources/\(paymentResult.source.stripeID)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
-                                    if let error = response.error {
-                                        print(error)
-                                    } else {
-                                        if let result = response.result.value as? NSDictionary {
-                                            self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").childByAutoId().setValue(result)
-                                        }
+                        if let sources = (snapshot.value as! [String: Any])["sources"] as? [String: [String: Any]] {
+                            var found = false
+                            for source in sources.values {
+                                if let id = source["id"] as? String {
+                                    if id == paymentResult.paymentMethod.stripeId {
+                                        found = true
                                     }
+                                }
+                            }
+                            
+                            if !found {
+                                let appDelegate = UIApplication.shared.delegate as? AppDelegate
+                                appDelegate?.getSecretKey(completion: { (secretKey) in
+                                    Alamofire.request("https://api.stripe.com/v1/customers/\(customerID)/sources/\(paymentResult.paymentMethod.stripeId)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+                                        if let error = response.error {
+                                            print(error)
+                                        } else {
+                                            if let result = response.result.value as? NSDictionary {
+                                                self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").childByAutoId().setValue(result)
+                                            }
+                                        }
+                                    })
                                 })
-                            })
+                            }
                         }
+                        completion(nil)
                     }
                 }
             })
@@ -557,6 +580,11 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             return
         }
         
+//        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+//        self.navigationController?.navigationBar.shadowImage = UIImage()
+//        self.navigationController?.navigationBar.isTranslucent = true
+//        self.navigationController?.view.backgroundColor = .clear
+        
         self.payMethod.setTitle(paymentContext.selectedPaymentOption?.label, for: .normal)
         self.payButton.isEnabled = true
         self.payButton.backgroundColor = UIColor(named: "Accent")
@@ -566,7 +594,6 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     // MARK - Private functions
     
     private func getStripeAccountID(destination: String, completion: @escaping (String)->()) {
-        print(destination)
         RideDB.child("stripe_customers").child(destination).observeSingleEvent(of: .value, with: { snapshot in
             if snapshot.hasChild("account_id") {
                 if let value = snapshot.value as? [String: Any] {
@@ -622,13 +649,12 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
 }
 
 extension SentRequestViewController: STPAddCardViewControllerDelegate {
-    
     func addCardViewControllerDidCancel(_ addCardViewController: STPAddCardViewController) {
         navigationController?.popViewController(animated: true)
     }
     
-    func addCardViewController(_ addCardViewController: STPAddCardViewController, didCreateToken token: STPToken, completion: @escaping STPErrorBlock) {
-        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").childByAutoId().child("token").setValue(token.tokenId) { (error, ref) -> Void in
+    func addCardViewController(_ addCardViewController: STPAddCardViewController, didCreatePaymentMethod paymentMethod: STPPaymentMethod, completion: @escaping STPErrorBlock) {
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").childByAutoId().child("token").setValue(paymentMethod.stripeId) { (error, ref) -> Void in
             if let error = error {
                 completion(error)
             } else {

@@ -21,7 +21,8 @@ class RequestViewController: UIViewController {
     @IBOutlet weak var select: UIButton!
     
     var userManager: UserManagerProtocol!
-    var user: User? = nil
+    var user: [User] = []
+    var groupID: String!
     lazy var RideDB = Database.database().reference()
     let locationManager = CLLocationManager()
     var searchController: UISearchController? = nil
@@ -107,6 +108,7 @@ class RequestViewController: UIViewController {
             requestFromViewController.region = region
             requestFromViewController.destination = selectedPin
             requestFromViewController.user = user
+            requestFromViewController.groupID = groupID
             requestFromViewController.userManager = userManager
             // Set back button
             let backButton = UIBarButtonItem()

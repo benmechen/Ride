@@ -112,6 +112,17 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
                         guard success && user != nil else {
                             return
                         }
+                        
+                        guard user?.car._carMPG != "" && user?.car._carMPG != "nil" else {
+                            let alert = UIAlertController(title: "Error", message: "User's MPG not set", preferredStyle: .alert)
+                            
+                            alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action) in
+                                self.navigationController?.popViewController(animated: true)
+                            }))
+                            self.present(alert, animated: true)
+                            return
+                        }
+                        
                         self.RideDB.child("fuel").observeSingleEvent(of: .value, with: { (snapshot) in
                             if let value = snapshot.value {
                                 let directionsRequest = MKDirections.Request()

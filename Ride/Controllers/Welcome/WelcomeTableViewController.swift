@@ -9,8 +9,6 @@
 import UIKit
 import Crashlytics
 import Firebase
-import FacebookCore
-import FacebookLogin
 import os.log
 import MapKit
 import Kingfisher

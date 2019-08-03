@@ -12,7 +12,7 @@ import os.log
 class GroupTableViewCell: UITableViewCell {
 
     var delegate: GroupTableViewCellDelegate!
-    var user: User!
+    var user: [User]!
     @IBOutlet weak var requestButton: UIButton!
     @IBOutlet weak var userImage: UIImageView!
     @IBOutlet weak var userName: UILabel!
