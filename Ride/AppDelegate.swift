@@ -10,6 +10,7 @@ import UIKit
 import MapKit
 import Firebase
 import FacebookCore
+import FBSDKCoreKit
 import Crashlytics
 import Stripe
 import UserNotifications
@@ -44,7 +45,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         FirebaseApp.configure()
         userManager = UserManager()
         Messaging.messaging().delegate = self
-        SDKApplicationDelegate.shared.application(application, didFinishLaunchingWithOptions: launchOptions)
+        AppEvents.activateApp()
+        FBSDKCoreKit.ApplicationDelegate.shared.application(application, didFinishLaunchingWithOptions: launchOptions)
         RideDB = Database.database().reference()
         RideStorage = Storage.storage()
         
@@ -137,7 +139,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
     
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        let handled = SDKApplicationDelegate.shared.application(app, open: url, options: options)
+        let handled = FBSDKCoreKit.ApplicationDelegate.shared.application(app, open: url, options: options)
         
         return handled
     }

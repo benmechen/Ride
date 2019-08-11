@@ -429,6 +429,9 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             self.page4Pay.borderWidth = 2
             self.page4Pay.borderColor = .white
             self.page4Pay.setAttributedTitle(NSAttributedString(string: "\u{2713} Payment Successful", attributes: [NSAttributedString.Key.foregroundColor : UIColor.white, NSAttributedString.Key.font: self.page4Pay.titleLabel?.font as Any]), for: .disabled)
+            self.page4Cancel.isEnabled = false
+            let cancelText = NSAttributedString(string: "Cancel Ride", attributes: [NSAttributedString.Key.foregroundColor : UIColor(white: 1.0, alpha: 0.5)])
+            self.page4Cancel.setAttributedTitle(cancelText, for: .normal)
         }
     }
     
@@ -441,17 +444,14 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                     var total: Double?
                     var user: Double?
                     if self.price["split_total"] != nil && self.price["split_user"] != nil || self.request?.status == 4 {
-//                        StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: self.price["split_total"]!, user: self.price["split_user"]!, requestID: self.request!._id!, completion: completion)
                         total = self.price["split_total"]
                         user = self.price["split_user"]
                     } else {
-//                        StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: self.price["total"]!, user: self.price["user"]!, requestID: self.request!._id!, completion: completion)
                         total = self.price["total"]
                         user = self.price["user"]
                     }
                     
                     StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: total!, user: user!, requestID: self.request!._id!) { (error) in
-                        print("Error:", error)
                         guard error != nil else {
                             completion(error)
                             return

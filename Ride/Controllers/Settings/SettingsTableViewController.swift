@@ -10,6 +10,7 @@ import UIKit
 import Firebase
 import FacebookLogin
 import FacebookCore
+import FBSDKLoginKit
 import Stripe
 import Crashlytics
 import Kingfisher
@@ -98,6 +99,7 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                         Alamofire.request("https://api.stripe.com/v1/accounts/\(value)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
                             if let error = response.error {
                                 print(error)
+                                NSLog(error.localizedDescription)
                             } else {
                                 self.driverStatusLabel.text = "Driver status: Verified"
                                 self.driverStatusIcon.image = UIImage(named: "check")
@@ -553,7 +555,7 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     // MARK: - Private methods
     
     private func logOut() {
-        AccessToken.current = nil
+        FBSDKLoginKit.AccessToken.current = nil
         
         locationManager.stopUpdatingLocation()
         

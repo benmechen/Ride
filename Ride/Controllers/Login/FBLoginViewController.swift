@@ -11,6 +11,7 @@ import Crashlytics
 import Firebase
 import FacebookCore
 import FacebookLogin
+import FBSDKLoginKit
 import WebKit
 import os.log
 
@@ -39,9 +40,9 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
     
     @IBAction func loginButtonClicked(_ sender: UIButton) {
         let loginManager = LoginManager()
-        loginManager.loginBehavior = LoginBehavior.systemAccount
+//        loginManager.loginBehavior = LoginBehavior.systemAccount
 //        loginManager.loginBehavior = FBSDKLoginBehaviorSystemAccount;
-        loginManager.logIn(readPermissions: [.publicProfile, .userFriends], viewController: self) { loginResult in
+        loginManager.logIn(permissions: [.publicProfile, .userFriends], viewController: self) { loginResult in
             print(loginResult)
             
             switch loginResult {
@@ -52,19 +53,19 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
             case .success(let grantedPermissions, let declinedPermissions, let accessToken):
                 print(grantedPermissions)
                 print(declinedPermissions)
-                let credential = FacebookAuthProvider.credential(withAccessToken: (accessToken.authenticationToken))
+                let credential = FacebookAuthProvider.credential(withAccessToken: accessToken.tokenString)
                 Auth.auth().signIn(with: credential) { (user, error) in
                     if let error = error {
                         print(error)
                         return
                     }
                     
-                    if accessToken.userId != nil && Auth.auth().currentUser?.uid != nil {
+                    if accessToken.userID != nil && Auth.auth().currentUser?.uid != nil {
                         self.RideDB.child("IDs").observeSingleEvent(of: .value, with: { (snapshot) in
                             if let value = snapshot.value as? NSDictionary {
-                                if value[accessToken.userId as Any] == nil {
+                                if value[accessToken.userID as Any] == nil {
                                     print("Adding user id")
-                                    self.RideDB.child("IDs").updateChildValues([(accessToken.userId)!: Auth.auth().currentUser?.uid as Any])
+                                    self.RideDB.child("IDs").updateChildValues([(accessToken.userID): Auth.auth().currentUser?.uid as Any])
                                 } else {
                                     print("Entry already exists")
                                 }
@@ -89,7 +90,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                         
                         self.userManager?.getCurrentUser(completion: { (_, _) in })
                         
-                        self.populateFriends(userId: (accessToken.userId)!, completion: { success, data in
+                        self.populateFriends(userId: (accessToken.userID), completion: { success, data in
                             if success {
                                 for id in data {
                                     self.RideDB.child("Connections").child((Auth.auth().currentUser?.uid)!).child(id).setValue(true)
@@ -128,36 +129,55 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
         
         let connection = GraphRequestConnection()
         
-        connection.add(GraphRequest(graphPath: "/me/friends"), batchParameters: params) { httpResponse, result in
-//        connection.add(GraphRequest(graphPath: "/me/friends", parameters: params)) { ( httpResponse, result, error in
-            switch result {
-            case .success(let response):
-                if let userData = response.dictionaryValue {
-                    if let ids = userData["data"] as? NSArray {
-                    var idArray: Array<String> = Array()
-                    var i = 1
-                    for idDict in ids {
-                        if let id = idDict as? NSDictionary {
-                            self.RideDB.child("IDs").observeSingleEvent(of: .value, with: { (snapshot) in
-                                let value = snapshot.value as? NSDictionary
-                                if let uid = value?[id["id"] as Any] as? String {
-                                    idArray.append(uid)
-                                }
-            
-                                if i == ids.count {
-                                    completion(true, idArray)
-                                }
-                                i += 1
-                            })
-                        }
+        connection.add(GraphRequest(graphPath: "/me/friends"), batchParameters: params) { (httpResponse, result, error) in
+            if let ids = result as? NSArray {
+                var idArray: Array<String> = Array()
+                var i = 1
+                for idDict in ids {
+                    if let id = idDict as? NSDictionary {
+                        self.RideDB.child("IDs").observeSingleEvent(of: .value, with: { (snapshot) in
+                            let value = snapshot.value as? NSDictionary
+                            if let uid = value?[id["id"] as Any] as? String {
+                                idArray.append(uid)
+                            }
+        
+                            if i == ids.count {
+                                completion(true, idArray)
+                            }
+                            i += 1
+                        })
                     }
                 }
             }
-            case .failed(let error):
-                //TODO: Handle error
-                print("Graph Request Failed: \(error)")
-                completion(false, [])
-            }
+            
+//            switch result {
+//            case .success(let response):
+//                if let userData = response.dictionaryValue {
+//                    if let ids = userData["data"] as? NSArray {
+//                    var idArray: Array<String> = Array()
+//                    var i = 1
+//                    for idDict in ids {
+//                        if let id = idDict as? NSDictionary {
+//                            self.RideDB.child("IDs").observeSingleEvent(of: .value, with: { (snapshot) in
+//                                let value = snapshot.value as? NSDictionary
+//                                if let uid = value?[id["id"] as Any] as? String {
+//                                    idArray.append(uid)
+//                                }
+//
+//                                if i == ids.count {
+//                                    completion(true, idArray)
+//                                }
+//                                i += 1
+//                            })
+//                        }
+//                    }
+//                }
+//            }
+//            case .failed(let error):
+//                //TODO: Handle error
+//                print("Graph Request Failed: \(error)")
+//                completion(false, [])
+//            }
         }
         connection.start()
     }

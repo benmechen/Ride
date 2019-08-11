@@ -11,6 +11,7 @@ import Firebase
 import Crashlytics
 import MapKit
 import CoreLocation
+import Alamofire
 
 class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
 
@@ -19,12 +20,16 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     var request: Request? = nil
     var userName: String? = nil
     var distance: CLLocationDistance? = nil
-    var fees: Double? = nil
-    var min: Double? = nil
+    var fees: Double = 0.15
+    var min: Double = 1.0
     var message: String = ""
     var fuel: Double = 0.0
     lazy var geocoder = CLGeocoder()
     var price: [String: Double] = [:]
+    let currencyFormatter = NumberFormatter()
+    var euroToPound = 1.00
+    var currency = 1.00
+    var vSpinner: UIView?
     
     @IBOutlet weak var page1Title: UILabel!
     @IBOutlet weak var page1Time: UILabel!
@@ -52,6 +57,11 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        currencyFormatter.usesGroupingSeparator = true
+        currencyFormatter.numberStyle = .currency
+        // localize to your grouping and decimal separator
+        currencyFormatter.locale = Locale.current
 
         // Do any additional setup after loading the view.
         if (page1Title != nil) {
@@ -123,6 +133,8 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
                             return
                         }
                         
+                        self.vSpinner = self.showSpinner(onView: self.view)
+                        
                         self.RideDB.child("fuel").observeSingleEvent(of: .value, with: { (snapshot) in
                             if let value = snapshot.value {
                                 let directionsRequest = MKDirections.Request()
@@ -139,11 +151,35 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
                                     if let routeResponse = response?.routes {
                                         let quickestRouteForSegment: MKRoute = routeResponse.sorted(by: {$0.expectedTravelTime < $1.expectedTravelTime})[0]
                                         self.fuel = self.calculateFuelCost(distance: quickestRouteForSegment.distance, mpg: Int(user!.car._carMPG)!, fuel: value as! Double)
-                                        self.page3Price.text = String(format: "£%.2f", self.fuel)
-                                        self.page3Fuel.attributedText = self.attributedText(withString: String(format: "Estimated Fuel Cost: £%.2f", self.fuel), boldString: "Estimated Fuel Cost", font: self.page3Fuel.font!)
-                                        self.updateFees(self)
-                                        self.page3Price.text = String(format: "£%.2f", self.fuel + self.calculateFee(cost: self.fuel))
-                                        
+                                        NSLog("http://data.fixer.io/api/latest?access_key=d10ce9ff8cb3863166fc5fcc6af7a2d6&base=GBP&symbols=\(Locale.current.currencyCode!)")
+                                        Alamofire.request("http://data.fixer.io/api/latest?access_key=d10ce9ff8cb3863166fc5fcc6af7a2d6&base=EUR&symbols=EUR,GBP,\(Locale.current.currencyCode!)", method: .get).responseJSON(completionHandler: { (response) in                                            
+                                            if let result = response.result.value, let json = result as? [String: AnyObject] {
+                                                guard (json["success"] as! Bool) == true else {
+                                                    self.removeSpinner(spinner: self.vSpinner!)
+                                                    NSLog(response.error?.localizedDescription ?? "")
+                                                    let alert = UIAlertController(title: "Error", message: "Could not fetch currency rates", preferredStyle: .alert)
+                                                    alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { (_) in
+                                                        self.navigationController?.popViewController(animated: true)
+                                                    }))
+                                                    self.present(alert, animated: true, completion: nil)
+                                                    return
+                                                }
+                                                
+                                                if var rates = json["rates"] as? [String: Double] {
+                                                    if let euroToPound = rates["GBP"], let currency = rates[(Locale.current.currencyCode)!] {
+                                                        self.removeSpinner(spinner: self.vSpinner!)
+                                                        self.euroToPound = euroToPound
+                                                        self.currency = currency
+                                                        self.fuel = self.convertToLocalCurrency(pound: self.fuel)
+                                                        self.min = self.convertToLocalCurrency(pound: self.min)
+                                                        self.page3Price.text = self.currencyFormatter.string(from: NSNumber(value: self.fuel))
+                                                        self.page3Fuel.attributedText = self.attributedText(withString: String(format: "Estimated Fuel Cost: %@", self.currencyFormatter.string(from: NSNumber(value: self.fuel))!), boldString: "Estimated Fuel Cost", font: self.page3Fuel.font!)
+                                                        self.updateFees(self)
+                                                        self.page3Price.text = String(format: "%@", self.currencyFormatter.string(from: NSNumber(value: self.fuel + self.calculateFee(cost: self.fuel)))!)
+                                                    }
+                                                }
+                                            }
+                                        })
                                     }
                                 })
                             }
@@ -313,21 +349,22 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     }
     
     @IBAction func updateFees(_ sender: Any) {
-        var currentPrice = Double(removeSpecialCharsFromString(text: page3Price.text!))
+        var currentPrice = self.currencyFormatter.number(from: page3Price.text!)?.doubleValue
         
-        if (currentPrice ?? 0.0) < (self.min ?? 1.0) {
-            page3Price.text = "£" + String(self.min ?? 1.0)
+        if (currentPrice ?? 0.0) < self.min {
+            page3Price.text = self.currencyFormatter.string(from: NSNumber(value: self.min))
             currentPrice = self.min
         }
         
         if currentPrice != nil {
-            page3Fees.attributedText = attributedText(withString: String(format: "Ride Fees: £%.2f %@", self.calculateFee(cost: currentPrice!), self.message), boldString: "Ride Fees", font: UIFont(name: "HelveticaNeue-Thin", size: 17)!)
+            page3Fees.attributedText = attributedText(withString: String(format: "Ride Fees: %1@ %2@", self.currencyFormatter.string(from: NSNumber(value: self.calculateFee(cost: currentPrice!)))!, self.message), boldString: "Ride Fees", font: UIFont(name: "HelveticaNeue-Thin", size: 17)!)
             
             var profit = (currentPrice ?? 1 ) - self.calculateFee(cost: currentPrice!) - self.fuel
             if profit < 0 {
                 profit = 0
             }
-            page3Profit.attributedText = attributedText(withString: String(format: "Your Profit: £%.2f", profit), boldString: "Your Profit", font: UIFont(name: "HelveticaNeue-Thin", size: 17)!)
+            
+            page3Profit.attributedText = attributedText(withString: String(format: "Your Profit: %@", self.currencyFormatter.string(from: NSNumber(value: profit))!), boldString: "Your Profit", font: UIFont(name: "HelveticaNeue-Thin", size: 17)!)
             
             self.price["total"] = currentPrice
             self.price["fees"] = self.calculateFee(cost: currentPrice!)
@@ -379,6 +416,10 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
 //        self.dismiss(animated: true, completion: nil)
     }
     
+    func convertToLocalCurrency(pound: Double) -> Double {
+        return (pound / euroToPound) * currency
+    }
+    
     func page3Sent() {
         page3Total.isHidden = true
         page3Profit.isHidden = true
@@ -401,14 +442,14 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     }
     
     func calculateFuelCost(distance: CLLocationDistance, mpg: Int, fuel: Double) -> Double {
-        return (fuel * (((distance / 1609.344) / Double(mpg)) * 4.546)) / 100
+        return self.convertToLocalCurrency(pound: (fuel * (((distance / 1609.344) / Double(mpg)) * 4.546)) / 100)
     }
     
     func calculateFee(cost: Double) -> Double {
-        let fee = cost * (fees ?? 0.1)
+        let fee = cost * fees
         
-        if fee < self.min ?? 1.0 {
-            return self.min ?? 1.0
+        if fee < self.min {
+            return self.min
         }
         
         return fee
@@ -437,8 +478,10 @@ extension String {
         
         var number: NSNumber!
         let formatter = NumberFormatter()
+        formatter.usesGroupingSeparator = true
         formatter.numberStyle = .currencyAccounting
-        formatter.currencySymbol = "£"
+//        formatter.currencySymbol = "£"
+        formatter.locale = Locale.current
         formatter.maximumFractionDigits = 2
         formatter.minimumFractionDigits = 2
         

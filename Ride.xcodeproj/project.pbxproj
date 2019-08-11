@@ -22,6 +22,7 @@
 		B527416A221EFC2300D713B7 /* UIViewController+LoadingSpinner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5274169221EFC2300D713B7 /* UIViewController+LoadingSpinner.swift */; };
 		B52BF0ED2210465B00C60028 /* SentRequestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52BF0EC2210465B00C60028 /* SentRequestViewController.swift */; };
 		B52BF0EF2210710500C60028 /* ReceivedRequestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52BF0EE2210710500C60028 /* ReceivedRequestViewController.swift */; };
+		B52CD57222FC199400D57A48 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B52CD57122FC199400D57A48 /* Assets.xcassets */; };
 		B52DD43321D8127600A2C475 /* UIView+Properties.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52DD43221D8127600A2C475 /* UIView+Properties.swift */; };
 		B52EE2AB21664D6A00B73D9D /* GroupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52EE2AA21664D6A00B73D9D /* GroupViewController.swift */; };
 		B532624221DD0A6E00ED789B /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = B532624121DD0A6E00ED789B /* Request.swift */; };
@@ -60,7 +61,6 @@
 		B5CBD03620F29A2D00FD86D8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CBD03520F29A2D00FD86D8 /* AppDelegate.swift */; };
 		B5CBD03820F29A2D00FD86D8 /* FBLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CBD03720F29A2D00FD86D8 /* FBLoginViewController.swift */; };
 		B5CBD03B20F29A2D00FD86D8 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B5CBD03920F29A2D00FD86D8 /* Main.storyboard */; };
-		B5CBD03D20F29A3000FD86D8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B5CBD03C20F29A3000FD86D8 /* Assets.xcassets */; };
 		B5CBD04020F29A3000FD86D8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B5CBD03E20F29A3000FD86D8 /* LaunchScreen.storyboard */; };
 		B5CBD04B20F29A3000FD86D8 /* RideTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CBD04A20F29A3000FD86D8 /* RideTests.swift */; };
 		B5CBD05620F29A3000FD86D8 /* RideUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CBD05520F29A3000FD86D8 /* RideUITests.swift */; };
@@ -111,6 +111,7 @@
 		B5274169221EFC2300D713B7 /* UIViewController+LoadingSpinner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+LoadingSpinner.swift"; sourceTree = "<group>"; };
 		B52BF0EC2210465B00C60028 /* SentRequestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SentRequestViewController.swift; sourceTree = "<group>"; };
 		B52BF0EE2210710500C60028 /* ReceivedRequestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceivedRequestViewController.swift; sourceTree = "<group>"; };
+		B52CD57122FC199400D57A48 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B52DD43221D8127600A2C475 /* UIView+Properties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Properties.swift"; sourceTree = "<group>"; };
 		B52EE2AA21664D6A00B73D9D /* GroupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupViewController.swift; sourceTree = "<group>"; };
 		B532624121DD0A6E00ED789B /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
@@ -150,7 +151,6 @@
 		B5CBD03520F29A2D00FD86D8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B5CBD03720F29A2D00FD86D8 /* FBLoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FBLoginViewController.swift; sourceTree = "<group>"; };
 		B5CBD03A20F29A2D00FD86D8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		B5CBD03C20F29A3000FD86D8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B5CBD03F20F29A3000FD86D8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B5CBD04120F29A3000FD86D8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B5CBD04620F29A3000FD86D8 /* RideTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RideTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -353,12 +353,12 @@
 				B5CBD06820F2A6A000FD86D8 /* Controllers */,
 				B5CBD03520F29A2D00FD86D8 /* AppDelegate.swift */,
 				B5CBD03920F29A2D00FD86D8 /* Main.storyboard */,
-				B5CBD03C20F29A3000FD86D8 /* Assets.xcassets */,
 				B5074FBA22CABE580022139B /* ColourTheme.xcassets */,
 				B5CBD03E20F29A3000FD86D8 /* LaunchScreen.storyboard */,
 				B5CBD04120F29A3000FD86D8 /* Info.plist */,
 				B5CBD06320F29C4200FD86D8 /* GoogleService-Info.plist */,
 				B5A791BD2243A0A300D3D4B7 /* AlertChildPageViewController.xib */,
+				B52CD57122FC199400D57A48 /* Assets.xcassets */,
 			);
 			path = Ride;
 			sourceTree = "<group>";
@@ -540,8 +540,8 @@
 				B561B8822180C755002B92F4 /* MapCallout.xib in Resources */,
 				B5CBD04020F29A3000FD86D8 /* LaunchScreen.storyboard in Resources */,
 				B5CBD06420F29C4200FD86D8 /* GoogleService-Info.plist in Resources */,
-				B5CBD03D20F29A3000FD86D8 /* Assets.xcassets in Resources */,
 				B5A791BE2243A0A400D3D4B7 /* AlertChildPageViewController.xib in Resources */,
+				B52CD57222FC199400D57A48 /* Assets.xcassets in Resources */,
 				B5074FBB22CABE580022139B /* ColourTheme.xcassets in Resources */,
 				B5CBD03B20F29A2D00FD86D8 /* Main.storyboard in Resources */,
 			);
@@ -927,6 +927,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.fuse.Ride;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -948,6 +949,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.fuse.Ride;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 1;
 			};

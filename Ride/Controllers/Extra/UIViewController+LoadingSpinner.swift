@@ -133,7 +133,7 @@ class SpinnerView : UIView {
         let count = 36
         let animation = CAKeyframeAnimation(keyPath: "strokeColor")
         animation.keyTimes = (0 ... count).map { NSNumber(value: CFTimeInterval($0) / CFTimeInterval(count)) }
-        animation.values = (0 ... count).map { _ in UIColor(named: "Accent")?.cgColor ?? UIColor.systemPink }
+        animation.values = (0 ... count).map { _ in UIColor(named: "Accent")?.cgColor ?? UIColor.red }
         animation.duration = duration
         animation.calculationMode = .linear
         animation.repeatCount = Float.infinity
