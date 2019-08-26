@@ -25,7 +25,7 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     var message: String = ""
     var fuel: Double = 0.0
     lazy var geocoder = CLGeocoder()
-    var price: [String: Double] = [:]
+    var price: [String: Any] = [:]
     let currencyFormatter = NumberFormatter()
     var euroToPound = 1.00
     var currency = 1.00
@@ -152,7 +152,7 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
                                         let quickestRouteForSegment: MKRoute = routeResponse.sorted(by: {$0.expectedTravelTime < $1.expectedTravelTime})[0]
                                         self.fuel = self.calculateFuelCost(distance: quickestRouteForSegment.distance, mpg: Int(user!.car._carMPG)!, fuel: value as! Double)
                                         NSLog("http://data.fixer.io/api/latest?access_key=d10ce9ff8cb3863166fc5fcc6af7a2d6&base=GBP&symbols=\(Locale.current.currencyCode!)")
-                                        Alamofire.request("http://data.fixer.io/api/latest?access_key=d10ce9ff8cb3863166fc5fcc6af7a2d6&base=EUR&symbols=EUR,GBP,\(Locale.current.currencyCode!)", method: .get).responseJSON(completionHandler: { (response) in                                            
+                                        Alamofire.request("http://data.fixer.io/api/latest?access_key=d10ce9ff8cb3863166fc5fcc6af7a2d6&base=EUR&symbols=EUR,GBP,\(Locale.current.currencyCode!)", method: .get).responseJSON(completionHandler: { (response) in
                                             if let result = response.result.value, let json = result as? [String: AnyObject] {
                                                 guard (json["success"] as! Bool) == true else {
                                                     self.removeSpinner(spinner: self.vSpinner!)
@@ -210,8 +210,9 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
             page4Time.attributedText = attributedText(withString: String(format: "Pickup Time: %@", dateFormatter.string(from: date)), boldString: "Pickup Time", font: page4Time.font)
             
             RideDB.child("Requests").child(request!._id!).child("price").observeSingleEvent(of: .value, with: { (snapshot) in
-                if let value = snapshot.value as? [String: Double] {
-                    self.page4Price.attributedText = self.attributedText(withString: String(format: "Price: £%.2f", value["total"]!), boldString: "Price", font: self.page4Price.font)
+                if let value = snapshot.value as? [String: Any], let currency = value["currency"] as? String, let total = value["total"] as? Double {
+                    self.currencyFormatter.locale = Locale.init(identifier: currency)
+                    self.page4Price.attributedText = self.attributedText(withString: String(format: "Price: %@", self.currencyFormatter.string(from: NSNumber(value: total))!), boldString: "Price", font: self.page4Price.font)
                 }
             })
             
@@ -375,6 +376,7 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
     @IBAction func send(_ sender: Any) {
         RideDB.child("Requests").child(request!._id!).child("status").setValue(1)
         RideDB.child("Users").child((request?._sender)!).child("requests").child("sent").child((request?._id)!).child("new").setValue(true)
+        self.price["currency"] = Locale.current.currencyCode
         RideDB.child("Requests").child(request!._id!).child("price").setValue(self.price)
         // RideDB?.child("Requests").child(request!._id!).child("price").setValue(Double(removeSpecialCharsFromString(text: page3Price.text!)))
         

@@ -82,6 +82,8 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         
         sentRequestsTable.delegate = self
         sentRequestsTable.dataSource = self
+        sentRequestsTable.separatorStyle = .none
+        receivedRequestsTable.separatorStyle = .none
         receivedRequestsTable.delegate = self
         receivedRequestsTable.dataSource = self
         

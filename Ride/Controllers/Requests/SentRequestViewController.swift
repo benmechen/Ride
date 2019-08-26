@@ -31,10 +31,11 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     var requestsViewControllerDelegate: RequestsViewControllerDelegate!
     var request: Request? = nil
     var userName: String? = nil
-    var price: [String: Double] = [:]
+    var price: [String: Any] = [:]
     var connections = [String: Array<Connection>]()
     var textFields = Array<UITextField>()
     lazy var geocoder = CLGeocoder()
+    let currencyFormatter = NumberFormatter()
     let customerContext = STPCustomerContext(keyProvider: StripeClient.shared)
     var paymentContext = STPPaymentContext(customerContext: STPCustomerContext(keyProvider: StripeClient.shared))
     var completePaymentDelegate: PaymentDelegate? = nil
@@ -123,8 +124,28 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             page3Title.text = page3Title.text! + String(userName?.split(separator: " ").first ?? "the other user")
             
             RideDB.child("Requests").child(request!._id!).child("price").observeSingleEvent(of: .value, with: { (snapshot) in
-                if let value = snapshot.value as? [String: Double] {
-                    self.page3Price.text = String(format: "£%.2f", value["total"]!)
+                if let value = snapshot.value as? [String: Any] {
+                    guard let currency = value["currency"] as? String else {
+                        let alert = UIAlertController(title: "Error", message: "This request is corrupted. Please delete the request and try again", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+                            self.navigationController?.popViewController(animated: true)
+                        }))
+                        self.present(alert, animated: true, completion: nil)
+                        return
+                    }
+                    
+                    guard let total = value["total"] as? Double, let _ = value["user"] as? Double else {
+                        let alert = UIAlertController(title: "Error", message: "This request is corrupted. Please delete the request and try again", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+                            self.navigationController?.popViewController(animated: true)
+                        }))
+                        self.present(alert, animated: true, completion: nil)
+                        return
+                    }
+                    
+                    self.currencyFormatter.locale = Locale(identifier: currency)
+                    
+                    self.page3Price.text = String(format: "%@", self.currencyFormatter.string(from: NSNumber(value: total))!)
                 }
             })
         } else if (page4Title != nil) {
@@ -137,9 +158,31 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             }
             
             RideDB.child("Requests").child(request!._id!).child("price").observeSingleEvent(of: .value, with: { (snapshot) in
-                if let value = snapshot.value as? [String: Double] {
+                if let value = snapshot.value as? [String: Any] {
+                    /// Check all values present & correct - Breaking Change
+                    guard let currency = value["currency"] as? String else {
+                        let alert = UIAlertController(title: "Error", message: "This request is corrupted. Please delete the request and try again", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+                            self.navigationController?.popViewController(animated: true)
+                        }))
+                        self.present(alert, animated: true, completion: nil)
+                        return
+                    }
+                    
+                    guard let total = value["total"] as? Double, let _ = value["user"] as? Double else {
+                        let alert = UIAlertController(title: "Error", message: "This request is corrupted. Please delete the request and try again", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+                            self.navigationController?.popViewController(animated: true)
+                        }))
+                        self.present(alert, animated: true, completion: nil)
+                        return
+                    }
+                    
                     self.price = value
-                    self.page4Price.attributedText = self.attributedText(withString: String(format: "Price: £%.2f", value["total"]!), boldString: "Price", font: self.page4Price.font)
+                    
+                    self.currencyFormatter.locale = Locale(identifier: currency)
+                    
+                    self.page4Price.attributedText = self.attributedText(withString: String(format: "Price: %@", self.currencyFormatter.string(from: NSNumber(value: total))!), boldString: "Price", font: self.page4Price.font)
                 }
             })
             
@@ -204,9 +247,9 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             payTitle.text = payTitle.text! + userName!
             payButton.backgroundColor = payButton.backgroundColor?.withAlphaComponent(0.75)
             if self.request?.status == 4 {
-                payPrice.text = String(format: "£%.2f", self.price["split_total"]!)
+                payPrice.text = String(format: "%@", self.currencyFormatter.string(from: NSNumber(value: self.price["split_total"] as! Double))!)
             } else {
-                payPrice.text = String(format: "£%.2f", self.price["total"]!)
+                payPrice.text = String(format: "%@", self.currencyFormatter.string(from: NSNumber(value: self.price["total"] as! Double))!)
                 
                 let input = UITextField(frame: CGRect(x: 0, y: 0, width: 303, height: 40))
                 input.placeholder = " + Select users to split the payment"
@@ -297,9 +340,9 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         if self.paymentContext.selectedPaymentOption != nil {
             self.vSpinner = self.showSpinner(onView: self.view)
             if self.price["split_total"] != nil || self.request?.status == 4 {
-                self.paymentContext.paymentAmount = Int(String(format: "%.2f", self.price["split_total"]!).replacingOccurrences(of: ".", with: ""))!
+                self.paymentContext.paymentAmount = Int(String(format: "%.2f", self.price["split_total"]! as! Double).replacingOccurrences(of: ".", with: ""))!
             } else {
-                self.paymentContext.paymentAmount = Int(String(format: "%.2f", self.price["total"]!).replacingOccurrences(of: ".", with: ""))!
+                self.paymentContext.paymentAmount = Int(String(format: "%.2f", self.price["total"]! as! Double).replacingOccurrences(of: ".", with: ""))!
             }
             self.paymentContext.paymentCurrency = Constants.defaultCurrency
             self.paymentContext.requestPayment()
@@ -395,8 +438,8 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             self.payUsers.contentSize = CGSize(width: self.payUsers.frame.width, height: self.payUsers.contentSize.height + 50)
         }
         
-        var splitPriceTotal = self.splitPrice(users: users["selected"]!.count + 1, price: self.price["total"]!)
-        let splitPriceUser = self.splitPrice(users: users["selected"]!.count + 1, price: self.price["user"]!)
+        var splitPriceTotal = self.splitPrice(users: users["selected"]!.count + 1, price: self.price["total"]! as! Double)
+        let splitPriceUser = self.splitPrice(users: users["selected"]!.count + 1, price: self.price["user"]! as! Double)
         
         let splitPriceFees: Double = splitPriceTotal - splitPriceUser
         let stripeFees: Double = 0.2 + (splitPriceTotal * 0.029)
@@ -411,10 +454,10 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             splitPriceTotal = splitPriceUser + stripeFees + 1 / Double(users["selected"]!.count + 1)
         }
         
-        if splitPriceTotal != self.price["total"] {
+        if splitPriceTotal != self.price["total"] as! Double {
             self.price["split_total"] = splitPriceTotal.rounded(digits: 2)
             self.price["split_user"] = splitPriceUser.rounded(digits: 2)
-            self.paySplitPrice.text = String(format: "You pay: £%.2f", splitPriceTotal)
+            self.paySplitPrice.text = String(format: "You pay: %@", String(format: "%@", self.currencyFormatter.string(from: NSNumber(value: splitPriceTotal))!) )
         } else {
             self.price["split"] = nil
             self.paySplitPrice.text = ""
@@ -444,14 +487,14 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                     var total: Double?
                     var user: Double?
                     if self.price["split_total"] != nil && self.price["split_user"] != nil || self.request?.status == 4 {
-                        total = self.price["split_total"]
-                        user = self.price["split_user"]
+                        total = (self.price["split_total"] as! Double)
+                        user = (self.price["split_user"] as! Double)
                     } else {
-                        total = self.price["total"]
-                        user = self.price["user"]
+                        total = (self.price["total"] as! Double)
+                        user = (self.price["user"] as! Double)
                     }
                     
-                    StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: total!, user: user!, requestID: self.request!._id!) { (error) in
+                    StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: total!, user: user!, currency: self.price["currency"] as! String, requestID: self.request!._id!) { (error) in
                         guard error != nil else {
                             completion(error)
                             return

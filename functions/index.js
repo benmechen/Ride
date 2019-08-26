@@ -120,7 +120,7 @@ exports.createStripeCustomer = functions.auth.user().onCreate((user) => {
 exports.createStripeAccount = functions.database.ref('/stripe_customers/{userId}/account').onCreate((snap, context) => {
   return stripe.accounts.create({
     type: 'custom',
-    country: 'GB',
+    country: snap.val().country,
     business_type: 'individual',
     email: snap.val().email,
   }).then((customer) => {
@@ -169,8 +169,8 @@ exports.updateStripeCustomer = functions.database.ref('/stripe_customers/{userId
             },
             external_account: {
               object: 'bank_account',
-              country: 'GB',
-              currency: 'gbp',
+              country: val.account_country,
+              currency: val.account_currency,
               routing_number: val.sort_code,
               account_number: val.account_number,
               account_holder_name: val.first_name + " " + val.last_name,
@@ -207,8 +207,8 @@ exports.updateStripeCustomer = functions.database.ref('/stripe_customers/{userId
           },
           external_account: {
             object: 'bank_account',
-            country: 'GB',
-            currency: 'gbp',
+            country: val.address_country,
+            currency: val.account_currency,
             routing_number: val.sort_code,
             account_number: val.account_number,
             account_holder_name: val.first_name + " " + val.last_name,

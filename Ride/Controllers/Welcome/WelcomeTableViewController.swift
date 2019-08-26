@@ -39,6 +39,7 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh(_:)), for: UIControl.Event.valueChanged)
         self.tableView.refreshControl = refreshControl
+        self.tableView.separatorStyle = .none
     }
     
     override func viewWillAppear(_ animated: Bool) {

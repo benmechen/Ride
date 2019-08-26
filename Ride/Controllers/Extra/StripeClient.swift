@@ -37,14 +37,14 @@ class StripeClient: NSObject, STPCustomerEphemeralKeyProvider {
         case invalidResponse
     }
         
-    func completeCharge(_ result: STPPaymentResult, customer: String, destination: String, total: Double, user: Double, requestID: String, completion: @escaping STPErrorBlock) {
+    func completeCharge(_ result: STPPaymentResult, customer: String, destination: String, total: Double, user: Double, currency: String, requestID: String, completion: @escaping STPErrorBlock) {
         
         let params: [String: Any] = [
             "source": result.paymentMethod.stripeId,
             "customer": customer,
             "total_amount": Int(String(format: "%.2f", total).replacingOccurrences(of: ".", with: ""))!,
             "user_amount": Int(String(format: "%.2f", user).replacingOccurrences(of: ".", with: ""))!,
-            "currency": Constants.defaultCurrency,
+            "currency": currency.lowercased(),
             "destination": destination,
             "metadata": [
                 "request_id": requestID

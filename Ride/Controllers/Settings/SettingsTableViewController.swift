@@ -54,6 +54,7 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     var handle: UInt? = nil
     var currentUserCarType = ""
     let locationManager = CLLocationManager()
+    var vSpinner: UIView?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -79,8 +80,6 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                 guard success && user != nil else {
                     return
                 }
-                
-                print("User:", user)
                 
                 self.profilePhoto.kf.setImage(
                     with: user!.photo,
@@ -344,27 +343,54 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
     @IBAction func nameTextFieldReturn(_ sender: UITextField) {
         sender.resignFirstResponder()
         
+        vSpinner = self.showSpinner(onView: self.view)
+        
+        RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).observeSingleEvent(of: .value) { (snapshot) in
+            if snapshot.hasChild("account") {
+                let alert = UIAlertController(title: "Are you sure you want to change your name?", message: "Chaning your Ride name will require your account to be reverified - the new name must match that specified on the ID you supplied when the account was created.", preferredStyle: .alert)
+                
+                alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { _ in
+                    snapshot.ref.child("account").child("legal_entity").child("first_name").setValue(self.nameTextField.text?.split(separator: " ").first)
+                    snapshot.ref.child("account").child("legal_entity").child("last_name").setValue(self.nameTextField.text?.split(separator: " ").last)
+                    
+                    self.setName(self.nameTextField.text!)
+                    self.removeSpinner(spinner: self.vSpinner!)
+                }))
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
+                    self.nameTextField.text = Auth.auth().currentUser?.displayName
+                    self.removeSpinner(spinner: self.vSpinner!)
+                }))
+                
+                
+                self.present(alert, animated: true)
+            } else {
+                self.setName(self.nameTextField.text!)
+                self.removeSpinner(spinner: self.vSpinner!)
+            }
+        }
+    }
+    
+    func setName(_ name: String) {
         let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
         
-        changeRequest?.displayName = self.nameTextField.text
+        changeRequest?.displayName = name
         
-        RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("name").setValue(self.nameTextField.text)
+        RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("name").setValue(name)
         
         userManager?.updateCurrentUser()
-            
+        
         changeRequest?.commitChanges { error in
             if let error = error {
                 let alert = UIAlertController(title: "An error occurred. Please try again.", message: "", preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+                alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { _ in
                     NSLog(error.localizedDescription)
                 }))
-                sender.resignFirstResponder()
+//                sender.resignFirstResponder()
                 self.present(alert, animated: true, completion: nil)
             } else {
-                sender.resignFirstResponder()
+//                sender.resignFirstResponder()
             }
         }
-        
     }
     
     func numberOfComponents(in pickerView: UIPickerView) -> Int {

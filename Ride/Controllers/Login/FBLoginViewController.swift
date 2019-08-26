@@ -23,6 +23,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
     
     var userManager: UserManagerProtocol!
     lazy var RideDB = Database.database().reference()
+    var vSpinner: UIView?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,6 +40,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
     // MARK: Actions
     
     @IBAction func loginButtonClicked(_ sender: UIButton) {
+        vSpinner = self.showSpinner(onView: self.view)
         let loginManager = LoginManager()
 //        loginManager.loginBehavior = LoginBehavior.systemAccount
 //        loginManager.loginBehavior = FBSDKLoginBehaviorSystemAccount;
@@ -77,6 +79,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                             os_log("Error logging in with Facebook")
                         }))
                         sender.resignFirstResponder()
+                        self.removeSpinner(spinner: self.vSpinner!)
                         self.present(alert, animated: true, completion: {
                             self.dismiss(animated: true, completion: nil)
                         })
@@ -101,6 +104,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                             }
                             
 //                            self.performSegue(withIdentifier: "showMainNav", sender: nil)
+                            self.removeSpinner(spinner: self.vSpinner!)
                             moveToWelcomeController()
                         })
                     })
@@ -130,18 +134,18 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
         let connection = GraphRequestConnection()
         
         connection.add(GraphRequest(graphPath: "/me/friends"), batchParameters: params) { (httpResponse, result, error) in
-            if let ids = result as? NSArray {
+            if let resultDict = result as? [String: Any], let data = resultDict["data"] as? [[String: String]] {
                 var idArray: Array<String> = Array()
                 var i = 1
-                for idDict in ids {
-                    if let id = idDict as? NSDictionary {
+                for idDict in data {
+                    if let id = idDict["id"] {
                         self.RideDB.child("IDs").observeSingleEvent(of: .value, with: { (snapshot) in
                             let value = snapshot.value as? NSDictionary
-                            if let uid = value?[id["id"] as Any] as? String {
+                            if let uid = value?[id] as? String {
                                 idArray.append(uid)
                             }
         
-                            if i == ids.count {
+                            if i == data.count {
                                 completion(true, idArray)
                             }
                             i += 1

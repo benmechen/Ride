@@ -19,10 +19,13 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
     var userManager: UserManagerProtocol!
     lazy var RideDB = Database.database().reference()
     var profileButton: UIImageView!
+    var vSpinner: UIView?
     override var canResignFirstResponder: Bool {return false}
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.vSpinner = self.showSpinner(onView: self.view)
         
         RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
             if let value = snapshot.value as? String, let appDelegate = UIApplication.shared.delegate as? AppDelegate {
@@ -32,7 +35,6 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
                             print(error)
                         } else {
                             if let result = response.result.value as? NSDictionary {
-                                print(result)
                                 self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account").setValue(result)
                                 if let verification = result["verification"] as? NSDictionary {
                                     if let fieldsNeeded = verification["fields_needed"] as? NSArray {
@@ -40,6 +42,7 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
                                             if let legalEntity = result["legal_entity"] as? NSDictionary, let legalEntityVerification = legalEntity["verification"] as? NSDictionary {
                                                 if let status = legalEntityVerification["status"] as? String {
                                                     if status != "pending" {
+                                                        self.removeSpinner(spinner: self.vSpinner!)
                                                         self.performSegue(withIdentifier: "showSettings", sender: nil)
                                                     }
                                                 }
@@ -56,14 +59,18 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
         
         self.navigationController?.navigationBar.shadowImage = UIImage()
         
-        //Set the right bar button to user's profile picture
+        //Set the left bar button to user's profile picture
         self.profileButton = UIImageView(frame: CGRect(x: 0, y: 0, width: 38, height: 38))
                 
         userManager?.getCurrentUser(completion: { (success, user) in
             guard success && user != nil else {
                 return
             }
-        
+            
+            if self.vSpinner != nil {
+                self.removeSpinner(spinner: self.vSpinner!)
+            }
+            
             if ((user!.car._carType == "undefined" || user!.car._carType == "") && user!.car._carMPG != "nil") {
                 self.performSegue(withIdentifier: "showSetup", sender: nil)
             } else {
