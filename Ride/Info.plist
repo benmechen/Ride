@@ -6,8 +6,6 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Ride</string>
-	<key>CFBundleDocumentTypes</key>
-	<array/>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -19,7 +17,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.0.0 (alpha)</string>
+	<string>2.0.0 (beta)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -29,12 +27,8 @@
 			</array>
 		</dict>
 	</array>
-    <key>FacebookAppID</key>
-    <string>349035665631411</string>
-    <key>FacebookDisplayName</key>
-    <string>Ride</string>
 	<key>CFBundleVersion</key>
-	<string>72</string>
+	<string>314</string>
 	<key>FacebookAppID</key>
 	<string>349035665631411</string>
 	<key>FacebookDisplayName</key>
@@ -60,13 +54,13 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Allow Ride to access the camera to scan your driver's license for verificaition</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Allows users in your groups to see how close to them you are when available for Rides. Select "Allow whilst using" to make it easier for your friends to get Rides from you.</string>
+	<string>Allows users in your groups to see how close you are to them when available for Rides. Select "Allow whilst using" to make it easier for your friends to get Rides from you.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Allows users in your groups to see how close to them you are when available for Rides. Select "Allow whilst using" to make it easier for your friends to get Rides from you.</string>
+	<string>Allows users in your groups to see how close you are to them when available for Rides. Select "Allow whilst using" to make it easier for your friends to get Rides from you.</string>
 	<key>NSLocationUsageDescription</key>
-	<string>Allows users in your groups to see how close to them you are when available for Rides. Select "Allow whilst using" to make it easier for your friends to get Rides from you.</string>
+	<string>Allows users in your groups to see how close you are to them when available for Rides. Select "Allow whilst using" to make it easier for your friends to get Rides from you.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Allows users in your groups to see how close to them you are when available for Rides. Select "Allow whilst using" to make it easier for your friends to get Rides from you.</string>
+	<string>Allows users in your groups to see how close you are to them when available for Rides. Select "Allow whilst using" to make it easier for your friends to get Rides from you.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

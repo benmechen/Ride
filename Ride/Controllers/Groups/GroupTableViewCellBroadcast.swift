@@ -28,8 +28,6 @@ class GroupTableViewCellBroadcast: UITableViewCell {
 
     
     @IBAction func requestRide(_ sender: Any) {
-        print("Clicked")
-        print(users)
         if self.delegate != nil {
             self.delegate.callSegueFromCell(data: users)
         }

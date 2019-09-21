@@ -108,19 +108,11 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
         if mpgTextField != nil {
             mpgTextField.layer.borderWidth = 1
             mpgTextField.layer.borderColor = UIColor.white.cgColor
-            
-            let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(SettingsTableViewController.dismissKeyboard))
-            
-            view.addGestureRecognizer(tap)
         }
         
         if noOfSeatsTextField != nil {
             noOfSeatsTextField.layer.borderWidth = 1
             noOfSeatsTextField.layer.borderColor = UIColor.white.cgColor
-            
-            let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(SettingsTableViewController.dismissKeyboard))
-            
-            view.addGestureRecognizer(tap)
         }
         
         if carTypeTextField != nil {
@@ -135,9 +127,6 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
         if numberPlateTextField != nil {
             numberPlateTextField.layer.borderWidth = 1
             numberPlateTextField.layer.borderColor = UIColor.white.cgColor
-            
-            let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(SettingsTableViewController.dismissKeyboard))
-            view.addGestureRecognizer(tap)
         }
         
         // Page 6
@@ -188,10 +177,6 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
                     }
                 }
             }
-            
-            
-            let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(SettingsTableViewController.dismissKeyboard))
-            view.addGestureRecognizer(tap)
         }
         
         if sortCodeTextField != nil {
@@ -272,10 +257,6 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
                 self.accountNumberLabel.isHidden = true
                 self.accountNumberTextField.isHidden = true
             }
-            
-            
-            let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(SettingsTableViewController.dismissKeyboard))
-            view.addGestureRecognizer(tap)
         }
         
         if cameraView != nil {
@@ -308,6 +289,7 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
                 print("Error Unable to initialize back camera:  \(error.localizedDescription)")
             }
         }
+        self.hideKeyboardWhenTappedAround()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -474,10 +456,6 @@ class SetupViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     }
     
     // MARK: - Actions
-    
-    @objc func dismissKeyboard() {
-        view.endEditing(true)
-    }
     
     @IBAction func page1NoPressed(_ sender: Any) {
         RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("car").child("mpg").setValue("nil")

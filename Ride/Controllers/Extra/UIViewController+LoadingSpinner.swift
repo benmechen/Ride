@@ -13,7 +13,13 @@ extension UIViewController {
     func showSpinner(onView : UIView) -> UIView {
         let spinnerViewContainter = UIView.init(frame: onView.bounds)
 //        spinnerViewContainter.backgroundColor = UIColor.init(red: 0, green: 0, blue: 0, alpha: 0.5)
-        spinnerViewContainter.backgroundColor = UIColor.init(white: 1, alpha: 0.6)
+
+        if #available(iOS 13.0, *) {
+            spinnerViewContainter.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.6)
+        } else {
+            // Fallback on earlier versions
+            spinnerViewContainter.backgroundColor = UIColor.init(white: 1, alpha: 0.6)
+        }
 //        let ai = UIActivityIndicatorView.init(style: .whiteLarge)
 //        ai.startAnimating()
 //        ai.center = spinnerView.center

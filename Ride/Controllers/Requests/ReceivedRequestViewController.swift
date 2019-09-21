@@ -165,7 +165,7 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
                                                     return
                                                 }
                                                 
-                                                if var rates = json["rates"] as? [String: Double] {
+                                                if let rates = json["rates"] as? [String: Double] {
                                                     if let euroToPound = rates["GBP"], let currency = rates[(Locale.current.currencyCode)!] {
                                                         self.removeSpinner(spinner: self.vSpinner!)
                                                         self.euroToPound = euroToPound
@@ -278,6 +278,8 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
         } else {
             RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("sent").child((request?._id)!).child("new").setValue(false)
         }
+        
+        self.hideKeyboardWhenTappedAround() 
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -407,10 +409,6 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
         if let amountString = page3Price.text?.currencyInputFormatting() {
             page3Price.text = amountString
         }
-    }
-    
-    @objc func dismissKeyboard() {
-        view.endEditing(true)
     }
     
     @objc func dismissView() {

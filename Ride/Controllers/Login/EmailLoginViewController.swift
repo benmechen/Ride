@@ -35,6 +35,8 @@ class EmailLoginViewController: UIViewController {
         loginButton.backgroundColor = UIColor(named: "Accent")
         createAccountButton.setTitleColor(UIColor(named: "Accent"), for: .normal)
         forgotPasswordButton.setTitleColor(UIColor(named: "Accent"), for: .normal)
+        
+        self.hideKeyboardWhenTappedAround() 
     }
     
     override func didReceiveMemoryWarning() {
@@ -83,7 +85,7 @@ class EmailLoginViewController: UIViewController {
                         }
                         
                         self.userManager!.getCurrentUser(completion: {(_,_) in })
-                        
+                        RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("token").setValue(Messaging.messaging().fcmToken)
                         self.removeSpinner(spinner: self.vSpinner!)
                         moveToWelcomeController()
                     })

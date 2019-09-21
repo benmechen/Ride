@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AuthenticationServices
 import Crashlytics
 import Firebase
 import FacebookCore
@@ -19,7 +20,10 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
     
     //MARK: Properties
     @IBOutlet weak var welcome: UILabel!
+    @IBOutlet weak var loginStackView: UIStackView!
+    @IBOutlet weak var logInCollectionView: UICollectionView!
     @IBOutlet weak var changeLoginMethod: UIButton!
+    @IBOutlet weak var disclamerButton: UIButton!
     
     var userManager: UserManagerProtocol!
     lazy var RideDB = Database.database().reference()
@@ -27,8 +31,18 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        logInCollectionView.delegate = self
+        logInCollectionView.dataSource = self
+        logInCollectionView.frame.size.width = self.view.frame.width
+        logInCollectionView.isPrefetchingEnabled = true
+        logInCollectionView.clipsToBounds = false
+        loginStackView.clipsToBounds = false
+        
         self.welcome.textColor = UIColor(named: "Main")
         self.changeLoginMethod.setTitleColor(UIColor(named: "Accent"), for: .normal)
+        
+        disclamerButton.setAttributedTitle(attributedText(withString: "By creating an account you agree to the Ride Terms and Conditions and Privacy Policy", boldString: "Ride Terms and Conditions and Privacy Policy", font: UIFont.systemFont(ofSize: 14)), for: .normal)
     }
 
     override func didReceiveMemoryWarning() {
@@ -37,7 +51,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
     }
 
     
-    // MARK: Actions
+    // MARK: Login Functions
     
     @IBAction func loginButtonClicked(_ sender: UIButton) {
         vSpinner = self.showSpinner(onView: self.view)
@@ -50,8 +64,10 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
             switch loginResult {
             case .failed(let error):
                 print("Error: \(error)")
+                self.removeSpinner(spinner: self.vSpinner!)
             case .cancelled:
                 print("User cancelled login.")
+                self.removeSpinner(spinner: self.vSpinner!)
             case .success(let grantedPermissions, let declinedPermissions, let accessToken):
                 print(grantedPermissions)
                 print(declinedPermissions)
@@ -59,6 +75,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                 Auth.auth().signIn(with: credential) { (user, error) in
                     if let error = error {
                         print(error)
+                        self.removeSpinner(spinner: self.vSpinner!)
                         return
                     }
                     
@@ -104,6 +121,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                             }
                             
 //                            self.performSegue(withIdentifier: "showMainNav", sender: nil)
+                            self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("token").setValue(Messaging.messaging().fcmToken)
                             self.removeSpinner(spinner: self.vSpinner!)
                             moveToWelcomeController()
                         })
@@ -115,6 +133,21 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
         }
     }
     
+    @available(iOS 13.0, *)
+    @objc
+    func handleAuthorizationAppleIDButtonPress() {
+        let appleIDProvider = ASAuthorizationAppleIDProvider()
+        let request = appleIDProvider.createRequest()
+        request.requestedScopes = [.fullName, .email]
+        
+        let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+        authorizationController.delegate = self
+        authorizationController.presentationContextProvider = self
+        authorizationController.performRequests()
+    }
+    
+    
+    // MARK: - Navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         super.prepare(for: segue, sender: sender)
         
@@ -184,5 +217,126 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
 //            }
         }
         connection.start()
+    }
+    
+    private func attributedText(withString string: String, boldString: String, font: UIFont) -> NSAttributedString {
+        let attributedString = NSMutableAttributedString(string: string,
+                                                         attributes: [NSAttributedString.Key.font: font])
+        let boldFontAttribute: [NSAttributedString.Key: Any] = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: font.pointSize)]
+        let range = (string as NSString).range(of: boldString)
+        if #available(iOS 13.0, *) {
+            attributedString.addAttribute(.foregroundColor, value: UIColor.secondaryLabel, range: (string as NSString).range(of: string))
+        } else {
+            // Fallback on earlier versions
+            attributedString.addAttribute(.foregroundColor, value: UIColor.black, range: (string as NSString).range(of: string))
+        }
+        attributedString.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+        return attributedString
+    }
+}
+
+extension FBLoginViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if #available(iOS 13.0, *) {
+            return 2
+        }
+        return 1
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if #available(iOS 13.0, *) {
+            if indexPath.item == 1 {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Apple Login", for: indexPath)
+                var style: ASAuthorizationAppleIDButton.Style = .black
+                cell.backgroundColor = .black
+                if self.traitCollection.userInterfaceStyle == .dark {
+                    style = .white
+                    cell.backgroundColor = .white
+                }
+                let appleAuthorizationButton = ASAuthorizationAppleIDButton(authorizationButtonType: .signIn, authorizationButtonStyle: style)
+                appleAuthorizationButton.layer.cornerRadius = 0
+                appleAuthorizationButton.superview?.cornerRadius = 0
+                appleAuthorizationButton.sizeThatFits(cell.layer.frame.size)
+                appleAuthorizationButton.layer.frame.size = cell.layer.frame.size
+                appleAuthorizationButton.addTarget(self, action: #selector(handleAuthorizationAppleIDButtonPress), for: .touchUpInside)
+                cell.addSubview(appleAuthorizationButton)
+                return cell
+            }
+        }
+        
+        return collectionView.dequeueReusableCell(withReuseIdentifier: "Facebook Login", for: indexPath)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: collectionView.layer.frame.size.width - 10, height: 44)
+    }
+}
+
+@available(iOS 13.0, *)
+extension FBLoginViewController: ASAuthorizationControllerDelegate {
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+            
+            let userIdentifier = appleIDCredential.user
+            let fullName = appleIDCredential.fullName
+            let email = appleIDCredential.email
+            
+            print("*********************")
+            print("* Sign in with Apple *")
+            print("*********************")
+            print("NAME:", fullName)
+            print("EMAIL:", email)
+            print("ID:", userIdentifier)
+            
+            // Create an account in your system.
+            // For the purpose of this demo app, store the userIdentifier in the keychain.
+//            do {
+//                try KeychainItem(service: "com.example.apple-samplecode.juice", account: "userIdentifier").saveItem(userIdentifier)
+//            } catch {
+//                print("Unable to save userIdentifier to keychain.")
+//            }
+            
+            // For the purpose of this demo app, show the Apple ID credential information in the ResultViewController.
+//            if let viewController = self.presentingViewController as? ResultViewController {
+//                DispatchQueue.main.async {
+//                    viewController.userIdentifierLabel.text = userIdentifier
+//                    if let givenName = fullName?.givenName {
+//                        viewController.givenNameLabel.text = givenName
+//                    }
+//                    if let familyName = fullName?.familyName {
+//                        viewController.familyNameLabel.text = familyName
+//                    }
+//                    if let email = email {
+//                        viewController.emailLabel.text = email
+//                    }
+//                    self.dismiss(animated: true, completion: nil)
+//                }
+//            }
+        } else if let passwordCredential = authorization.credential as? ASPasswordCredential {
+            // Sign in using an existing iCloud Keychain credential.
+            let username = passwordCredential.user
+            let password = passwordCredential.password
+            
+            // For the purpose of this demo app, show the password credential as an alert.
+            DispatchQueue.main.async {
+                let message = "The app has received your selected credential from the keychain. \n\n Username: \(username)\n Password: \(password)"
+                let alertController = UIAlertController(title: "Keychain Credential Received",
+                                                        message: message,
+                                                        preferredStyle: .alert)
+                alertController.addAction(UIAlertAction(title: "Dismiss", style: .cancel, handler: nil))
+                self.present(alertController, animated: true, completion: nil)
+            }
+        }
+    }
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        // Handle error.
+    }
+}
+
+@available(iOS 13.0, *)
+extension FBLoginViewController: ASAuthorizationControllerPresentationContextProviding {
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        return self.view.window!
     }
 }

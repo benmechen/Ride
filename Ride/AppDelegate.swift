@@ -27,7 +27,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     var selectedIndex: Int = 0
     var publishKey = ""
     var secretKey = ""
-    var updateLastSeen = true
+    var updateLastSeen = false
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
@@ -127,9 +127,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if Auth.auth().currentUser != nil {
+        if Auth.auth().currentUser != nil && !updateLastSeen {
             guard let location: CLLocationCoordinate2D = manager.location?.coordinate else { return }
-        
+            manager.stopUpdatingLocation()
             let locationDict = ["latitude": location.latitude,
                                 "longitude": location.longitude] as [String : Any]
             
@@ -154,6 +154,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
         
         self.locationManager.stopUpdatingLocation()
+        self.updateLastSeen = false
         
 //        userManager?.getCurrentUser(completion: { (success, user) in
 //            guard success && user != nil else {
@@ -190,12 +191,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
             if !(user!.available.isEmpty) {
                 if user!.available.values.contains(true) {
                     if CLLocationManager.locationServicesEnabled() {
-                        self.locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+                        self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
                         self.locationManager.startUpdatingLocation()
-                    }
-                    
-                    if self.updateLastSeen {
-                        self.updateLastSeen = false
                     }
                 }
             }
@@ -420,6 +417,7 @@ func moveToWelcomeController() {
 //    appDelegate.updateUserLocation()
     appDelegate.window?.rootViewController = welcomeViewController
     if let tabViewController = appDelegate.window?.rootViewController?.children.first as? TabViewController {
+        appDelegate.userManager.logout()
         tabViewController.userManager = appDelegate.userManager
         tabViewController.selectedIndex = appDelegate.selectedIndex
         

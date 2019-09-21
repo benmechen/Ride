@@ -69,6 +69,8 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        currencyFormatter.usesGroupingSeparator = true
+        currencyFormatter.numberStyle = .currency
 
         // Do any additional setup after loading the view.
         if (page1Title != nil) {
@@ -143,8 +145,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                         return
                     }
                     
-                    self.currencyFormatter.locale = Locale(identifier: currency)
-                    
+                    self.currencyFormatter.currencyCode = currency
                     self.page3Price.text = String(format: "%@", self.currencyFormatter.string(from: NSNumber(value: total))!)
                 }
             })
@@ -180,7 +181,8 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                     
                     self.price = value
                     
-                    self.currencyFormatter.locale = Locale(identifier: currency)
+//                    self.currencyFormatter.locale = Locale(identifier: currency)
+                    self.currencyFormatter.currencyCode = currency
                     
                     self.page4Price.attributedText = self.attributedText(withString: String(format: "Price: %@", self.currencyFormatter.string(from: NSNumber(value: total))!), boldString: "Price", font: self.page4Price.font)
                 }

@@ -24,10 +24,12 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     lazy var RideDB = Database.database().reference()
     var searchController: UISearchController!
     var profileButton: UIImageView!
+    var availableUsers: [User] = []
     var groups = [Group]()
     var payoutsEnabled: Bool = false
     var alertView: AlertOnboarding!
     var currentUserCarType = ""
+    var collectionView: UICollectionView?
     
     var vSpinner: UIView?
 
@@ -75,6 +77,26 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
                 })
             }
         })
+        
+        RideDB.child("Connections").child(Auth.auth().currentUser!.uid).observeSingleEvent(of: .value, with: { (snapshot) in
+            if let value = snapshot.value as? [String: Bool]{
+                for id in value.keys {
+                    self.userManager.fetch(byID: id) { (error, user) in
+                        /// Check for availability
+                        guard user?.id != Auth.auth().currentUser?.uid else {
+                            /// Current user, don't want to display own icon in available users collection
+                            return
+                        }
+                        for key in Array((user?.available.keys)!) {
+                            if user?.available[key] == true {
+                                self.availableUsers.append(user!)
+                                break
+                            }
+                        }
+                    }
+                }
+            }
+        })
     }
     
     override func didReceiveMemoryWarning() {
@@ -101,11 +123,19 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if availableUsers.count > 0 {
+            return groups.count + 1 /// 1st cell is for row of user icons
+        }
+        
+        if groups.count == 0 {
+            return 1
+        }
+        
         return groups.count
     }
     
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        if currentUserCarType != "undefined" && currentUserCarType != "" {
+        if currentUserCarType != "undefined" && currentUserCarType != "" && groups.count > 0 && (availableUsers.count > 0 && indexPath.row != 0) {
             return true
         }
         
@@ -150,8 +180,47 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
 
         return []
     }
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        if (availableUsers.count > 0 && indexPath.row == 0) || (groups.count == 0 && indexPath.row == 0)  {
+            return CGFloat(75)
+        }
+        
+        return CGFloat(60)
+    }
+    
+    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        guard let tableViewCell = cell as? WelcomeIconsTableViewCell else {
+            return
+        }
 
+        if groups.count == 0 {
+            tableViewCell.groupsLabel.isHidden = false
+        } else {
+            tableViewCell.groupsLabel.isHidden = true
+            tableViewCell.setCollectionViewDataSourceDelegate(self, forRow: indexPath.row)
+        }
+    }
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard (indexPath.row != 0 || availableUsers.count == 0) && groups.count > 0 else {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "WelcomeIconsTableViewCell", for: indexPath) as? WelcomeIconsTableViewCell else {
+                fatalError("The dequeued cell is not an instance of WelcomeIconsTableViewCell")
+            }
+            
+            let separatorView = UIView.init(frame: CGRect(x: 8, y: cell.frame.size.height - 1, width: cell.frame.size.width - 16, height: 0.5))
+            separatorView.backgroundColor = .lightGray
+            cell.contentView.addSubview(separatorView)
+            if groups.count == 0 {
+                cell.groupsLabel.isHidden = false
+            } else {
+                cell.groupsLabel.isHidden = true
+            }
+                        
+            return cell
+        }
+        
+        
         let cellIdentifier = "WelcomeTableViewCell"
         guard let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath) as? WelcomeTableViewCell else {
             fatalError("The dequeued cell is not an instance of WelcomeTableViewCell")
@@ -162,7 +231,12 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
         cell.userManager = self.userManager
         
         if groups.count > 0 {
-            let group = groups[indexPath.row]
+            var i = 0
+            if availableUsers.count > 0 {
+                i = 1 /// 1st row for user icons
+            }
+            
+            let group = groups[indexPath.row - i]
             
             cell.checkIfAvailable(groupID: group._groupID)
             
@@ -231,16 +305,50 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
                 return
             }
             
-            if indexPath.row < groups.count {
-                let selectedGroup = groups[indexPath.row]
+            var i = 0
+            if availableUsers.count > 0 {
+                i = 1 /// 1st row for user icons
+            }
+            
+            if (indexPath.row - i) < groups.count {
+                let selectedGroup = groups[indexPath.row - i]
                 print(selectedGroup._groupUsers.count)
                 groupViewController.group = selectedGroup
                 groupViewController.welcomeViewControllerDelegate = self
                 groupViewController.userManager = userManager
             } else {
-                os_log("Index %@ out of range %@", log: OSLog.default, type: .error, indexPath.row, groups.count)
+                os_log("Index %@ out of range %@", log: OSLog.default, type: .error, indexPath.row - i, groups.count)
                 return
             }
+        case "requestRide":
+            guard let navVC = segue.destination as? UINavigationController, let requestViewController = navVC.viewControllers.first as? RequestViewController else {
+                os_log("Unexpected destination: %@", log: OSLog.default, type: .error, segue.destination)
+               return
+            }
+            guard let selectedUserCell = sender as? UserIconCollectionViewCell else {
+                os_log("Unexpected sender: %@", log: OSLog.default, type: .error, String(describing: sender))
+                return
+            }
+            guard let indexPath = collectionView?.indexPath(for: selectedUserCell) else {
+                os_log("Selected cell not being displayed by collection view", log: OSLog.default, type: .error)
+                return
+            }
+            
+            if indexPath.row < availableUsers.count {
+                requestViewController.userManager = userManager
+                requestViewController.groupID = ""
+                for key in Array(availableUsers[indexPath.row].available.keys) {
+                    if availableUsers[indexPath.row].available[key] == true {
+                        requestViewController.groupID = key
+                        break
+                    }
+                }
+                requestViewController.user = [availableUsers[indexPath.row]]
+            } else {
+                os_log("Index %@ out of range %@", log: OSLog.default, type: .error, indexPath.row - 1, groups.count)
+                return
+            }
+            
         case "showSettings":
             let navVC = segue.destination as? UINavigationController
             let settingsViewController = navVC?.viewControllers.first as! SettingsTableViewController
@@ -263,7 +371,7 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
             
             setupViewController.userManager = userManager
         default:
-            fatalError("Unexpected Segue Identifier; \(String(describing: segue.identifier))")
+            fatalError("Unexpected Segue Identifier: \(String(describing: segue.identifier))")
         }
     }
     
@@ -383,5 +491,50 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
 extension WelcomeTableViewController: UserManagerClient {
     func setUserManager(_ userManager: UserManagerProtocol) {
         self.userManager = userManager
+    }
+}
+
+
+/// 1st row icon display
+extension WelcomeTableViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return availableUsers.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "IconCell", for: indexPath) as? UserIconCollectionViewCell else {
+            fatalError("Could not cast collection cell to UserIconlCollectionViewCell")
+        }
+        
+        cell.image.layer.borderWidth = 1
+        cell.image.layer.borderColor = UIColor(named: "Accent")?.cgColor
+        cell.image.layer.masksToBounds = false
+        cell.image.layer.cornerRadius = cell.image.frame.height/2
+        cell.image.clipsToBounds = true
+        cell.image.contentMode = .scaleAspectFill
+        
+        cell.name.text = String(availableUsers[indexPath.row].name.split(separator: " ").first ?? "")
+                
+        cell.image.kf.setImage(
+            with: availableUsers[indexPath.row].photo,
+            placeholder: UIImage(named: "groupPlaceholder"),
+            options: ([
+                .transition(.fade(1)),
+                .cacheOriginalImage
+                ] as KingfisherOptionsInfo)) { result in
+                    switch result {
+                    case .success(let value):
+                        print("Task done for: \(value.source.url?.absoluteString ?? "")")
+                    case .failure(let error):
+                        os_log("Error: %@", log: OSLog.default, type: .error, error.localizedDescription)
+                    }
+        }
+        
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        self.collectionView = collectionView
+        self.performSegue(withIdentifier: "requestRide", sender: collectionView.cellForItem(at: indexPath))
     }
 }

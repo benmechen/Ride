@@ -15,6 +15,9 @@
  */
 'use strict';
 
+let moment = require("moment-timezone");
+
+
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
@@ -58,6 +61,7 @@ exports.createStripeCharge = functions.database.ref('/stripe_customers/{userId}/
             return stripe.paymentIntents.create({
               payment_method: val.source,
               customer: val.customer,
+              receipt_email: val.email,
               amount: val.total_amount,
               currency: val.currency,
               confirmation_method: 'manual',
@@ -295,9 +299,14 @@ exports.addPaymentSource = functions.database
 exports.cleanupUser = functions.auth.user().onDelete((user) => {
   return admin.database().ref(`/stripe_customers/${user.uid}`).once('value').then(
       (snapshot) => {
-        return snapshot.val();
-      }).then((customer) => {
-        return stripe.customers.del(customer.customer_id);
+        // return snapshot.val();
+      // }).then((customer) => {
+        console.log(snapshot.val().customer_id);
+        if (snapshot.val().account_id != null && snapshot.val().account_id != "undefined") {
+            console.log(snapshot.val().account_id);
+            stripe.account.del(snapshot.val().account_id);
+        }
+        return stripe.customers.del(snapshot.val().customer_id);
       }).then(() => {
         return admin.database().ref(`/stripe_customers/${user.uid}`).remove();
       });
@@ -402,9 +411,10 @@ exports.deleteBankAccount = functions.database
 exports.sendRideCreationNotification = functions.database.ref('/Requests/{pushId}').onCreate((snap, context) => {
   const destination_user_id = snap.val().driver;
   const destination_user_name = snap.val().sender_name;
-  const date = new Date(snap.val().time * 1000);
+  // const date = new Date(snap.val().time * 1000);
+  const date = moment(snap.val().time * 1000).tz(snap.val().timeZone)
 
-    console.log(destination_user_ids);
+    console.log(destination_user_id);
 
     return admin.database().ref(`Users/${destination_user_id}/token`)
           .once('value').then((snapshot) => {
@@ -414,7 +424,7 @@ exports.sendRideCreationNotification = functions.database.ref('/Requests/{pushId
             var message = {
               notification: {
                 title: `Ride request from ${destination_user_name}`,
-                body: `Pickup from ${snap.val().from.name} at ${date.toLocaleTimeString()} on ${date.toDateString()}`
+                body: `Pickup from ${snap.val().from.name} at ${date.format("HH:mm:ss")} on ${date.format("dddd MMM Do YYYY")}`
               },
               apns: {
                 payload: {

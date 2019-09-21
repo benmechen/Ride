@@ -22,6 +22,7 @@ class Request {
     var _to: CLLocationCoordinate2D!
     var _toName: String!
     var _time: Int!
+    var _timeZone: TimeZone!
     var _passengers: Int!
     var new: Bool = false
     var status: Int = 0
@@ -29,7 +30,7 @@ class Request {
     var sent: Int!
     lazy var RideDB = Database.database().reference()
     
-    init (id: String? = nil, driver: String, sender: String, from: CLLocationCoordinate2D, fromName: String, to: CLLocationCoordinate2D, toName: String, time: Int, passengers: Int, status: Int, sent: Int? = 0) {
+    init (id: String? = nil, driver: String, sender: String, from: CLLocationCoordinate2D, fromName: String, to: CLLocationCoordinate2D, toName: String, time: Int, timeZone: TimeZone, passengers: Int, status: Int, sent: Int? = 0) {
         
         self._id = id
         self._driver = driver
@@ -39,6 +40,7 @@ class Request {
         self._to = to
         self._toName = toName
         self._time = time
+        self._timeZone = timeZone
         self._passengers = passengers
         self.status = status
         self.sent = sent
@@ -64,6 +66,7 @@ class Request {
                                             "from": from,
                                             "to": to,
                                             "time": self._time,
+                                            "timeZone": self._timeZone.identifier,
                                             "passengers": self._passengers,
                                             "status": self.status,
                                             "sent": ServerValue.timestamp(),

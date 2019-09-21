@@ -49,15 +49,13 @@ class CardsTableViewController: UIViewController, UITableViewDataSource, UITable
             self.accountNoTextField.borderColor = .white
             
             self.sortCodeTextField.delegate = self
-            
-            let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(UIInputViewController.dismissKeyboard))
-            view.addGestureRecognizer(tap)
         }
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         
         if self.cardsTableView != nil {
             self.navigationItem.rightBarButtonItem = self.editButtonItem
         }
+        
+        self.hideKeyboardWhenTappedAround()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -78,10 +76,6 @@ class CardsTableViewController: UIViewController, UITableViewDataSource, UITable
         if self.handle != nil {
             RideDB.removeObserver(withHandle: self.handle!)
         }
-    }
-    
-    @objc func dismissKeyboard() {
-        view.endEditing(true)
     }
 
     // MARK: - Table view data source

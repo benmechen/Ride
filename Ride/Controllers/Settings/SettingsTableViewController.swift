@@ -177,11 +177,9 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                                 } else {
                                     if let result = response.result.value as? NSDictionary {
                                         print(result)
-                                        if let legalEntity = result["legal_entity"] as? NSDictionary, let verification = legalEntity["verification"] as? NSDictionary {
-                                            if let details = verification["details"] as? String {
-                                                self.verificationActivityIndicator.stopAnimating()
-                                                self.verificationErrorLabel.text = details
-                                            }
+                                        if let legalEntity = result["legal_entity"] as? NSDictionary, let verification = legalEntity["verification"] as? NSDictionary, let details = verification["details"] as? String {
+                                            self.verificationActivityIndicator.stopAnimating()
+                                            self.verificationErrorLabel.text = details
                                         }
                                     }
                                 }
@@ -316,22 +314,34 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
         super.prepare(for: segue, sender: sender)
         
         if segue.identifier == "showSetupFromSettings" {
-            let navigationController = segue.destination as! UINavigationController
-            let setupViewController = navigationController.viewControllers.first as! SetupViewController
-            setupViewController.skip = true
-            setupViewController.userManager = userManager
+            if let navigationController = segue.destination as? UINavigationController, let setupViewController = navigationController.viewControllers.first as? SetupViewController {
+                setupViewController.skip = true
+                setupViewController.userManager = userManager
+            }
         }
         
         if segue.identifier == "showPrivacyPolicy" {
-            let navigationController = segue.destination as! UINavigationController
-            let legalViewController = navigationController.viewControllers.first as! LegalViewController
-            legalViewController.url = URL(string: "https://fuse-ride.firebaseapp.com/terms/privacy.html")
+            if let navigationController = segue.destination as? UINavigationController, let legalViewController = navigationController.viewControllers.first as? LegalViewController {
+                legalViewController.url = URL(string: "https://fuse-ride.firebaseapp.com/terms/privacy.html")
+            }
         }
         
         if segue.identifier == "showSSA" {
-            let navigationController = segue.destination as! UINavigationController
-            let legalViewController = navigationController.viewControllers.first as! LegalViewController
-            legalViewController.url = URL(string: "https://stripe.com/gb/ssa")
+            if let navigationController = segue.destination as? UINavigationController, let legalViewController = navigationController.viewControllers.first as? LegalViewController {
+                legalViewController.url = URL(string: "https://stripe.com/gb/ssa")
+            }
+        }
+        
+        if segue.identifier == "showContact" {
+            if let contactViewController = segue.destination as? ContactViewController {
+                contactViewController.userManager = userManager
+            }
+        }
+        
+        if segue.identifier == "rerunSetup" {
+            if let setupViewController = segue.destination as? SetupViewController {
+                setupViewController.userManager = userManager
+            }
         }
         
         if let destination = segue.destination as? SettingsTableViewController {
@@ -442,7 +452,7 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
         }
     }
     
-    @objc func dismissKeyboard() {
+    @objc override func dismissKeyboard() {
         if carTypeTextField != nil {
             updateCarType()
         } else if carMPGTextField != nil {
@@ -620,7 +630,6 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                 if id != nil {
                     self.RideDB.child("Users").child(id!).removeValue()
                     self.RideDB.child("Connections").child(id!).removeValue()
-                    self.RideDB.child("stripe_customers").child(id!).removeValue()
                 }
                 
                 let alert = UIAlertController(title: "Account deleted", message: "", preferredStyle: .alert)
@@ -628,7 +637,14 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                     NSLog("Firebase Auth delete account success")
                 }))
                 self.present(alert, animated: true, completion: nil)
-                self.logOut()
+                
+                if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                    appDelegate.userManager.logout()
+                }
+
+                let loginManager = LoginManager()
+                loginManager.logOut()
+                
                 moveToLoginController()
             }
         }

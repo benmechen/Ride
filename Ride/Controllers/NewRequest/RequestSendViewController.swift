@@ -26,6 +26,7 @@ class RequestSendViewController: UIViewController {
     var to: MKPlacemark? = nil
     let datePickerView = UIDatePicker()
     var dateStamp: TimeInterval? = nil
+    var timeZone: TimeZone?
     var eta: Date? = nil
     var vSpinner: UIView?
     
@@ -100,6 +101,8 @@ class RequestSendViewController: UIViewController {
         peopleTextField.layer.shadowRadius = 2
         peopleTextField.layer.shadowOpacity = 0.2
         peopleTextField.layer.shadowOffset = CGSize(width: 0.0, height: 0.0)
+        
+        self.hideKeyboardWhenTappedAround() 
     }
     
 
@@ -138,7 +141,7 @@ class RequestSendViewController: UIViewController {
         let timestampInt = Int(dateStamp!)
         if let noOfPeople = Int(peopleTextField.text!) {
             for user in users {
-                let request = Request(driver: user.id, sender: Auth.auth().currentUser!.uid, from: (from?.coordinate)!, fromName: (from?.title)!, to: (to?.coordinate)!, toName: (to?.title)! , time: timestampInt, passengers: noOfPeople, status: 0)
+                let request = Request(driver: user.id, sender: Auth.auth().currentUser!.uid, from: (from?.coordinate)!, fromName: (from?.title)!, to: (to?.coordinate)!, toName: (to?.title)! , time: timestampInt, timeZone: timeZone ?? TimeZone.current, passengers: noOfPeople, status: 0)
                 
                 request.send(userManager: userManager) { (success, key) in
                     if success {
@@ -169,8 +172,10 @@ class RequestSendViewController: UIViewController {
         let calendar = Calendar(identifier: .gregorian)
         var comps = DateComponents()
         comps.minute = 5
-        let minDate = calendar.date(byAdding: comps, to: (eta)!)
-        datePickerView.minimumDate = minDate
+        if eta != nil {
+            let minDate = calendar.date(byAdding: comps, to: (eta)!)
+            datePickerView.minimumDate = minDate
+        }
         sender.inputView = datePickerView
         datePickerView.addTarget(self, action: #selector(datePickerValueChanged), for: UIControl.Event.valueChanged)
     }
@@ -180,10 +185,11 @@ class RequestSendViewController: UIViewController {
         timeFormatter.dateStyle = DateFormatter.Style.medium
         timeFormatter.timeStyle = DateFormatter.Style.short
         
-        var date = timeFormatter.date(from: timeFormatter.string(from: sender.date))
-        let offset = timeFormatter.timeZone.daylightSavingTimeOffset(for: date!)
-        date! += offset
+        let date = timeFormatter.date(from: timeFormatter.string(from: sender.date))
+//        let offset = timeFormatter.timeZone.daylightSavingTimeOffset(for: date!)
+//        date! += offset
         dateStamp = date?.timeIntervalSince1970
+        timeZone = sender.timeZone
         
         timeTextField.text = timeFormatter.string(from: sender.date)
     }
@@ -198,11 +204,6 @@ class RequestSendViewController: UIViewController {
         toolBar.isUserInteractionEnabled = true
         
         timeTextField.inputAccessoryView = toolBar
-    }
-    
-    @objc func dismissKeyboard() {
-        checkIfDone()
-        view.endEditing(true)
     }
     
     private func checkIfDone() {

@@ -194,12 +194,13 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
     }
     
     override func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
-        if self.navigationBar.rightBarButtonItem!.isEnabled {
-           self.navigationBar.rightBarButtonItem?.isEnabled = false
-           self.navigationBar.rightBarButtonItem?.tintColor = .clear
-        } else {
+        if item == self.tabBar.items?[0] {
             self.navigationBar.rightBarButtonItem?.isEnabled = true
             self.navigationBar.rightBarButtonItem?.tintColor = .white
+        } else {
+            self.tabBar.items?[1].badgeValue = nil
+            self.navigationBar.rightBarButtonItem?.isEnabled = false
+            self.navigationBar.rightBarButtonItem?.tintColor = .clear
         }
     }
 }

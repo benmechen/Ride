@@ -70,9 +70,7 @@ class UserManager: UserManagerProtocol {
             completion(false, nil)
             return
         }
-    
-        print(currentUser)
-        
+            
         if currentUser == nil {
             print(Auth.auth().currentUser!.uid)
             fetch(byID: Auth.auth().currentUser!.uid) { (success, user) in

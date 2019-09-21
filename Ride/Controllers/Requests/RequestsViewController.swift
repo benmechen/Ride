@@ -29,12 +29,15 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
     var userName = ""
     var sectionChanged: Bool = false
     var refreshControl = UIRefreshControl()
+    var changeSection: Bool = false
     override var canResignFirstResponder: Bool {return false}
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
+        
+        changeSection = true
         
         //Hide NavBar bottom line
         self.navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
@@ -77,7 +80,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
         
         let y = segmentedControl.frame.origin.y + CGFloat(segmentedControllerY)
         
-        //Set width
+        //Set width & opacity
         segmentedControl.frame = CGRect(x: CGFloat(xSC), y: y, width: CGFloat(segmentedControllerWidth), height: segmentedControl.frame.size.height + 5)
         
         sentRequestsTable.delegate = self
@@ -230,8 +233,11 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
             // To
             let date = Date(timeIntervalSince1970: Double((request._time)!))
             let dateFormatter = DateFormatter()
+            dateFormatter.locale = Locale.current
             dateFormatter.timeStyle = .short
             dateFormatter.dateStyle = .none
+//            let offset = dateFormatter.timeZone.daylightSavingTimeOffset(for: date)
+//            date += offset
             cell.start.text = dateFormatter.string(from: date)
             
             // People
@@ -332,6 +338,9 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
             let dateFormatter = DateFormatter()
             dateFormatter.timeStyle = .short
             dateFormatter.dateStyle = .none
+            dateFormatter.timeZone = TimeZone.current
+//            let offset = dateFormatter.timeZone.daylightSavingTimeOffset(for: date)
+//            date += offset
             cell.start.text = dateFormatter.string(from: date)
             
             // People
@@ -577,7 +586,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
     
     private func getUserRequests() {
         self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("sent").queryOrdered(byChild: "timestamp").observe(.value, with: { (snapshot) in
-            for child in snapshot.children {
+            for child in snapshot.children.reversed() {
                 let snap = child as! DataSnapshot
                 self.RideDB.child("Requests").child(snap.key).observeSingleEvent(of: .value, with: { (snapshot) in
                     if let sentValue = snapshot.value as? [String: Any] {
@@ -590,8 +599,9 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                         let toLat: Double = to["latitude"] as! Double
                         let toLong: Double = to["longitude"] as! Double
                         let toName: String = to["name"] as! String
+                        let timeZone = sentValue["timeZone"] as? String ?? ""
                         
-                        let request = Request(id: snap.key, driver: sentValue["driver"] as! String, sender: sentValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: sentValue["time"] as! Int, passengers: sentValue["passengers"] as! Int, status: sentValue["status"] as! Int, sent: sentValue["sent"] as? Int)
+                        let request = Request(id: snap.key, driver: sentValue["driver"] as! String, sender: sentValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: sentValue["time"] as! Int, timeZone: TimeZone.init(identifier: timeZone) ?? TimeZone.current, passengers: sentValue["passengers"] as! Int, status: sentValue["status"] as! Int, sent: sentValue["sent"] as? Int)
                         
                         if let value = snap.value as? [String: Any] {
                             request.new = value["new"] as! Bool
@@ -618,7 +628,7 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                         let sentCount = self.sentRequestIDs["upcoming"]!.count + self.sentRequestIDs["previous"]!.count
                         let receivedCount = self.receivedRequestIDs["upcoming"]!.count + self.receivedRequestIDs["previous"]!.count
                         
-                        if (sentCount > 0 || receivedCount > 0) && !self.sectionChanged {
+                        if (sentCount > 0 || receivedCount > 0) && !self.sectionChanged && self.changeSection {
                             if sentCount < receivedCount {
                                 self.segmentedControl.selectedSegmentIndex = 1
                             } else {
@@ -635,14 +645,14 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
             if snapshot.childrenCount == 0 {
                 self.sentRequestIDs["upcoming"]?.append("nil")
                 
-                let request = Request(id: "nil", driver: "", sender: "", from: CLLocationCoordinate2D(), fromName: "", to: CLLocationCoordinate2D(), toName: "", time: 0, passengers: 0, status: 0)
+                let request = Request(id: "nil", driver: "", sender: "", from: CLLocationCoordinate2D(), fromName: "", to: CLLocationCoordinate2D(), toName: "", time: 0, timeZone: TimeZone.current, passengers: 0, status: 0)
                 self.sentRequests["upcoming"]?["nil"] = request
                 self.sentRequestsTable.reloadData()
             }
         })
         
         self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("requests").child("received").queryOrdered(byChild: "timestamp").observe(.value, with: { (snapshot) in
-            for child in snapshot.children {
+            for child in snapshot.children.reversed() {
                 let snap = child as! DataSnapshot
                 self.RideDB.child("Requests").child(snap.key).observeSingleEvent(of: .value, with: { (snapshot) in
                     if let receivedValue = snapshot.value as? [String: Any] {
@@ -655,8 +665,9 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                         let toLat: Double = to["latitude"] as! Double
                         let toLong: Double = to["longitude"] as! Double
                         let toName: String = to["name"] as! String
+                        let timeZone = receivedValue["timeZone"] as? String ?? ""
                         
-                        let request = Request(id: snap.key, driver: receivedValue["driver"] as! String, sender: receivedValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: receivedValue["time"] as! Int, passengers: receivedValue["passengers"] as! Int, status: receivedValue["status"] as! Int, sent: receivedValue["sent"] as? Int)
+                        let request = Request(id: snap.key, driver: receivedValue["driver"] as! String, sender: receivedValue["sender"] as! String, from: CLLocationCoordinate2DMake(fromLat, fromLong), fromName: fromName, to: CLLocationCoordinate2DMake(toLat, toLong), toName: toName, time: receivedValue["time"] as! Int, timeZone: TimeZone.init(identifier: timeZone) ?? TimeZone.current, passengers: receivedValue["passengers"] as! Int, status: receivedValue["status"] as! Int, sent: receivedValue["sent"] as? Int)
                         
                         if let value = snap.value as? [String: Any] {
                             request.new = value["new"] as! Bool
@@ -693,8 +704,12 @@ class RequestsViewController: UIViewController, UITableViewDataSource, UITableVi
                             }
                         }
                         
-                        self.segmentedControl.selectedSegmentIndex = section
-                        self.switchSections(self)
+                        if self.changeSection {
+                            self.segmentedControl.selectedSegmentIndex = section
+                            self.switchSections(self)
+                            
+                            self.changeSection = false
+                        }
                         
                         self.receivedRequestsTable.reloadData()
                         self.receivedRequestsTable.numberOfRows(inSection: 0)

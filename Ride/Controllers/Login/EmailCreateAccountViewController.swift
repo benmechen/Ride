@@ -37,6 +37,8 @@ class EmailCreateAccountViewController: UIViewController {
         confirmPasswordTextField.layer.borderWidth = 1
         confirmPasswordTextField.layer.borderColor = UIColor(named: "Accent")?.cgColor
         createAccountButton.backgroundColor = UIColor(named: "Accent")
+        
+        self.hideKeyboardWhenTappedAround()
     }
     
     

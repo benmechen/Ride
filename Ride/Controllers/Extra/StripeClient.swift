@@ -42,6 +42,7 @@ class StripeClient: NSObject, STPCustomerEphemeralKeyProvider {
         let params: [String: Any] = [
             "source": result.paymentMethod.stripeId,
             "customer": customer,
+            "email": Auth.auth().currentUser?.email ?? "benm123@yahoo.com",
             "total_amount": Int(String(format: "%.2f", total).replacingOccurrences(of: ".", with: ""))!,
             "user_amount": Int(String(format: "%.2f", user).replacingOccurrences(of: ".", with: ""))!,
             "currency": currency.lowercased(),

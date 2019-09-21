@@ -31,6 +31,8 @@ class ContactViewController: UIViewController {
         })
         
         emailTextField.text = Auth.auth().currentUser?.email
+        
+        self.hideKeyboardWhenTappedAround() 
     }
     
 

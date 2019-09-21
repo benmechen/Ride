@@ -235,8 +235,8 @@ class GroupViewController: UIViewController, UITableViewDelegate, UITableViewDat
                 cell.sendText.isHidden = false
                 cell.selectionStyle = .none
                 cell.delegate = self
-                userManager.getCurrentUser { (error, user) in
-                    if error && user != nil {
+                userManager.getCurrentUser { (success, user) in
+                    if success && user != nil {
                         var users: [User] = []
                         
                         for groupUser in self.group._groupUsers {
