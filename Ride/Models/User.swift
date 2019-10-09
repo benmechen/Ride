@@ -24,6 +24,7 @@ struct User: SenderType, Equatable {
     let car: Car
     let available: [String: Bool]
     let location: [String: CLLocationDegrees]
+    let usedDiscoutCodes: [String]
     
     // MessageKit Conformation
     var senderId: String
@@ -132,10 +133,15 @@ class UserManager: UserManagerProtocol {
                 if value["location"] == nil {
                     value["location"] = [:]
                 }
+                if value["discounts"] == nil {
+                    value["discounts"] = [:]
+                }
 
                 let car = value["car"] as! [String: String]
+                let discounts = value["discounts"] as! [String: Any]
+                print(discounts.keys)
 
-                let newUser = User(id: id, name: value["name"] as! String, photo: URL(string: value["photo"] as! String)!, car: Car(type: car["type"]  ?? "", mpg: car["mpg"] ?? "", seats: car["seats"] ?? "", registration: car["registration"] ?? ""), available: value["available"] as! [String : Bool], location: value["location"] as! [String : CLLocationDegrees], senderId: id, displayName: value["name"] as! String)
+                let newUser = User(id: id, name: value["name"] as! String, photo: URL(string: value["photo"] as! String)!, car: Car(type: car["type"]  ?? "", mpg: car["mpg"] ?? "", seats: car["seats"] ?? "", registration: car["registration"] ?? ""), available: value["available"] as! [String : Bool], location: value["location"] as! [String : CLLocationDegrees], usedDiscoutCodes: Array(discounts.keys), senderId: id, displayName: value["name"] as! String)
                 
                 self.userCache.append(newUser)
                 

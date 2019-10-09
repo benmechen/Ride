@@ -373,6 +373,44 @@ exports.deleteBankAccount = functions.database
           });
 });
 
+// A new user account has been created, run new user setup
+exports.newUserCreated = functions.database.ref('/Users/{userId}').onCreate((snap, context) => {
+  console.log(snap.val().invited_by);
+  admin.database().ref(`/discounts/RIDE20/users/${snap.val().invited_by}`).set(true);
+  return admin.database().ref(`Users/${snap.val().invited_by}/token`).once('value')
+    .then((snapshot) => {
+      console.log(snapshot.val());
+      return snapshot.val();
+    }).then((tokenID) => {
+      console.log("Token ID: " + tokenID);
+      var message = {
+        notification: {
+          title: `${snap.val().name} has accepted your invitation`,
+          body: `Thanks for sharing Ride! You can now claim your 20% discount on your next Ride using the code RIDE20 in the next 30 days.`
+        },
+        apns: {
+          payload: {
+            aps: {
+              badge: 1,
+              sound: "default"
+            },
+          },
+        },
+        token: tokenID
+      };
+
+      // Send a message to the device corresponding to the provided
+      // registration token.
+      return admin.messaging().send(message)
+    }).then((response) => {
+        // Response is a message ID string.
+        console.log('Successfully sent message:', response);
+        return response
+      }).catch((error) => {
+        console.log('Error sending message:', error);
+        return error
+      });
+});
 
 // NOTIFICATIONS
 

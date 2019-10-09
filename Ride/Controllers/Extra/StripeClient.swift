@@ -17,10 +17,10 @@ enum Constants {
     static let defaultDescription = "Pay your Ride driver"
 }
 
-enum Result {
-    case success
-    case failure(Error)
-}
+//enum Result {
+//    case success
+//    case failure(Error)
+//}
 
 class StripeClient: NSObject, STPCustomerEphemeralKeyProvider {
     
@@ -42,7 +42,7 @@ class StripeClient: NSObject, STPCustomerEphemeralKeyProvider {
         let params: [String: Any] = [
             "source": result.paymentMethod.stripeId,
             "customer": customer,
-            "email": Auth.auth().currentUser?.email ?? "benm123@yahoo.com",
+            "email": Auth.auth().currentUser?.email ?? "mailmyother3@gmail.com",
             "total_amount": Int(String(format: "%.2f", total).replacingOccurrences(of: ".", with: ""))!,
             "user_amount": Int(String(format: "%.2f", user).replacingOccurrences(of: ".", with: ""))!,
             "currency": currency.lowercased(),
@@ -74,9 +74,7 @@ class StripeClient: NSObject, STPCustomerEphemeralKeyProvider {
     func createCustomerKey(withAPIVersion apiVersion: String, completion: @escaping STPJSONResponseCompletionBlock) {
         
         let parameters: [String: Any] = ["api_version": apiVersion]
-        
-        print("Parameters:", parameters)
-        
+                
         RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("ephemeral_keys").removeValue()
             
         RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("ephemeral_keys").setValue(parameters) { (error, ref) -> Void in

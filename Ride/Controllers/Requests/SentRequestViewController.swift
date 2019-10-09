@@ -35,6 +35,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     var connections = [String: Array<Connection>]()
     var textFields = Array<UITextField>()
     lazy var geocoder = CLGeocoder()
+    var usedCode: String?
     let currencyFormatter = NumberFormatter()
     let customerContext = STPCustomerContext(keyProvider: StripeClient.shared)
     var paymentContext = STPPaymentContext(customerContext: STPCustomerContext(keyProvider: StripeClient.shared))
@@ -66,6 +67,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     @IBOutlet weak var payButton: UIButton!
     @IBOutlet weak var payUsers: UIScrollView!
     @IBOutlet weak var paySplitPrice: UILabel!
+    @IBOutlet weak var codeTextField: UITextField!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -180,6 +182,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                     }
                     
                     self.price = value
+                    self.price["original"] = self.price["total"]
                     
 //                    self.currencyFormatter.locale = Locale(identifier: currency)
                     self.currencyFormatter.currencyCode = currency
@@ -237,6 +240,10 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             self.paymentContext.delegate = self
             self.paymentContext.hostViewController = self
             
+            /// Move discount code text field up when keyboard appears
+            NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+            
             let cancel = UIButton()
             cancel.setTitleColor(UIColor(named: "Accent"), for: .normal)
             cancel.setTitle("Cancel", for: .normal)
@@ -263,6 +270,10 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                 self.payUsers.addSubview(input)
                 self.payUsers.contentSize = CGSize(width: self.payUsers.frame.width, height: self.payUsers.contentSize.height + 50)
             }
+            
+            codeTextField.inputAccessoryView = createToolbar()
+            
+            self.hideKeyboardWhenTappedAround()
         }
         
         if request?._driver == Auth.auth().currentUser!.uid {
@@ -297,7 +308,11 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         self.navigationController?.view.backgroundColor = UIColor(named: "Main")
     }
     
-    // Mark: - Actions
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    // MARK: - Actions
     
     @IBAction func accept(_ sender: Any) {
         RideDB.child("Requests").child(request!._id!).child("status").setValue(2)
@@ -355,6 +370,90 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         view.endEditing(true)
         self.performSegue(withIdentifier: "showAddUserPay", sender: self)
     }
+    
+    @IBAction func codeEntered(_ sender: Any) {
+        guard self.price["total"] != nil else {
+            os_log("Error: No total set", log: OSLog.default, type: .error)
+            return
+        }
+        
+        guard codeTextField.text != "" else {
+            codeTextField.rightViewMode = .never
+            self.price["total"] = self.price["original"]
+            self.payPrice.text = String(format: "%@", self.currencyFormatter.string(from: NSNumber(value: self.price["total"] as! Double))!)
+            return
+        }
+        
+        let indicator = UIActivityIndicatorView()
+        indicator.color = UIColor(named: "Accent")
+        indicator.startAnimating()
+        codeTextField.rightViewMode = .unlessEditing
+        codeTextField.rightView = indicator
+        
+        /// Check discount code
+        getDiscount(fromCode: codeTextField.text!, price: self.price["total"] as! Double) { (result) in
+            switch result {
+            case let .success(price):
+                self.price["total"] = price
+                self.codeTextField.setIcon(UIImage(named: "tick")!)
+                self.payPrice.text = String(format: "%@", self.currencyFormatter.string(from: NSNumber(value: self.price["total"] as! Double))!)
+                self.usedCode = self.codeTextField.text!
+            case let .error(error):
+                self.price["total"] = self.price["original"]
+                self.payPrice.text = String(format: "%@", self.currencyFormatter.string(from: NSNumber(value: self.price["total"] as! Double))!)
+                self.codeTextField.setIcon(UIImage(named: "cross")!)
+                switch error {
+                case DiscountError.codeExpired:
+                    let alert = UIAlertController(title: "Code Expired", message: "This code has expired", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                    self.present(alert, animated: true)
+                case DiscountError.databaseError:
+                    let alert = UIAlertController(title: "Error", message: "There was an error connecting to the Ride service. Please try again, and contact support if the issue persists.", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                    self.present(alert, animated: true)
+                case let DiscountError.conditionalCode(condition):
+                    let alert = UIAlertController(title: "Discount not available", message: condition, preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                    self.present(alert, animated: true)
+                default:
+                    os_log("Error applying discount", log: OSLog.default, type: .error, error.localizedDescription)
+                }
+            }
+        }
+    }
+    
+    func createToolbar() -> UIToolbar {
+        let toolBar = UIToolbar()
+        toolBar.sizeToFit()
+        
+        let flexibleButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.flexibleSpace, target: nil, action: nil)
+        let doneButton = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(self.dismissKeyboard))
+        toolBar.setItems([flexibleButton, doneButton], animated: false)
+        toolBar.isUserInteractionEnabled = true
+        
+        return toolBar
+    }
+    
+    @objc func keyboardWillShow(notification: NSNotification) {
+        guard let userInfo = notification.userInfo else { return }
+        guard let keyboardSize = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+        let keyboardFrame = keyboardSize.cgRectValue
+        
+        if self.view.frame.origin.y == 0 {
+            self.view.frame.origin.y -= keyboardFrame.height
+        }
+    }
+    
+    @objc func keyboardWillHide(notification: NSNotification) {
+        guard let userInfo = notification.userInfo else { return }
+        guard let keyboardSize = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+        let keyboardFrame = keyboardSize.cgRectValue
+        
+        if self.view.frame.origin.y != 0 {
+            self.view.frame.origin.y += keyboardFrame.height
+        }
+    }
+
     
     // MARK: - Map View
     func mapView(_ mapView: MKMapView, rendererFor
@@ -421,6 +520,9 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
         }
     }
     
+    
+    // MARK: - Custom Functions
+    
     func addUsers(users: [String: Array<Connection>]) {
         for textField in self.textFields {
             textField.removeFromSuperview()
@@ -477,6 +579,89 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
             self.page4Cancel.isEnabled = false
             let cancelText = NSAttributedString(string: "Cancel Ride", attributes: [NSAttributedString.Key.foregroundColor : UIColor(white: 1.0, alpha: 0.5)])
             self.page4Cancel.setAttributedTitle(cancelText, for: .normal)
+        }
+    }
+    
+    func getDiscount(fromCode code: String, price: Double, completion: @escaping ((Result<Double>) -> ())) {
+        guard code != "" else {
+            completion(.error(DiscountError.invalidCode))
+            return
+        }
+        
+        guard price > 0.0 else {
+            completion(.error(DiscountError.invalidPrice))
+            return
+        }
+        
+        RideDB.child("discounts").observeSingleEvent(of: .value) { (snapshot) in
+            if let discounts = snapshot.value as? [String: [String: Any]] {
+                for fetchedCode in Array(discounts.keys) {
+                    if code == fetchedCode {
+                        // Code matched, apply discount
+                        self.userManager.getCurrentUser { (success, currentUser) in
+                            guard success else {
+                                completion(.error(DiscountError.databaseError))
+                                return
+                            }
+                            
+                            // Make sure code has not been used before (if applicable to code)
+                            if discounts[fetchedCode]?["onetimeuse"] as! Bool == true {
+                                guard !((currentUser?.usedDiscoutCodes.contains(code))!) else {
+                                    completion(.error(DiscountError.codeExpired))
+                                    return
+                                }
+                            }
+                            
+                            // Make sure code is not past its expiry
+                            guard (discounts[fetchedCode]?["expiry"] as? Int ?? 0) >= Int(Date().timeIntervalSince1970) else {
+                                completion(.error(DiscountError.codeExpired))
+                                return
+                            }
+                            
+                            // Make sure user has access to discount
+                            if let users = discounts[fetchedCode]?["users"] as? [String: Bool] {
+                                guard Array(users.keys).contains(Auth.auth().currentUser!.uid) else {
+                                    completion(.error(DiscountError.conditionalCode("You are not elegible for this discount")))
+                                    return
+                                }
+                            }
+                            
+                            // Code has reached used state, calculate value, add to user's list and set to expired if necessary
+                            guard var amount = discounts[fetchedCode]?["amount"] as? Double, let type = discounts[fetchedCode]?["type"] as? String, let method = discounts[fetchedCode]?["method"] as? String else {
+                                completion(.error(DiscountError.error))
+                                return
+                            }
+                            
+                            if type == "percent" {
+                                amount = ((amount / 100) * price)
+                            }
+                            
+                            var finalPrice = 0.30
+                            
+                            switch method {
+                            case "+":
+                                finalPrice = price + amount
+                            case "-":
+                                finalPrice = price - amount
+                            default:
+                                completion(.error(DiscountError.databaseError))
+                            }
+                            
+                            if finalPrice < 0.30 {
+                                finalPrice = 0.30
+                            }
+                            self.RideDB.child("discounts").child(fetchedCode).child("uses").setValue(((discounts[fetchedCode]?["uses"] as? Int) ?? 0) + 1)
+                            
+                            completion(.success(finalPrice))
+                        }
+                        return
+                    }
+                }
+                // No match found
+                completion(.error(DiscountError.invalidCode))
+            } else {
+                completion(.error(DiscountError.databaseError))
+            }
         }
     }
     
@@ -555,6 +740,10 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                 } else {
                     RideDB.child("Requests").child(self.request!._id!).child("status").setValue(3)
                     RideDB.child("Users").child((request?._driver)!).child("requests").child("received").child((request?._id)!).child("new").setValue(true)
+                }
+                
+                if usedCode != nil {
+                    self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).child("discounts").child(usedCode!).setValue(true)
                 }
                 self.dismissPayController()
             }

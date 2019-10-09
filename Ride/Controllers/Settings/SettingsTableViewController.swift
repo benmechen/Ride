@@ -357,7 +357,7 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
         
         RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).observeSingleEvent(of: .value) { (snapshot) in
             if snapshot.hasChild("account") {
-                let alert = UIAlertController(title: "Are you sure you want to change your name?", message: "Chaning your Ride name will require your account to be reverified - the new name must match that specified on the ID you supplied when the account was created.", preferredStyle: .alert)
+                let alert = UIAlertController(title: "Are you sure you want to change your name?", message: "Changing your Ride name will require your account to be reverified - the new name must match that specified on the ID you supplied when the account was created.", preferredStyle: .alert)
                 
                 alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { _ in
                     snapshot.ref.child("account").child("legal_entity").child("first_name").setValue(self.nameTextField.text?.split(separator: " ").first)
@@ -511,6 +511,47 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
 //                self.navigationController?.pushViewController(addCardViewController, animated: true)
             }
         case 3:
+            Discounts.shared.shareRide(generateLinkForUser: Auth.auth().currentUser!.uid) { (result) in
+                switch result {
+                case let .success(url):
+                    let activity = UIActivityViewController(
+                      activityItems: ["Hey, come join me on Ride, the friendly ride sharing app", url],
+                      applicationActivities: nil
+                    )
+                    activity.completionWithItemsHandler = {(activityType: UIActivity.ActivityType?, completed: Bool, returnedItems: [Any]?, error: Error?) in
+                        if !completed {
+                            return
+                        }
+
+                        let alert = UIAlertController(title: "Thanks for sharing Ride!", message: "Once the other user has downloaded Ride using the link you just send to them and made an account, you will receive a notification containting a discount code to use on your next Ride", preferredStyle: .alert)
+                        
+                        alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                        
+                        self.present(alert, animated: true)
+                    }
+
+                    self.present(activity, animated: true, completion: nil)
+                case let .error(error):
+                    var errorMessage = ". Please try again or contact support if this issue persists"
+                    switch error {
+                    case DiscountsError.idInvalid:
+                        errorMessage = "Supplied ID is invalid" + errorMessage
+                    case let DiscountsError.shorteningError(shorteningError):
+                        errorMessage = shorteningError + errorMessage
+                    case DiscountsError.urlError:
+                        errorMessage = "Could not generate URL" + errorMessage
+                    default:
+                        errorMessage = "An error occured" + errorMessage
+                    }
+                    
+                    let alert = UIAlertController(title: "Error", message: errorMessage, preferredStyle: .alert)
+                    
+                    alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                    
+                    self.present(alert, animated: true)
+                }
+            }
+        case 4:
             if indexPath.row == 0 {
                 logOut()
             } else if indexPath.row == 1 {
@@ -666,3 +707,15 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
         RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).child("car").child("registration").setValue(carRegistrationTextField.text)
     }
 }
+
+//extension SettingsTableViewController: UIActivityItemSource {
+//    func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any {
+//        <#code#>
+//    }
+//
+//    func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? {
+//        <#code#>
+//    }
+//
+//
+//}

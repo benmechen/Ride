@@ -33,6 +33,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         
         self.window = UIWindow(frame: UIScreen.main.bounds)
         
+        let defaults = UserDefaults.standard
+        defaults.set("LqbIZWu8c3cNWJcmy9xD7spNHjz2", forKey: "invited_by")
         
         //To change Navigation Bar Background Color
         UINavigationBar.appearance().barTintColor = UIColor(named: "Main")
@@ -139,6 +141,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
     
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        let isDynamicLink = DynamicLinks.dynamicLinks().shouldHandleDynamicLink(fromCustomSchemeURL: url)
+        if isDynamicLink {
+            let dynamicLink = DynamicLinks.dynamicLinks().dynamicLink(fromCustomSchemeURL: url)
+            return handleDynamicLink(dynamicLink)
+        }
+        
+        
         let handled = FBSDKCoreKit.ApplicationDelegate.shared.application(app, open: url, options: options)
         
         return handled
@@ -332,6 +341,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         }
         
         completion(self.secretKey)
+    }
+    
+    func handleDynamicLink(_ dynamicLink: DynamicLink?) -> Bool {
+        guard let dynamicLink = dynamicLink else { return false }
+        guard let deepLink = dynamicLink.url else { return false }
+        let queryItems = URLComponents(url: deepLink, resolvingAgainstBaseURL: true)?.queryItems
+        let invitedBy = queryItems?.filter({(item) in item.name == "invitedby"}).first?.value
+        let user = Auth.auth().currentUser
+
+        if user == nil && invitedBy != nil {
+            let defaults = UserDefaults.standard
+            defaults.set(invitedBy, forKey: "invited_by")
+        }
+        
+        return true
     }
 }
 

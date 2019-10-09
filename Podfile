@@ -12,6 +12,7 @@ target 'Ride' do
   pod 'Firebase/Storage'
   pod 'Firebase/Performance'
   pod 'Firebase/Messaging'
+  pod 'Firebase/DynamicLinks'
   pod 'FacebookCore'
   pod 'FacebookLogin'
   pod 'FBSDKCoreKit'

@@ -80,9 +80,16 @@ class EmailCreateAccountViewController: UIViewController {
                             } else {
                                 self.RideDB.child("Users").observeSingleEvent(of: .value, with: { (snapshot) in
                                     if !snapshot.hasChild(Auth.auth().currentUser!.uid){
-                                        self.RideDB.child("Users").child(Auth.auth().currentUser!.uid).setValue(["name": Auth.auth().currentUser?.displayName as Any, "photo": Auth.auth().currentUser?.photoURL?.absoluteString as Any, "car": ["type": "", "mpg": "", "seats": "", "registration": ""]])
+                                        var userDetails = ["name": Auth.auth().currentUser?.displayName as Any, "photo": Auth.auth().currentUser?.photoURL?.absoluteString as Any, "car": ["type": "", "mpg": "", "seats": "", "registration": ""]]
                                         
-                                        self.RideDB.child("Connections").child(Auth.auth().currentUser!.uid).setValue([])
+                                        let defaults = UserDefaults.standard
+                                        if let invitedBy = defaults.string(forKey: "invited_by") {
+                                            userDetails["invited_by"] = invitedBy
+                                            
+                                            self.RideDB.child("Connections").child((Auth.auth().currentUser?.uid)!).child(invitedBy).setValue(true)
+                                            self.RideDB.child("Connections").child(invitedBy).child((Auth.auth().currentUser?.uid)!).setValue(true)
+                                        }
+                                        self.RideDB.child("Users").child((Auth.auth().currentUser?.uid)!).setValue(userDetails)
                                     }
                                     
                                     self.userManager!.getCurrentUser(completion: {(_,_) in })
