@@ -9,6 +9,7 @@ target 'Ride' do
   pod 'Firebase/Core'
   pod 'Firebase/Auth'
   pod 'Firebase/Database'
+  pod 'Firebase/Functions'
   pod 'Firebase/Storage'
   pod 'Firebase/Performance'
   pod 'Firebase/Messaging'

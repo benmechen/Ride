@@ -412,6 +412,59 @@ exports.newUserCreated = functions.database.ref('/Users/{userId}').onCreate((sna
       });
 });
 
+// Sign In with Apple
+exports.getUserTokenForAppleLogIn = functions.https.onCall((data, context) => {
+  //1
+  return getFirebaseUser(data).then(firebaseUser => {
+      const tokenPromise = admin.auth().createCustomToken(firebaseUser.uid);
+    return tokenPromise;
+  }).catch(error => {
+    console.log('getUserTokenForAppleLogIn error: ' + error);
+    return error;
+  });
+});
+
+/**
+ * Look up Firebase user based on Apple Id. If the Firebase user does not exist,
+ + create a new Firebase user with Apple User.
+ *
+ * @returns {Promise<UserRecord>} The Firebase user record in a promise.
+ */
+function getFirebaseUser(appleUserData) {
+  // Generate Firebase user's uid based on Apple user ID
+  const firebaseUid = appleUserData.userId;
+
+  return admin.auth().getUser(firebaseUid).catch(error => {
+    // If user does not exist, create a Firebase new user with the Apple user
+    if (error.code === 'auth/user-not-found') {
+        console.log('Create new Firebase user for Apple user Id => ' + firebaseUid);
+        return createFirebaseUser(appleUserData).then(newUser =>{
+          return newUser;
+        }).catch(err => {
+          console.log('Error Creating User: ' + err);
+          return err;
+        });
+    }
+    // If error other than auth/user-not-found occurred, fail the whole login process
+    throw error;
+  });
+}
+
+function createFirebaseUser(appleUserData) {
+  const userId = appleUserData.userId;
+  const email = appleUserData.email;
+  const fullName = appleUserData.fullName;
+
+  console.log(email);
+
+  return admin.auth().createUser({
+    uid: userId,
+    displayName: fullName,
+    email: email,
+    providerId: "Apple"
+  });
+}
+
 // NOTIFICATIONS
 
 // Send notification on request creation

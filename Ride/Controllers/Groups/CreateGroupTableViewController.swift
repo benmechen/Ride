@@ -36,6 +36,28 @@ class CreateGroupTableViewController: UITableViewController {
 
         navigationItem.searchController = searchController
         definesPresentationContext = true
+        if #available(iOS 13.0, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithTransparentBackground()
+            
+            var hue: CGFloat = 0
+            var saturation: CGFloat = 0
+            var brightness: CGFloat = 0
+            var alpha: CGFloat = 0
+            
+            UIColor(named: "Main")?.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+            if traitCollection.userInterfaceStyle == .dark {
+                appearance.backgroundColor = UIColor(hue: hue, saturation: saturation - 0.1, brightness: brightness - 0.08, alpha: alpha)
+            } else {
+                appearance.backgroundColor = UIColor(hue: hue, saturation: saturation - 0.2, brightness: brightness + 0.08, alpha: alpha)
+            }
+            
+            appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
+
+            navigationController?.navigationBar.standardAppearance = .init(barAppearance: appearance)
+            navigationController?.navigationBar.scrollEdgeAppearance = navigationController?.navigationBar.standardAppearance
+            navigationController?.navigationBar.barTintColor = UIColor(named: "Main")
+        }
         
         if self.connections.count == 0 {
             //Create data model

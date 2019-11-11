@@ -47,7 +47,7 @@ class UserManager: UserManagerProtocol {
     //MARK: Properties
     private var userCache = [User]()
     private var references = [DatabaseReference]()
-    fileprivate var currentUser: User?
+    var currentUser: User?
     private var currentUserReference: Int?
     
     /// Create current user
@@ -71,11 +71,10 @@ class UserManager: UserManagerProtocol {
             completion(false, nil)
             return
         }
-            
         if currentUser == nil {
-            print(Auth.auth().currentUser!.uid)
             fetch(byID: Auth.auth().currentUser!.uid) { (success, user) in
                 guard success else {
+                    completion(false, nil)
                     return
                 }
                 
@@ -139,7 +138,6 @@ class UserManager: UserManagerProtocol {
 
                 let car = value["car"] as! [String: String]
                 let discounts = value["discounts"] as! [String: Any]
-                print(discounts.keys)
 
                 let newUser = User(id: id, name: value["name"] as! String, photo: URL(string: value["photo"] as! String)!, car: Car(type: car["type"]  ?? "", mpg: car["mpg"] ?? "", seats: car["seats"] ?? "", registration: car["registration"] ?? ""), available: value["available"] as! [String : Bool], location: value["location"] as! [String : CLLocationDegrees], usedDiscoutCodes: Array(discounts.keys), senderId: id, displayName: value["name"] as! String)
                 

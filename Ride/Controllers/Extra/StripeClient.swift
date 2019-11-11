@@ -40,7 +40,7 @@ class StripeClient: NSObject, STPCustomerEphemeralKeyProvider {
     func completeCharge(_ result: STPPaymentResult, customer: String, destination: String, total: Double, user: Double, currency: String, requestID: String, completion: @escaping STPErrorBlock) {
         
         let params: [String: Any] = [
-            "source": result.paymentMethod.stripeId,
+            "source": result.paymentMethod!.stripeId,
             "customer": customer,
             "email": Auth.auth().currentUser?.email ?? "mailmyother3@gmail.com",
             "total_amount": Int(String(format: "%.2f", total).replacingOccurrences(of: ".", with: ""))!,

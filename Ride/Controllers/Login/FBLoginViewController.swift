@@ -10,6 +10,7 @@ import UIKit
 import AuthenticationServices
 import Crashlytics
 import Firebase
+import FirebaseFunctions
 import FacebookCore
 import FacebookLogin
 import FBSDKLoginKit
@@ -27,6 +28,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
     
     var userManager: UserManagerProtocol!
     lazy var RideDB = Database.database().reference()
+    lazy var RideFunctions = Functions.functions()
     var vSpinner: UIView?
     
     override func viewDidLoad() {
@@ -110,6 +112,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                             let defaults = UserDefaults.standard
                             if let invitedBy = defaults.string(forKey: "invited_by") {
                                 userDetails["invited_by"] = invitedBy
+                                defaults.set(nil, forKey: "invited_by")
                                 
                                 self.RideDB.child("Connections").child((Auth.auth().currentUser?.uid)!).child(invitedBy).setValue(true)
                                 self.RideDB.child("Connections").child(invitedBy).child((Auth.auth().currentUser?.uid)!).setValue(true)
@@ -136,11 +139,33 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
                         })
                     })
                     
-                    print("\(String(describing: Auth.auth().currentUser)) logged in")
+                    print("\(String(describing: Auth.auth().currentUser?.displayName)) logged in")
                 }
             }
         }
     }
+    
+//    func signIn(withCustomToken id: String) {
+//        guard id.count > 0 else {
+//            return
+//        }
+//
+//        Auth.auth().signIn(withCustomToken: id) { (user, error) in
+//            if let error = error {
+//                print(error.localizedDescription)
+//
+//                let alert = UIAlertController(title: "Error", message: "An error occured during sign in, please try again", preferredStyle: .alert)
+//                alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+//                    os_log("Error logging in with Facebook")
+//                }))
+//                self.present(alert, animated: true, completion: {
+//                    self.dismiss(animated: true, completion: nil)
+//                })
+//            } else {
+//                moveToWelcomeController()
+//            }
+//        }
+//    }
     
     @available(iOS 13.0, *)
     @objc
@@ -169,7 +194,6 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
     
     
     // MARK: Private functions
-    
     private func populateFriends(userId: String, completion: @escaping (Bool, Array<String>) -> ()) {
         let params = ["fields": "id"]
         
@@ -285,17 +309,29 @@ extension FBLoginViewController: UICollectionViewDelegate, UICollectionViewDataS
 extension FBLoginViewController: ASAuthorizationControllerDelegate {
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+            print(appleIDCredential)
+            let fullNameCreds = appleIDCredential.fullName
+            let firstName = fullNameCreds?.givenName ?? "(First name not given)"
+            let lastName = fullNameCreds?.familyName ?? "(Last name not given)"
+            let fullName = "\(firstName) \(lastName)"
+            let email = appleIDCredential.email ?? "(Email not given)"
+            let userId = appleIDCredential.user
             
-            let userIdentifier = appleIDCredential.user
-            let fullName = appleIDCredential.fullName
-            let email = appleIDCredential.email
+            let params: [String: String] = [
+                "fullName": fullName,
+                "email": email,
+                "userId": userId
+            ]
             
-            print("*********************")
-            print("* Sign in with Apple *")
-            print("*********************")
-            print("NAME:", fullName)
-            print("EMAIL:", email)
-            print("ID:", userIdentifier)
+            RideFunctions.httpsCallable("getUserTokenForAppleLogIn").call(params) { (result, error) in
+                if let error = error as NSError? {
+                    print("Token Error: " + error.localizedDescription)
+                }
+                
+                if let token = result?.data as? String {
+//                    self.signIn(withCustomToken: token)
+                }
+            }
             
         } else if let passwordCredential = authorization.credential as? ASPasswordCredential {
             // Sign in using an existing iCloud Keychain credential.
@@ -316,6 +352,7 @@ extension FBLoginViewController: ASAuthorizationControllerDelegate {
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         // Handle error.
+        print(error.localizedDescription)
     }
 }
 

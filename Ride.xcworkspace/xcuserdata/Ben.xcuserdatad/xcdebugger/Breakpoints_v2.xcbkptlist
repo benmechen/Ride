@@ -5,69 +5,45 @@
    version = "2.0">
    <Breakpoints>
       <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         BreakpointExtensionID = "Xcode.Breakpoint.ExceptionBreakpoint">
          <BreakpointContent
-            uuid = "299E6757-32A4-46EE-822B-00FDB9D4428B"
-            shouldBeEnabled = "No"
+            uuid = "9457ED23-C150-4461-AA44-6944288BD775"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Ride/Controllers/Groups/GroupViewController.swift"
-            timestampString = "0"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "367"
-            endingLineNumber = "367"
-            landmarkName = "GroupViewController"
-            landmarkType = "3">
+            scope = "1"
+            stopOnStyle = "0">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "717D019C-FDAB-40E1-8F39-B14EB4C22AA4"
-            shouldBeEnabled = "No"
+            uuid = "079028C6-BDD6-4F1B-ABBB-4AFD43B5D0EF"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Ride/Models/User.swift"
-            timestampString = "0"
+            filePath = "Ride/Controllers/Login/FBLoginViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "76"
-            endingLineNumber = "76"
-            landmarkName = "getCurrentUser(completion:)"
+            startingLineNumber = "80"
+            endingLineNumber = "80"
+            landmarkName = "loginButtonClicked(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "3903F3F9-C0E0-4FAB-B75B-1E4A05E82BC4"
-            shouldBeEnabled = "No"
+            uuid = "56BC9011-3750-4BA7-996A-DB74452A46C6"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Ride/Controllers/Welcome/SetupViewController.swift"
-            timestampString = "588022756.255066"
+            filePath = "Ride/Controllers/Login/FBLoginViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "237"
-            endingLineNumber = "237"
-            landmarkName = "viewDidLoad()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "277E6AEE-3A28-49DB-8C47-EC73B542E28F"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Ride/Controllers/Requests/SentRequestViewController.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "388"
-            endingLineNumber = "388"
-            landmarkName = "codeEntered(_:)"
+            startingLineNumber = "101"
+            endingLineNumber = "101"
+            landmarkName = "loginButtonClicked(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

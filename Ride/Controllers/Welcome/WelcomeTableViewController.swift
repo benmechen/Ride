@@ -135,8 +135,14 @@ class WelcomeTableViewController: UITableViewController, CLLocationManagerDelega
     }
     
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        if currentUserCarType != "undefined" && currentUserCarType != "" && groups.count > 0 && (availableUsers.count > 0 && indexPath.row != 0) {
-            return true
+        if currentUserCarType != "undefined" && currentUserCarType != "" && groups.count > 0 {
+            if availableUsers.count > 0 {
+                if indexPath.row != 0 {
+                    return true
+                }
+            } else {
+                return true
+            }
         }
         
         return false

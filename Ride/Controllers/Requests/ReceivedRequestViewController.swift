@@ -210,8 +210,26 @@ class ReceivedRequestViewController: UIViewController, MKMapViewDelegate {
             page4Time.attributedText = attributedText(withString: String(format: "Pickup Time: %@", dateFormatter.string(from: date)), boldString: "Pickup Time", font: page4Time.font)
             
             RideDB.child("Requests").child(request!._id!).child("price").observeSingleEvent(of: .value, with: { (snapshot) in
-                if let value = snapshot.value as? [String: Any], let currency = value["currency"] as? String, let total = value["total"] as? Double {
-                    self.currencyFormatter.locale = Locale.init(identifier: currency)
+                if let value = snapshot.value as? [String: Any] {
+                    guard let currency = value["currency"] as? String else {
+                        let alert = UIAlertController(title: "Error", message: "This request is corrupted. Please delete the request and try again", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+                            self.navigationController?.popViewController(animated: true)
+                        }))
+                        self.present(alert, animated: true, completion: nil)
+                        return
+                    }
+                    
+                    guard let total = value["total"] as? Double, let _ = value["user"] as? Double else {
+                        let alert = UIAlertController(title: "Error", message: "This request is corrupted. Please delete the request and try again", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK"), style: .default, handler: { _ in
+                            self.navigationController?.popViewController(animated: true)
+                        }))
+                        self.present(alert, animated: true, completion: nil)
+                        return
+                    }
+                    
+                    self.currencyFormatter.currencyCode = currency
                     self.page4Price.attributedText = self.attributedText(withString: String(format: "Price: %@", self.currencyFormatter.string(from: NSNumber(value: total))!), boldString: "Price", font: self.page4Price.font)
                 }
             })

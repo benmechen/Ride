@@ -28,14 +28,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     var publishKey = ""
     var secretKey = ""
     var updateLastSeen = false
+    
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
         self.window = UIWindow(frame: UIScreen.main.bounds)
-        
-        let defaults = UserDefaults.standard
-        defaults.set("LqbIZWu8c3cNWJcmy9xD7spNHjz2", forKey: "invited_by")
-        
+                
         //To change Navigation Bar Background Color
         UINavigationBar.appearance().barTintColor = UIColor(named: "Main")
         //To change Back button title & icon color
@@ -52,6 +50,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         RideDB = Database.database().reference()
         RideStorage = Storage.storage()
         
+//        do {
+//            try Auth.auth().signOut()
+//        } catch {
+//            
+//        }
         
         
         // Check if user logged in
@@ -439,10 +442,9 @@ func moveToWelcomeController() {
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let currentViewController = appDelegate.window?.rootViewController
 //    appDelegate.updateUserLocation()
-    appDelegate.window?.rootViewController = welcomeViewController
-    if let tabViewController = appDelegate.window?.rootViewController?.children.first as? TabViewController {
-        appDelegate.userManager.logout()
-        tabViewController.userManager = appDelegate.userManager
+
+    if let tabViewController = welcomeViewController.children.first as? TabViewController {
+        tabViewController.userManager = UserManager()
         tabViewController.selectedIndex = appDelegate.selectedIndex
         
         for child in tabViewController.viewControllers ?? [] {
@@ -450,8 +452,8 @@ func moveToWelcomeController() {
                 top.setUserManager(tabViewController.userManager)
             }
         }
+        appDelegate.window?.rootViewController = welcomeViewController
     }
-    currentViewController?.present(welcomeViewController, animated: true, completion: nil)
 }
 
 func moveToLoginController() {

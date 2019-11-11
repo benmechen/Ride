@@ -24,7 +24,7 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+                
         self.vSpinner = self.showSpinner(onView: self.view)
         
         RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("account_id").observeSingleEvent(of: .value, with: { snapshot in
@@ -62,13 +62,16 @@ class TabViewController: UITabBarController, WelcomeViewControllerDelegate {
         //Set the left bar button to user's profile picture
         self.profileButton = UIImageView(frame: CGRect(x: 0, y: 0, width: 38, height: 38))
                 
+//        self.removeSpinner(spinner: self.vSpinner!)
         userManager?.getCurrentUser(completion: { (success, user) in
-            guard success && user != nil else {
-                return
+            if self.vSpinner != nil {
+                print("Removing spinner")
+                self.removeSpinner(spinner: self.vSpinner!)
             }
             
-            if self.vSpinner != nil {
-                self.removeSpinner(spinner: self.vSpinner!)
+            guard success && user != nil else {
+                print("Error")
+                return
             }
             
             if ((user!.car._carType == "undefined" || user!.car._carType == "") && user!.car._carMPG != "nil") {

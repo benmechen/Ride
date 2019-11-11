@@ -223,7 +223,7 @@ class GroupSettingsTableViewController: UITableViewController, UITextFieldDelega
         }
     }
     
-    private func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         self.dismiss(animated: true, completion: { () -> Void in
             var image = info[.originalImage] as? UIImage
             

@@ -666,8 +666,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
     }
     
     // MARK - Payment
-    
-    func paymentContext(_ paymentContext: STPPaymentContext, didCreatePaymentResult paymentResult: STPPaymentResult, completion: @escaping STPErrorBlock) {
+    func paymentContext(_ paymentContext: STPPaymentContext, didCreatePaymentResult paymentResult: STPPaymentResult, completion: @escaping STPPaymentStatusBlock) {
         self.getStripeAccountID(destination: self.request!._driver) { destination in
             self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).observeSingleEvent(of: .value, with: { snapshot in
                 if let customerID = (snapshot.value as! [String: Any])["customer_id"] as? String {
@@ -683,7 +682,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                     
                     StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: total!, user: user!, currency: self.price["currency"] as! String, requestID: self.request!._id!) { (error) in
                         guard error != nil else {
-                            completion(error)
+                            completion(.error, error)
                             return
                         }
                         
@@ -691,7 +690,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                             var found = false
                             for source in sources.values {
                                 if let id = source["id"] as? String {
-                                    if id == paymentResult.paymentMethod.stripeId {
+                                    if id == paymentResult.paymentMethod!.stripeId {
                                         found = true
                                     }
                                 }
@@ -700,7 +699,7 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                             if !found {
                                 let appDelegate = UIApplication.shared.delegate as? AppDelegate
                                 appDelegate?.getSecretKey(completion: { (secretKey) in
-                                    Alamofire.request("https://api.stripe.com/v1/customers/\(customerID)/sources/\(paymentResult.paymentMethod.stripeId)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+                                    Alamofire.request("https://api.stripe.com/v1/customers/\(customerID)/sources/\(paymentResult.paymentMethod!.stripeId)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
                                         if let error = response.error {
                                             print(error)
                                         } else {
@@ -712,12 +711,63 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                                 })
                             }
                         }
-                        completion(nil)
+                        completion(.success, nil)
                     }
                 }
             })
         }
     }
+//    func paymentContext(_ paymentContext: STPPaymentContext, didCreatePaymentResult paymentResult: STPPaymentResult, completion: @escaping STPErrorBlock) {
+//        self.getStripeAccountID(destination: self.request!._driver) { destination in
+//            self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).observeSingleEvent(of: .value, with: { snapshot in
+//                if let customerID = (snapshot.value as! [String: Any])["customer_id"] as? String {
+//                    var total: Double?
+//                    var user: Double?
+//                    if self.price["split_total"] != nil && self.price["split_user"] != nil || self.request?.status == 4 {
+//                        total = (self.price["split_total"] as! Double)
+//                        user = (self.price["split_user"] as! Double)
+//                    } else {
+//                        total = (self.price["total"] as! Double)
+//                        user = (self.price["user"] as! Double)
+//                    }
+//
+//                    StripeClient.shared.completeCharge(paymentResult, customer: customerID, destination: destination, total: total!, user: user!, currency: self.price["currency"] as! String, requestID: self.request!._id!) { (error) in
+//                        guard error != nil else {
+//                            completion(error)
+//                            return
+//                        }
+//
+//                        if let sources = (snapshot.value as! [String: Any])["sources"] as? [String: [String: Any]] {
+//                            var found = false
+//                            for source in sources.values {
+//                                if let id = source["id"] as? String {
+//                                    if id == paymentResult.paymentMethod!.stripeId {
+//                                        found = true
+//                                    }
+//                                }
+//                            }
+//
+//                            if !found {
+//                                let appDelegate = UIApplication.shared.delegate as? AppDelegate
+//                                appDelegate?.getSecretKey(completion: { (secretKey) in
+//                                    Alamofire.request("https://api.stripe.com/v1/customers/\(customerID)/sources/\(paymentResult.paymentMethod!.stripeId)", method: .get, headers: ["Authorization": "Bearer \(secretKey)"]).responseJSON(completionHandler: { response in
+//                                        if let error = response.error {
+//                                            print(error)
+//                                        } else {
+//                                            if let result = response.result.value as? NSDictionary {
+//                                                self.RideDB.child("stripe_customers").child(Auth.auth().currentUser!.uid).child("sources").childByAutoId().setValue(result)
+//                                            }
+//                                        }
+//                                    })
+//                                })
+//                            }
+//                        }
+//                        completion(nil)
+//                    }
+//                }
+//            })
+//        }
+//    }
     
     func paymentContext(_ paymentContext: STPPaymentContext, didFinishWith status: STPPaymentStatus, error: Error?) {
         self.removeSpinner(spinner: self.vSpinner!)
@@ -761,8 +811,8 @@ class SentRequestViewController: UIViewController, MKMapViewDelegate, STPPayment
                     alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
                     self.present(alert, animated: true, completion: nil)
                 }
-            } else if let errorDescription = error?._userInfo?["description"] {
-                os_log("Error making payment: `%@`", log: OSLog.default, type: .error, errorDescription)
+            } else if let errorDescription = error?._userInfo?["description"] as? String {
+                os_log("Error making payment: %@", log: OSLog.default, type: .error, errorDescription)
                 let alert = UIAlertController(title: "Error", message: (errorDescription as! String), preferredStyle: UIAlertController.Style.alert)
                 alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
                 self.present(alert, animated: true, completion: nil)
