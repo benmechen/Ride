@@ -63,7 +63,7 @@
 		B5C31D75216A5F46003DAFAE /* GroupSettingsMembersTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C31D74216A5F46003DAFAE /* GroupSettingsMembersTableViewController.swift */; };
 		B5C31D7D216A6015003DAFAE /* GroupSettingsMembersTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C31D7C216A6015003DAFAE /* GroupSettingsMembersTableViewCell.swift */; };
 		B5CBD03620F29A2D00FD86D8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CBD03520F29A2D00FD86D8 /* AppDelegate.swift */; };
-		B5CBD03820F29A2D00FD86D8 /* FBLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CBD03720F29A2D00FD86D8 /* FBLoginViewController.swift */; };
+		B5CBD03820F29A2D00FD86D8 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CBD03720F29A2D00FD86D8 /* LoginViewController.swift */; };
 		B5CBD03B20F29A2D00FD86D8 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B5CBD03920F29A2D00FD86D8 /* Main.storyboard */; };
 		B5CBD04020F29A3000FD86D8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B5CBD03E20F29A3000FD86D8 /* LaunchScreen.storyboard */; };
 		B5CBD04B20F29A3000FD86D8 /* RideTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CBD04A20F29A3000FD86D8 /* RideTests.swift */; };
@@ -159,7 +159,7 @@
 		B5C31D7C216A6015003DAFAE /* GroupSettingsMembersTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSettingsMembersTableViewCell.swift; sourceTree = "<group>"; };
 		B5CBD03220F29A2D00FD86D8 /* Ride.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ride.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B5CBD03520F29A2D00FD86D8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		B5CBD03720F29A2D00FD86D8 /* FBLoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FBLoginViewController.swift; sourceTree = "<group>"; };
+		B5CBD03720F29A2D00FD86D8 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
 		B5CBD03A20F29A2D00FD86D8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		B5CBD03F20F29A3000FD86D8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B5CBD04120F29A3000FD86D8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -290,10 +290,17 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
+		B5BEA6E12389D93700A6E40F /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
 		B5C31D76216A5F52003DAFAE /* Login */ = {
 			isa = PBXGroup;
 			children = (
-				B5CBD03720F29A2D00FD86D8 /* FBLoginViewController.swift */,
+				B5CBD03720F29A2D00FD86D8 /* LoginViewController.swift */,
 				B5CBD07120F3DD9700FD86D8 /* EmailLoginViewController.swift */,
 				B5E45F5E20F3F9360026EFEF /* EmailCreateAccountViewController.swift */,
 				B5B5ED2D20F40E12004679CE /* ResetPasswordViewController.swift */,
@@ -375,6 +382,7 @@
 			children = (
 				B5CBD06520F2A5EC00FD86D8 /* Ride.entitlements */,
 				B5274166221DE57B00D713B7 /* Ride-Bridging-Header.h */,
+				B5BEA6E12389D93700A6E40F /* ViewModels */,
 				B5B5ED3D20F54368004679CE /* Models */,
 				B5CBD06820F2A6A000FD86D8 /* Controllers */,
 				B5CBD03520F29A2D00FD86D8 /* AppDelegate.swift */,
@@ -756,7 +764,7 @@
 				B5B31E09222C5B370097DDD0 /* LegalViewController.swift in Sources */,
 				B5E45F5F20F3F9360026EFEF /* EmailCreateAccountViewController.swift in Sources */,
 				B523F9D4233B79B500D4BB1A /* Discounts.swift in Sources */,
-				B5CBD03820F29A2D00FD86D8 /* FBLoginViewController.swift in Sources */,
+				B5CBD03820F29A2D00FD86D8 /* LoginViewController.swift in Sources */,
 				B5A791BA22439FB400D3D4B7 /* AlertPageViewController.swift in Sources */,
 				B51341222165748B005231A5 /* GroupTableViewCell.swift in Sources */,
 				B520C47C232EDA3B004D870E /* UIViewController+HideKeyboard.swift in Sources */,

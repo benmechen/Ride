@@ -120,7 +120,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                 }
             }
         } else {
-            if let initialViewController = storyboard.instantiateViewController(withIdentifier: "loginVC") as? FBLoginViewController {
+            if let initialViewController = storyboard.instantiateViewController(withIdentifier: "loginVC") as? LoginViewController {
                 initialViewController.userManager = userManager
                 self.window?.rootViewController = initialViewController
             }
@@ -458,7 +458,7 @@ func moveToWelcomeController() {
 
 func moveToLoginController() {
     let mainStoryBoard: UIStoryboard = UIStoryboard(name: "Main", bundle: nil)
-    if let loginViewController = mainStoryBoard.instantiateViewController(withIdentifier: "loginVC") as? FBLoginViewController {
+    if let loginViewController = mainStoryBoard.instantiateViewController(withIdentifier: "loginVC") as? LoginViewController {
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         let currentViewController = appDelegate.window?.rootViewController
         loginViewController.userManager = appDelegate.userManager

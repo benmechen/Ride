@@ -523,7 +523,7 @@ class SettingsTableViewController: UITableViewController, UITextFieldDelegate, U
                             return
                         }
 
-                        let alert = UIAlertController(title: "Thanks for sharing Ride!", message: "Once the other user has downloaded Ride using the link you just send to them and made an account, you will receive a notification containting a discount code to use on your next Ride", preferredStyle: .alert)
+                        let alert = UIAlertController(title: "Thanks for sharing Ride!", message: "Once your friend has downloaded Ride and made an account through the link, you will receive a notification containting a discount code to use on your next Ride", preferredStyle: .alert)
                         
                         alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
                         

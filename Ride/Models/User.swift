@@ -47,7 +47,7 @@ class UserManager: UserManagerProtocol {
     //MARK: Properties
     private var userCache = [User]()
     private var references = [DatabaseReference]()
-    var currentUser: User?
+    fileprivate var currentUser: User?
     private var currentUserReference: Int?
     
     /// Create current user

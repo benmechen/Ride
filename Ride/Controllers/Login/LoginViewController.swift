@@ -17,7 +17,7 @@ import FBSDKLoginKit
 import WebKit
 import os.log
 
-class FBLoginViewController: UIViewController, WKNavigationDelegate {
+class LoginViewController: UIViewController, WKNavigationDelegate {
     
     //MARK: Properties
     @IBOutlet weak var welcome: UILabel!
@@ -268,7 +268,7 @@ class FBLoginViewController: UIViewController, WKNavigationDelegate {
     }
 }
 
-extension FBLoginViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+extension LoginViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if #available(iOS 13.0, *) {
             return 2
@@ -306,7 +306,7 @@ extension FBLoginViewController: UICollectionViewDelegate, UICollectionViewDataS
 }
 
 @available(iOS 13.0, *)
-extension FBLoginViewController: ASAuthorizationControllerDelegate {
+extension LoginViewController: ASAuthorizationControllerDelegate {
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
             print(appleIDCredential)
@@ -357,7 +357,7 @@ extension FBLoginViewController: ASAuthorizationControllerDelegate {
 }
 
 @available(iOS 13.0, *)
-extension FBLoginViewController: ASAuthorizationControllerPresentationContextProviding {
+extension LoginViewController: ASAuthorizationControllerPresentationContextProviding {
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         return self.view.window!
     }
