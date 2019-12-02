@@ -26,9 +26,10 @@ class LoginViewController: UIViewController, WKNavigationDelegate {
     @IBOutlet weak var changeLoginMethod: UIButton!
     @IBOutlet weak var disclamerButton: UIButton!
     
+//    lazy var RideDB = Database.database().reference()
+//    lazy var RideFunctions = Functions.functions()
+    var loginViewModel: LoginViewModel!
     var userManager: UserManagerProtocol!
-    lazy var RideDB = Database.database().reference()
-    lazy var RideFunctions = Functions.functions()
     var vSpinner: UIView?
     
     override func viewDidLoad() {
@@ -53,10 +54,19 @@ class LoginViewController: UIViewController, WKNavigationDelegate {
     }
 
     
-    // MARK: Login Functions
+    // MARK: Login Functions -- REMOVE
     
     @IBAction func loginButtonClicked(_ sender: UIButton) {
         vSpinner = self.showSpinner(onView: self.view)
+        
+        loginViewModel.login(withService: .facebook) { (result) in
+            switch result {
+            case .error(let error):
+            case .success(<#T##Bool#>)
+            }
+        }
+        
+        
         let loginManager = LoginManager()
 //        loginManager.loginBehavior = LoginBehavior.systemAccount
 //        loginManager.loginBehavior = FBSDKLoginBehaviorSystemAccount;
@@ -74,6 +84,7 @@ class LoginViewController: UIViewController, WKNavigationDelegate {
                 print(grantedPermissions)
                 print(declinedPermissions)
                 let credential = FacebookAuthProvider.credential(withAccessToken: accessToken.tokenString)
+                
                 Auth.auth().signIn(with: credential) { (user, error) in
                     if let error = error {
                         print(error)
@@ -167,6 +178,8 @@ class LoginViewController: UIViewController, WKNavigationDelegate {
 //        }
 //    }
     
+    
+    // MARK: Sign in with Apple Service
     @available(iOS 13.0, *)
     @objc
     func handleAuthorizationAppleIDButtonPress() {
@@ -193,7 +206,7 @@ class LoginViewController: UIViewController, WKNavigationDelegate {
     }
     
     
-    // MARK: Private functions
+    // MARK: Private functions -- REMOVE
     private func populateFriends(userId: String, completion: @escaping (Bool, Array<String>) -> ()) {
         let params = ["fields": "id"]
         
@@ -305,6 +318,7 @@ extension LoginViewController: UICollectionViewDelegate, UICollectionViewDataSou
     }
 }
 
+// MARK: Sign in with Apple Service
 @available(iOS 13.0, *)
 extension LoginViewController: ASAuthorizationControllerDelegate {
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
