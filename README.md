@@ -5,7 +5,7 @@ https://apps.apple.com/gb/app/ride-friendly-lifts/id1455407107
 
 ## v2.0
 
-A complete rebuild of the application, currently moving from MVC to MVVM architecture. New features include:
+A complete rebuild of the application, currently moving from MVC to MVVM architecture (WIP). New features include:
 * International rollout
 * Discounts & referal links
 * Redesign
